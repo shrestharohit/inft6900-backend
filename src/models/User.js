@@ -5,7 +5,7 @@ class User {
     const query = `
       INSERT INTO "User" (firstName, lastName, email, passwordHash, role, created_at)
       VALUES ($1, $2, $3, $4, $5, NOW())
-      RETURNING userID, firstName, lastName, email, role, created_at
+      RETURNING userID, firstName, lastName, email, role, isEmailVerified, created_at
     `;
     
     const result = await pool.query(query, [firstName, lastName, email, passwordHash, role]);
@@ -57,9 +57,44 @@ class User {
   }
 
   static async getAll() {
-    const query = 'SELECT userID, firstName, lastName, email, role, created_at FROM "User" ORDER BY created_at DESC';
+    const query = 'SELECT userID, firstName, lastName, email, role, isEmailVerified, created_at FROM "User" ORDER BY created_at DESC';
     const result = await pool.query(query);
     return result.rows;
+  }
+
+  // OTP Methods
+  static async setOTP(email, otpCode, expiresAt) {
+    const query = `
+      UPDATE "User" 
+      SET otpCode = $1, otpExpiresAt = $2, updated_at = NOW()
+      WHERE email = $3
+      RETURNING userID, email, otpCode, otpExpiresAt
+    `;
+    
+    const result = await pool.query(query, [otpCode, expiresAt, email]);
+    return result.rows[0];
+  }
+
+  static async verifyOTP(email, otpCode) {
+    const query = `
+      SELECT * FROM "User" 
+      WHERE email = $1 AND otpCode = $2 AND otpExpiresAt > NOW() AND isEmailVerified = FALSE
+    `;
+    
+    const result = await pool.query(query, [email, otpCode]);
+    return result.rows[0];
+  }
+
+  static async markEmailVerified(email) {
+    const query = `
+      UPDATE "User" 
+      SET isEmailVerified = TRUE, otpCode = NULL, otpExpiresAt = NULL, updated_at = NOW()
+      WHERE email = $1
+      RETURNING userID, firstName, lastName, email, role, isEmailVerified
+    `;
+    
+    const result = await pool.query(query, [email]);
+    return result.rows[0];
   }
 }
 

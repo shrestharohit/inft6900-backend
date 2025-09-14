@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const { VALID_USER_ROLES } = require('../config/constants');
+const { generateOTP, sendOTPEmail } = require('../services/emailService');
 
 const register = async (req, res) => {
   try {
@@ -36,9 +37,6 @@ const register = async (req, res) => {
       });
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     // Validate role
     const userRole = role || 'student';
     
@@ -48,7 +46,10 @@ const register = async (req, res) => {
       });
     }
 
-    // Create user
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user (unverified)
     const newUser = await User.create({
       firstName,
       lastName,
@@ -57,15 +58,26 @@ const register = async (req, res) => {
       role: userRole
     });
 
+    // Generate OTP
+    const otpCode = generateOTP();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+
+    // Store OTP in user record
+    await User.setOTP(email, otpCode, expiresAt);
+
+    // Send OTP email
+    const emailResult = await sendOTPEmail(email, otpCode, firstName);
+    
+    if (!emailResult.success) {
+      return res.status(500).json({ 
+        error: 'Failed to send verification email. Please try again.' 
+      });
+    }
+
     res.status(201).json({
-      message: 'User registered successfully',
-      user: {
-        id: newUser.userID,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
-        email: newUser.email,
-        role: newUser.role
-      }
+      message: 'Registration successful! Please check your email for verification code.',
+      email: email,
+      expiresIn: '10 minutes'
     });
 
   } catch (error) {
@@ -200,9 +212,50 @@ const updateCurrentUser = async (req, res) => {
   }
 };
 
+const verifyOTP = async (req, res) => {
+  try {
+    const { email, otpCode } = req.body;
+
+    // Basic validation
+    if (!email || !otpCode) {
+      return res.status(400).json({ 
+        error: 'Email and OTP code are required' 
+      });
+    }
+
+    // Verify OTP
+    const user = await User.verifyOTP(email, otpCode);
+    if (!user) {
+      return res.status(400).json({ 
+        error: 'Invalid or expired OTP code' 
+      });
+    }
+
+    // Mark email as verified and clear OTP
+    const verifiedUser = await User.markEmailVerified(email);
+
+    res.status(200).json({
+      message: 'Email verified successfully!',
+      user: {
+        id: verifiedUser.userID,
+        firstName: verifiedUser.firstName,
+        lastName: verifiedUser.lastName,
+        email: verifiedUser.email,
+        role: verifiedUser.role,
+        isEmailVerified: verifiedUser.isEmailVerified
+      }
+    });
+
+  } catch (error) {
+    console.error('OTP verification error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   register,
   login,
   getCurrentUser,
-  updateCurrentUser
+  updateCurrentUser,
+  verifyOTP
 };

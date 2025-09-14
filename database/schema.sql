@@ -14,6 +14,9 @@ CREATE TABLE "User" (
     email VARCHAR(150) UNIQUE NOT NULL,
     passwordHash TEXT NOT NULL,
     role VARCHAR(50) NOT NULL,
+    otpCode VARCHAR(6),
+    otpExpiresAt TIMESTAMP,
+    isEmailVerified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
