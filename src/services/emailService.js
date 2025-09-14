@@ -2,7 +2,7 @@ const nodemailer = require('nodemailer');
 
 // Email configuration for MailerSend
 const createTransporter = () => {
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     host: process.env.MAILERSEND_HOST,
     port: 587,
     secure: false, // true for 465, false for other ports
