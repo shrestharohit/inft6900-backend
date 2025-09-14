@@ -1,7 +1,10 @@
 const express = require('express');
 require('dotenv').config();
 
+// Import routes
 const authRoutes = require('./routes/authRoutes');
+
+// Import database connection
 const { connectDB } = require('./config/database');
 
 const app = express();
@@ -18,7 +21,11 @@ app.use('/api/auth', authRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    message: 'Brainwave API is running'
+  });
 });
 
 // Error handling
@@ -35,6 +42,7 @@ app.use('*', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
+  console.log(`🔐 Auth API: http://localhost:${PORT}/api/auth`);
 });
 
 module.exports = app;
