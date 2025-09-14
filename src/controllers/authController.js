@@ -49,7 +49,7 @@ const register = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user (unverified)
+    // Create user
     const newUser = await User.create({
       firstName,
       lastName,
@@ -58,27 +58,47 @@ const register = async (req, res) => {
       role: userRole
     });
 
-    // Generate OTP
-    const otpCode = generateOTP();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+    // Check if user needs email verification (only students need verification)
+    if (userRole === 'student') {
+      // Generate OTP for students
+      const otpCode = generateOTP();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
 
-    // Store OTP in user record
-    await User.setOTP(email, otpCode, expiresAt);
+      // Store OTP in user record
+      await User.setOTP(email, otpCode, expiresAt);
 
-    // Send OTP email
-    const emailResult = await sendOTPEmail(email, otpCode, firstName);
-    
-    if (!emailResult.success) {
-      return res.status(500).json({ 
-        error: 'Failed to send verification email. Please try again.' 
+      // Send OTP email
+      const emailResult = await sendOTPEmail(email, otpCode, firstName);
+      
+      if (!emailResult.success) {
+        return res.status(500).json({ 
+          error: 'Failed to send verification email. Please try again.' 
+        });
+      }
+
+      res.status(201).json({
+        message: 'Registration successful! Please check your email for verification code.',
+        email: email,
+        expiresIn: '10 minutes',
+        requiresVerification: true
+      });
+    } else {
+      // Admin and course_instructor are automatically verified
+      await User.markEmailVerified(email);
+      
+      res.status(201).json({
+        message: 'Registration successful! Your account is ready to use.',
+        user: {
+          id: newUser.userID,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+          email: newUser.email,
+          role: newUser.role,
+          isEmailVerified: true
+        },
+        requiresVerification: false
       });
     }
-
-    res.status(201).json({
-      message: 'Registration successful! Please check your email for verification code.',
-      email: email,
-      expiresIn: '10 minutes'
-    });
 
   } catch (error) {
     console.error('Registration error:', error);
@@ -113,6 +133,41 @@ const login = async (req, res) => {
       });
     }
 
+    // Check if user needs email verification (only students need verification)
+    if (user.role === 'student' && !user.isEmailVerified) {
+      // Generate new OTP for unverified students
+      const otpCode = generateOTP();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+
+      // Store OTP in user record
+      await User.setOTP(email, otpCode, expiresAt);
+
+      // Send OTP email
+      const emailResult = await sendOTPEmail(email, otpCode, user.firstName);
+      
+      if (!emailResult.success) {
+        return res.status(500).json({ 
+          error: 'Failed to send verification email. Please try again.' 
+        });
+      }
+
+      return res.status(200).json({
+        message: 'Please verify your email to continue. A new verification code has been sent.',
+        email: email,
+        expiresIn: '10 minutes',
+        requiresVerification: true,
+        user: {
+          id: user.userID,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          role: user.role,
+          isEmailVerified: false
+        }
+      });
+    }
+
+    // User is verified or doesn't need verification
     res.json({
       message: 'Login successful',
       user: {
@@ -120,7 +175,8 @@ const login = async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        role: user.role
+        role: user.role,
+        isEmailVerified: user.isEmailVerified
       }
     });
 
@@ -275,6 +331,13 @@ const resendOTP = async (req, res) => {
     if (user.isEmailVerified) {
       return res.status(400).json({ 
         error: 'Email is already verified' 
+      });
+    }
+
+    // Check if user role requires verification (only students need verification)
+    if (user.role !== 'student') {
+      return res.status(400).json({ 
+        error: 'This account type does not require email verification' 
       });
     }
 
