@@ -9,8 +9,8 @@
 -- ==================
 CREATE TABLE "User" (
     userID SERIAL PRIMARY KEY,
-    lastName VARCHAR(100) NOT NULL,
     firstName VARCHAR(100) NOT NULL,
+    lastName VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
     passwordHash TEXT NOT NULL,
     role VARCHAR(50) NOT NULL,
@@ -195,4 +195,4 @@ CREATE TABLE Feedback (
 -- ==================
 
 -- Index for faster email lookups
-CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_email ON "User"(email);
