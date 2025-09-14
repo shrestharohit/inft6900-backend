@@ -3,7 +3,7 @@ const nodemailer = require('nodemailer');
 // Email configuration for MailerSend
 const createTransporter = () => {
   return nodemailer.createTransporter({
-    host: 'smtp.mailersend.net',
+    host: process.env.MAILERSEND_HOST,
     port: 587,
     secure: false, // true for 465, false for other ports
     auth: {
