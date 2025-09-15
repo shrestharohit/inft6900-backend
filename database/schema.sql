@@ -73,8 +73,14 @@ CREATE TABLE Course (
     level VARCHAR(50),
     description TEXT,
     status VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    createdBy INT,
+    updatedBy INT,
     pathwayID INT,
-    FOREIGN KEY (pathwayID) REFERENCES Pathway(pathwayID) ON DELETE SET NULL
+    FOREIGN KEY (pathwayID) REFERENCES Pathway(pathwayID) ON DELETE SET NULL,
+    FOREIGN KEY (createdBy) REFERENCES ModuleOwner(ownerID),
+    FOREIGN KEY (updatedBy) REFERENCES ModuleOwner(ownerID)
 );
 
 CREATE TABLE Module (
@@ -84,10 +90,17 @@ CREATE TABLE Module (
     title VARCHAR(150) NOT NULL,
     description TEXT,
     status VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    createdBy INT,
+    updatedBy INT,
+    orderNumber INT,
     scheduleID INT,
     FOREIGN KEY (courseID) REFERENCES Course(courseID) ON DELETE CASCADE,
     FOREIGN KEY (ownerID) REFERENCES ModuleOwner(ownerID) ON DELETE CASCADE,
-    FOREIGN KEY (scheduleID) REFERENCES Schedule(scheduleID) ON DELETE SET NULL
+    FOREIGN KEY (scheduleID) REFERENCES Schedule(scheduleID) ON DELETE SET NULL,
+    FOREIGN KEY (createdBy) REFERENCES ModuleOwner(ownerID),
+    FOREIGN KEY (updatedBy) REFERENCES ModuleOwner(ownerID)
 );
 
 -- ==================
@@ -97,12 +110,14 @@ CREATE TABLE Enrolment (
     enrolmentID SERIAL PRIMARY KEY,
     enrolDate DATE DEFAULT CURRENT_DATE,
     enrolmentType VARCHAR(50),
+    enrolmentStatus VARCHAR(20),
     pathwayID INT,
     courseID INT,
     learnerID INT NOT NULL,
     completionStatus VARCHAR(50),
     lastAccessDate DATE,
     completionDate DATE,
+    disenrolledDate DATE,
     FOREIGN KEY (pathwayID) REFERENCES Pathway(pathwayID),
     FOREIGN KEY (courseID) REFERENCES Course(courseID),
     FOREIGN KEY (learnerID) REFERENCES Learner(learnerID) ON DELETE CASCADE
@@ -137,7 +152,13 @@ CREATE TABLE Quiz (
     title VARCHAR(150),
     totalMarks INT,
     timeLimit INT,
-    FOREIGN KEY (moduleID) REFERENCES Module(moduleID) ON DELETE CASCADE
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    createdBy INT,
+    updatedBy INT,
+    FOREIGN KEY (moduleID) REFERENCES Module(moduleID) ON DELETE CASCADE,
+    FOREIGN KEY (createdBy) REFERENCES ModuleOwner(ownerID),
+    FOREIGN KEY (updatedBy) REFERENCES ModuleOwner(ownerID)
 );
 
 CREATE TABLE Question (
@@ -165,6 +186,7 @@ CREATE TABLE QuizAttempt (
     attemptID SERIAL PRIMARY KEY,
     quizID INT NOT NULL,
     enrolmentID INT NOT NULL,
+    attemptNumber INT,
     startTime TIMESTAMP,
     endTime TIMESTAMP,
     score INT,
@@ -191,6 +213,19 @@ CREATE TABLE Feedback (
     comments TEXT,
     createdDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (attemptID) REFERENCES QuizAttempt(attemptID) ON DELETE CASCADE
+);
+
+-- ==================
+-- CERTIFICATES
+-- ==================
+CREATE TABLE Certificate (
+    certificateID SERIAL PRIMARY KEY,
+    learnerID INT NOT NULL,
+    courseID INT,
+    issueDate DATE DEFAULT CURRENT_DATE,
+    certificateURL TEXT,
+    FOREIGN KEY (learnerID) REFERENCES Learner(learnerID),
+    FOREIGN KEY (courseID) REFERENCES Course(courseID)
 );
 
 -- ==================
