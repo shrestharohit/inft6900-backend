@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 require('dotenv').config();
 
 // Import routes
@@ -13,7 +14,11 @@ const PORT = process.env.PORT || 3001;
 // Test database connection
 connectDB();
 
-// Middleware
+// ✅ Middleware
+app.use(cors({
+  origin: "http://localhost:5173", // allow your frontend
+  credentials: true
+}));
 app.use(express.json());
 
 // Routes
@@ -21,8 +26,8 @@ app.use('/api/auth', authRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
+  res.json({
+    status: 'OK',
     timestamp: new Date().toISOString(),
     message: 'Brainwave API is running'
   });
