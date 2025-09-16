@@ -3,12 +3,13 @@ const nodemailer = require('nodemailer');
 // Email configuration for MailerSend
 const createTransporter = () => {
   return nodemailer.createTransport({
-    host: process.env.MAILERSEND_HOST,
+    host: process.env.SMTP_HOST || 'smtp.mailersend.net',
     port: 587,
     secure: false, // true for 465, false for other ports
+    requireTLS: true, // ✅ important for MailerSend
     auth: {
-      user: process.env.MAILERSEND_USER, // Your MailerSend SMTP username
-      pass: process.env.MAILERSEND_PASS  // Your MailerSend SMTP password
+      user: process.env.SMTP_USER, // MailerSend SMTP username
+      pass: process.env.SMTP_PASS  // MailerSend SMTP password
     }
   });
 };
@@ -22,9 +23,12 @@ const generateOTP = () => {
 const sendOTPEmail = async (email, otp, firstName) => {
   try {
     const transporter = createTransporter();
-    
+
+    // ✅ Always log OTP to backend terminal for now
+    console.log(`📩 OTP for ${email} (${firstName}): ${otp}`);
+
     const mailOptions = {
-      from: process.env.MAILERSEND_FROM_EMAIL, // Your verified sender email in MailerSend
+      from: process.env.SMTP_USER, // Must be verified sender in MailerSend
       to: email,
       subject: 'Brainwave - Email Verification Code',
       html: `
@@ -51,7 +55,7 @@ const sendOTPEmail = async (email, otp, firstName) => {
     const result = await transporter.sendMail(mailOptions);
     console.log('✅ OTP email sent successfully:', result.messageId);
     return { success: true, messageId: result.messageId };
-    
+
   } catch (error) {
     console.error('❌ Failed to send OTP email:', error);
     return { success: false, error: error.message };
