@@ -21,14 +21,13 @@ CREATE TABLE "User" (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE "Learner" (
-    learnerID INT PRIMARY KEY,
-    FOREIGN KEY (learnerID) REFERENCES "User"(userID) ON DELETE CASCADE
+CREATE TABLE "Student" (
+    studentID INT PRIMARY KEY,
+    FOREIGN KEY (studentID) REFERENCES "User"(userID) ON DELETE CASCADE
 );
 
 CREATE TABLE "Admin" (
     adminID INT PRIMARY KEY,
-    roleLevel VARCHAR(50),
     FOREIGN KEY (adminID) REFERENCES "User"(userID) ON DELETE CASCADE
 );
 
@@ -41,7 +40,7 @@ CREATE TABLE "CourseOwner" (
 );
 
 -- ==================
--- NOTIFICATIONS & SCHEDULE
+-- NOTIFICATIONS 
 -- ==================
 CREATE TABLE "NotificationSetting" (
     settingID SERIAL PRIMARY KEY,
@@ -51,12 +50,6 @@ CREATE TABLE "NotificationSetting" (
     channel VARCHAR(50),
     createdDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (userID) REFERENCES "User"(userID) ON DELETE CASCADE
-);
-
-CREATE TABLE "Schedule" (
-    scheduleID SERIAL PRIMARY KEY,
-    frequency VARCHAR(50),
-    nextDueDate DATE
 );
 
 -- ==================
@@ -79,7 +72,7 @@ CREATE TABLE "Course" (
     pathwayID INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (ownerID) REFERENCES "CourseOwner"(ownerID) ON DELETE SET NULL,
+    FOREIGN KEY (ownerID) REFERENCES "CourseOwner"(ownerID) ON DELETE CASCADE,
     FOREIGN KEY (pathwayID) REFERENCES "Pathway"(pathwayID) ON DELETE SET NULL
 );
 
@@ -89,11 +82,9 @@ CREATE TABLE "Module" (
     title VARCHAR(150) NOT NULL,
     description TEXT,
     status VARCHAR(20),
-    scheduleID INT, -- is this necessary???
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (courseID) REFERENCES "Course"(courseID) ON DELETE CASCADE,
-    FOREIGN KEY (scheduleID) REFERENCES "Schedule"(scheduleID) ON DELETE SET NULL
+    FOREIGN KEY (courseID) REFERENCES "Course"(courseID) ON DELETE CASCADE
 );
 
 -- ==================
@@ -103,25 +94,27 @@ CREATE TABLE "Enrolment" (
     enrolmentID SERIAL PRIMARY KEY,
     enrolDate DATE DEFAULT CURRENT_DATE,
     enrolmentType VARCHAR(50),
+    enrolmentStatus VARCHAR(20),
     pathwayID INT,
     courseID INT,
-    learnerID INT NOT NULL,
+    studentID INT NOT NULL,
     completionStatus VARCHAR(50),
     lastAccessDate DATE,
     completionDate DATE,
+    disenrolledDate DATE,
     FOREIGN KEY (pathwayID) REFERENCES "Pathway"(pathwayID),
     FOREIGN KEY (courseID) REFERENCES "Course"(courseID),
-    FOREIGN KEY (learnerID) REFERENCES "Learner"(learnerID) ON DELETE CASCADE
+    FOREIGN KEY (studentID) REFERENCES "Student"(studentID) ON DELETE CASCADE
 );
 
 CREATE TABLE "ModuleAccess" (
     accessID SERIAL PRIMARY KEY,
     moduleID INT NOT NULL,
-    learnerID INT NOT NULL,
+    studentID INT NOT NULL,
     accessDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     duration INTERVAL,
     FOREIGN KEY (moduleID) REFERENCES "Module"(moduleID) ON DELETE CASCADE,
-    FOREIGN KEY (learnerID) REFERENCES "Learner"(learnerID) ON DELETE CASCADE
+    FOREIGN KEY (studentID) REFERENCES "Student"(studentID) ON DELETE CASCADE
 );
 
 -- ==================
@@ -134,6 +127,8 @@ CREATE TABLE "Content" (
     description TEXT,
     contentType VARCHAR(50),
     pageNumber INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (moduleID) REFERENCES "Module"(moduleID) ON DELETE CASCADE
 );
 
@@ -143,6 +138,8 @@ CREATE TABLE "Quiz" (
     title VARCHAR(150),
     totalMarks INT,
     timeLimit INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (moduleID) REFERENCES "Module"(moduleID) ON DELETE CASCADE
 );
 
@@ -197,6 +194,20 @@ CREATE TABLE "Feedback" (
     comments TEXT,
     createdDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (attemptID) REFERENCES "QuizAttempt"(attemptID) ON DELETE CASCADE
+);
+
+
+-- ==================
+-- CERTIFICATES
+-- ==================
+CREATE TABLE "Certificate" (
+    certificateID SERIAL PRIMARY KEY,
+    studentID INT NOT NULL,
+    courseID INT,
+    issueDate DATE DEFAULT CURRENT_DATE,
+    certificateURL TEXT,
+    FOREIGN KEY (studentID) REFERENCES "Student"(studentID),
+    FOREIGN KEY (courseID) REFERENCES "Course"(courseID)
 );
 
 -- ==================

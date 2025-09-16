@@ -15,7 +15,7 @@ class Module {
     static async findByCourseId(courseid) {
         const query = 'SELECT * FROM "Module" WHERE "courseid" = $1';
         const result = await pool.query(query, [courseid]);
-        return result.rows[0];
+        return result.rows;
     }
 
     static async findById(id) {

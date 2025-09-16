@@ -1,7 +1,7 @@
 const { pool } = require('../config/database');
 
 class User {
-  static async create({ firstName, lastName, email, passwordHash, role = 'learner' }) {
+  static async create({ firstName, lastName, email, passwordHash, role = 'student' }) {
     const query = `
       INSERT INTO "User" (firstName, lastName, email, passwordHash, role, created_at)
       VALUES ($1, $2, $3, $4, $5, NOW())
