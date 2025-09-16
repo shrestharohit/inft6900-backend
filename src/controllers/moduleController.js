@@ -61,7 +61,7 @@ const update = async (req, res) => {
     try {
         const { moduleid, courseid, title, description, status } = req.body;
 
-        // Check if courseId exists
+        // Check if moduleID exists
         const existingModule = await Module.findById(moduleid);
         if (!existingModule) {
             return res.status(404).json({
@@ -70,15 +70,15 @@ const update = async (req, res) => {
         }
 
         // Validate courseId
-        if (!courseid) {
+        if (!moduleid) {
             return res.status(400).json({
-                error: 'Course ID is required'
+                error: 'Module ID is required'
             });
         }
 
         // Check if courseId exists
         const existingCourse = await Course.findById(courseid);
-        if (!existingCourse) {
+        if (courseid !== undefined && !existingCourse) {
             return res.status(404).json({
                 error: 'Course not found'
             });
@@ -99,7 +99,7 @@ const update = async (req, res) => {
         if (status !== undefined) updateData.status = moduleStatus;
 
         // Update module
-        const updateModule = await Module.update(moduleid, updateData)
+        const updateModule = await Module.update(moduleid, updateData);
 
         res.json({
             message: 'Module updated successfully',
@@ -110,13 +110,19 @@ const update = async (req, res) => {
                 description: updateModule.description,
                 status: updateModule.status,
             }
-        })
+        });
 
     } catch(error) {
         console.error('Update course error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+
+const getAll = async (req, res) => {
+    const modules = await Module.getAll();
+    res.json(modules);
+}
 
 
 const getModuleMeta = (req, res) => {
@@ -129,5 +135,6 @@ const getModuleMeta = (req, res) => {
 module.exports = {
   register,
   update,
+  getAll,
   getModuleMeta,
 };

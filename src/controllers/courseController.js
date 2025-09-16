@@ -140,6 +140,12 @@ const update = async (req, res) => {
 };
 
 
+const getAll = async (req, res) => {
+    const courses = await Course.getAll();
+    res.json(courses);
+}
+
+
 const getCourseMeta = (req, res) => {
     res.json({
         status: VALID_COURSE_STATUS,
@@ -151,5 +157,6 @@ const getCourseMeta = (req, res) => {
 module.exports = {
   register,
   update,
+  getAll,
   getCourseMeta,
 };
