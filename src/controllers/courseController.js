@@ -165,7 +165,7 @@ const getCourseMeta = (req, res) => {
 
 const getCourse = async (req, res) => {
   try {
-    const courseId = req.headers['courseid'] || req.query.userId; // Get userId from header or query param
+    const courseId = req.params.id || req.query.courseid; // Get courseid from header or query param
 
     // Validate userId is provided
     if (!courseId) {

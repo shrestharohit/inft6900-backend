@@ -22,7 +22,7 @@ router.post("/getAll", getAll);
 router.post("/getCourseMeta", getCourseMeta);
 
 
-router.get("/id", getCourse);
+router.get("/:id", getCourse);
 
 
 module.exports = router;
