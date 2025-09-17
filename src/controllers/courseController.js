@@ -4,7 +4,7 @@ const { VALID_COURSE_STATUS, VALID_COURSE_LEVEL } = require('../config/constants
 
 const register = async (req, res) => {
     try {
-        const { title, ownerid, category, level, outline, status } = req.body;
+        const { title, ownerID, category, level, outline, status } = req.body;
 
         // Basic validataion
         if (!title || !category || !level || !outline || !status) {
@@ -14,7 +14,7 @@ const register = async (req, res) => {
         }
 
         // Validate owner id
-        const existingOwner = CourseOwner.findById(ownerid)
+        const existingOwner = await CourseOwner.findById(ownerID)
         if (!existingOwner) {
             return res.status(400).json({
                 error: 'Invalid owner ID. Course Owner does not exist.'
@@ -41,7 +41,7 @@ const register = async (req, res) => {
 
         // Create course
         const newCourse = await Course.create({
-            ownerid,
+            ownerID,
             title, 
             category,
             level: courseLevel, 
@@ -52,8 +52,8 @@ const register = async (req, res) => {
         res.json({
             message: 'Course registered successfully',
             course: {
-                id: newCourse.courseid,
-                ownerid: newCourse.ownerid,
+                id: newCourse.courseID,
+                ownerID: newCourse.ownerID,
                 title: newCourse.title,
                 category: newCourse.category,
                 level: newCourse.level,
@@ -71,18 +71,18 @@ const register = async (req, res) => {
 
 const update = async (req, res) => {
     try {
-        const courseid = req.params.courseid;
-        const { ownerid, title, category, level, outline, status } = req.body;
+        const courseID = req.params.courseID;
+        const { ownerID, title, category, level, outline, status } = req.body;
 
         // Validate courseId
-        if (!courseid) {
+        if (!courseID) {
             return res.status(400).json({
                 error: 'Course ID is required'
             });
         }
 
         // Check if courseId exists
-        const existingCourse = await Course.findById(courseid);
+        const existingCourse = await Course.findById(courseID);
         if (!existingCourse) {
             return res.status(404).json({
                 error: 'Course not found'
@@ -90,7 +90,7 @@ const update = async (req, res) => {
         }
 
         // Validate owner id
-        const existingOwner = CourseOwner.findById(ownerid)
+        const existingOwner = await CourseOwner.findById(ownerID)
         if (!existingOwner) {
             return res.status(400).json({
                 error: 'Invalid owner ID. Course Owner does not exist.'
@@ -115,7 +115,7 @@ const update = async (req, res) => {
 
         // Prepare update data
         const updateData = {};
-        if (ownerid !== undefined) updateData.ownerid = ownerid;
+        if (ownerID !== undefined) updateData.ownerID = ownerID;
         if (title !== undefined) updateData.title = title;
         if (category !== undefined) updateData.category = category;
         if (level !== undefined) updateData.level = courseLevel;
@@ -123,13 +123,13 @@ const update = async (req, res) => {
         if (status !== undefined) updateData.status = courseStatus;
 
         // Create course
-        const updateCourse = await Course.update(courseid, updateData)
+        const updateCourse = await Course.update(courseID, updateData)
 
         res.json({
             message: 'Course updated successfully',
             course: {
-                id: updateCourse.courseid,
-                ownerid: updateCourse.ownerid,
+                id: updateCourse.courseID,
+                ownerID: updateCourse.ownerID,
                 title: updateCourse.title,
                 category: updateCourse.category,
                 level: updateCourse.level,
@@ -166,7 +166,7 @@ const getMeta = (req, res) => {
 
 const getCourse = async (req, res) => {
   try {
-    const courseId = req.params.courseid || req.query.courseid; // Get courseid from header or query param
+    const courseId = req.params.courseID || req.query.courseID; // Get courseID from header or query param
 
     // Validate course id is provided
     if (!courseId) {

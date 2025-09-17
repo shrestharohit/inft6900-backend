@@ -3,17 +3,17 @@ const User = require('../models/User');
 
 const register = async (req, res) => {
   try {
-    const { ownerid, department } = req.body;
+    const { ownerID, department } = req.body;
 
     // Basic validation
-    if (!ownerid) {
+    if (!ownerID) {
       return res.status(400).json({ 
         error: 'OwnerID is required' 
       });
     }
 
     // Check if owner actually exists
-    const existingUser = await User.findById(ownerid);
+    const existingUser = await User.findById(ownerID);
     if (!existingUser) {
       return res.status(400).json({ 
         error: 'User not found.' 
@@ -28,7 +28,7 @@ const register = async (req, res) => {
     }
 
     // Check if owner has already registered
-    const existingOwner = await CourseOwner.findById(ownerid);
+    const existingOwner = await CourseOwner.findById(ownerID);
     if (existingOwner) {
       return res.status(400).json({ 
         error: 'Owner already registered.' 
@@ -37,14 +37,14 @@ const register = async (req, res) => {
 
     // Create owner
     const newOwner = await CourseOwner.create({
-      ownerid,
+      ownerID,
       department
     });
 
     res.status(201).json({
         message: 'Registration successful!',
         owner: {
-          ownerid: newOwner.ownerid,
+          ownerID: newOwner.ownerID,
           department: newOwner.department,
         },
     })
@@ -57,17 +57,17 @@ const register = async (req, res) => {
 
 const update = async (req, res) => {
   try {
-    const { ownerid, department } = req.body;
+    const { ownerID, department } = req.body;
 
     // Validate userId is provided
-    if (!ownerid) {
+    if (!ownerID) {
       return res.status(400).json({ 
         error: 'Owner ID is required.' 
       });
     }
 
     // Check if user exists
-    const existingOwner = await CourseOwner.findById(ownerid);
+    const existingOwner = await CourseOwner.findById(ownerID);
     if (!existingOwner) {
       return res.status(404).json({ 
         error: 'Course Owner not found' 
@@ -79,12 +79,12 @@ const update = async (req, res) => {
     if (department !== undefined) updateData.department = department;
 
     // Update user
-    const updatedOwner = await CourseOwner.update(ownerid, updateData);
+    const updatedOwner = await CourseOwner.update(ownerID, updateData);
 
     res.json({
       message: 'Course Owner updated successfully',
       owner: {
-        ownerid: updatedOwner.ownerid,
+        ownerID: updatedOwner.ownerID,
         department: updatedOwner.department,
       }
     });

@@ -4,11 +4,11 @@ const { VALID_QUIZ_STATUS } = require('../config/constants');
 
 const register = async (req, res) => {
     try {
-        const moduleid = req.params.moduleid;
-        const { title, timelimit, status } = req.body;
+        const moduleID = req.params.moduleID;
+        const { title, timeLimit, status } = req.body;
 
         // Validate course id is provided
-        if (!moduleid) {
+        if (!moduleID) {
             return res.status(400).json({ 
                 error: 'Module ID is required in header (moduleID) or query parameter (moduleID)' 
             });
@@ -22,16 +22,16 @@ const register = async (req, res) => {
         }
 
         // Validate status
-        const quizstatus = status || 'draft'
+        const quizStatus = status || 'draft'
 
-        if (!VALID_QUIZ_STATUS.includes(quizstatus)) {
+        if (!VALID_QUIZ_STATUS.includes(quizStatus)) {
             return res.status(400).json({
                 error: `Invalid status. Must be:${VALID_QUIZ_STATUS.join(', ')} `
             });
         }
 
         // Validate module ID
-        const quizModule = await Module.findById(moduleid)
+        const quizModule = await Module.findById(moduleID)
         if (!quizModule) {
             return res.status(400).json({
                 error: 'Invalid module ID. Module does not exist.'
@@ -40,19 +40,19 @@ const register = async (req, res) => {
 
         // Create course
         const newQuiz = await Quiz.create({
-            moduleid, 
+            moduleID, 
             title, 
-            timelimit, 
-            status: quizstatus
+            timeLimit, 
+            status: quizStatus
         });
 
         res.json({
-            message: 'Module registered successfully',
-            module: {
-                quizid: newQuiz.quizid,
-                moduleid: newQuiz.moduleid,
+            message: 'Quiz registered successfully',
+            quiz: {
+                quizID: newQuiz.quizID,
+                moduleID: newQuiz.moduleID,
                 title: newQuiz.title,
-                timelimit: newQuiz.timelimit,
+                timeLimit: newQuiz.timeLimit,
                 status: newQuiz.status,
                 created_at: newQuiz.created_at
             }
@@ -68,36 +68,36 @@ const register = async (req, res) => {
 
 const update = async (req, res) => {
     try {
-        const moduleid = req.params.moduleid;
-        const quizid = req.params.quizid;
-        const { title, timelimit, status } = req.body;
+        const moduleID = req.params.moduleID;
+        const quizID = req.params.quizID;
+        const { title, timeLimit, status } = req.body;
 
         // Check if quiz ID exists
-        const existinQuiz = await Quiz.findById(quizid);
+        const existinQuiz = await Quiz.findById(quizID);
         if (!existinQuiz) {
             return res.status(404).json({
                 error: 'Quiz not found'
             });
-        }
+        };
 
         // Validate quizid
-        if (!quizid) {
+        if (!quizID) {
             return res.status(400).json({
                 error: 'Quiz ID is required'
             });
         }
 
-        // Check if courseId exists
-        const existingModule = await Module.findById(moduleid);
-        if (moduleid !== undefined && !existingCourse) {
+        // Check if moduleID exists
+        const existingModule = await Module.findById(moduleID);
+        if (moduleID !== undefined && !existingModule) {
             return res.status(404).json({
                 error: 'Module not found'
             });
         }
 
         // Validate status
-        quizstatus = status;
-        if (quizstatus !== undefined && !VALID_QUIZ_STATUS.includes(quizstatus)) {
+        const quizStatus = status;
+        if (quizStatus !== undefined && !VALID_QUIZ_STATUS.includes(quizStatus)) {
             return res.status(400).json({
                 error: `Invalid status. Must be:${VALID_QUIZ_STATUS.join(', ')} `
             });
@@ -106,21 +106,21 @@ const update = async (req, res) => {
         // Prepare update data
         const updateData = {};
         if (title !== undefined) updateData.title = title;
-        if (timelimit !== undefined) updateData.timelimit = timelimit;
-        if (status !== undefined) updateData.status = quizstatus;
+        if (timeLimit !== undefined) updateData.timeLimit = timeLimit;
+        if (status !== undefined) updateData.status = quizStatus;
 
         // Update module
-        const updateQuiz = await Quiz.update(quizid, updateData);
+        const updateQuiz = await Quiz.update(quizID, updateData);
 
         res.json({
-            message: 'Module updated successfully',
-            module: {
-                quizid: newQuiz.quizid,
-                moduleid: newQuiz.moduleid,
-                title: newQuiz.title,
-                timelimit: newQuiz.timelimit,
-                status: newQuiz.status,
-                udpated_at: newQuiz.udpated_at
+            message: 'Quiz updated successfully',
+            quiz: {
+                quizid: updateQuiz.quizid,
+                moduleID: updateQuiz.moduleID,
+                title: updateQuiz.title,
+                timeLimit: updateQuiz.timeLimit,
+                status: updateQuiz.status,
+                udpated_at: updateQuiz.udpated_at
             }
         });
 
@@ -132,8 +132,8 @@ const update = async (req, res) => {
 
 const getQuiz = async (req, res) => {
     try {
-        const quizid = req.params.quizid;
-        const quiz = await Quiz.findById(quizid);
+        const quizID = req.params.quizID;
+        const quiz = await Quiz.findById(quizID);
         if (!quiz) {
             return res.status(400).json({
                 error: 'Invalid quiz id. Quiz not found.'
@@ -149,8 +149,8 @@ const getQuiz = async (req, res) => {
 }
 
 const getAllInModule = async (req, res) => {
-    const moduleid = req.params.moduleid;
-    const quiz = await Quiz.findByModule(moduleid);
+    const moduleID = req.params.moduleID;
+    const quiz = await Quiz.findByModule(moduleID);
     res.json(quiz);
 }
 

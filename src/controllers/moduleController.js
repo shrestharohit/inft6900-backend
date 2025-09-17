@@ -4,18 +4,18 @@ const { VALID_MODULE_STATUS } = require('../config/constants');
 
 const register = async (req, res) => {
     try {
-        const courseid = req.params.courseid;
-        const { title, description, modulenumber, expectedhours, status } = req.body;
+        const courseID = req.params.courseID;
+        const { title, description, moduleNumber, expectedHours, status } = req.body;
 
         // Validate course id is provided
-        if (!courseid) {
+        if (!courseID) {
             return res.status(400).json({ 
                 error: 'Course ID is required in header (courseID) or query parameter (courseID)' 
             });
         }
 
         // Basic validataion
-        if (!title || !modulenumber || !status) {
+        if (!title || !moduleNumber || !status) {
             return res.status(400).json({
                 error: 'Course ID, owner ID, title, and status are required'
             });
@@ -31,7 +31,7 @@ const register = async (req, res) => {
         }
 
         // Validate course ID
-        const moduleCourse = await Course.findById(courseid)
+        const moduleCourse = await Course.findById(courseID)
         if (!moduleCourse) {
             return res.status(400).json({
                 error: 'Invalid course ID. Course does not exist.'
@@ -39,14 +39,14 @@ const register = async (req, res) => {
         }
 
         // Validate module number
-        if (!modulenumber) {
+        if (!moduleNumber) {
             return res.status(400).json({
                 error: 'Module number is required.'
             });
         }
 
         // Check if module number is already used in the course
-        const existingModuleNumber = await Module.findByCourseIdModuleNumber(courseid, modulenumber)
+        const existingModuleNumber = await Module.findByCourseIdModuleNumber(courseID, moduleNumber)
         if (existingModuleNumber) {
             return res.status(400).json({
                 error: 'Selected module number already used in the selected course'
@@ -55,23 +55,23 @@ const register = async (req, res) => {
 
         // Create course
         const newModule = await Module.create({
-            courseid, 
+            courseID, 
             title, 
             description, 
-            modulenumber,
-            expectedhours,
+            moduleNumber,
+            expectedHours,
             status: moduleStatus
         });
 
         res.json({
             message: 'Module registered successfully',
             module: {
-                moduleid: newModule.moduleid,
-                courseid: newModule.courseid,
+                moduleID: newModule.moduleID,
+                courseID: newModule.courseID,
                 title: newModule.title,
                 description: newModule.description,
-                modulenumber: newModule.modulenumber,
-                expectedhours: newModule.expectedhours,
+                moduleNumber: newModule.moduleNumber,
+                expectedHours: newModule.expectedHours,
                 status: newModule.status,
             }
         })
@@ -86,12 +86,12 @@ const register = async (req, res) => {
 
 const update = async (req, res) => {
     try {
-        const courseid = req.params.courseid;
-        const moduleid = req.params.moduleid;
-        const { title, description, modulenumber, expectedhours, status } = req.body;
+        const courseID = req.params.courseID;
+        const moduleID = req.params.moduleID;
+        const { title, description, moduleNumber, expectedHours, status } = req.body;
 
         // Check if moduleID exists
-        const existingModule = await Module.findById(moduleid);
+        const existingModule = await Module.findById(moduleID);
         if (!existingModule) {
             return res.status(404).json({
                 error: 'Module not found'
@@ -99,25 +99,25 @@ const update = async (req, res) => {
         }
 
         // Validate courseId
-        if (!moduleid) {
+        if (!moduleID) {
             return res.status(400).json({
                 error: 'Module ID is required'
             });
         }
 
         // Check if courseId exists
-        const existingCourse = await Course.findById(courseid);
-        if (courseid !== undefined && !existingCourse) {
+        const existingCourse = await Course.findById(courseID);
+        if (courseID !== undefined && !existingCourse) {
             return res.status(404).json({
                 error: 'Course not found'
             });
         }
 
         // Check if module number is already used in the course
-        const currentModuleNumber = modulenumber !== undefined ? modulenumber : existingModule.modulenumber;
-        const existingModuleNumber = await Module.findByCourseIdModuleNumber(courseid, currentModuleNumber);
+        const currentModuleNumber = moduleNumber !== undefined ? moduleNumber : existingModule.moduleNumber;
+        const existingModuleNumber = await Module.findByCourseIdModuleNumber(courseID, currentModuleNumber);
 
-        if (existingModuleNumber && existingModuleNumber.moduleid !== parseInt(moduleid)) {
+        if (existingModuleNumber && existingModuleNumber.moduleID !== parseInt(moduleID)) {
             return res.status(400).json({
                 error: 'Selected module number already used in the selected course'
             });
@@ -135,22 +135,22 @@ const update = async (req, res) => {
         const updateData = {};
         if (title !== undefined) updateData.title = title;
         if (description !== undefined) updateData.description = description;
-        if (modulenumber !== undefined) updateData.modulenumber = modulenumber;
-        if (expectedhours !== undefined) updateData.expectedhours = expectedhours;
+        if (moduleNumber !== undefined) updateData.moduleNumber = moduleNumber;
+        if (expectedHours !== undefined) updateData.expectedHours = expectedHours;
         if (status !== undefined) updateData.status = modulestatus;
 
         // Update module
-        const updateModule = await Module.update(moduleid, updateData);
+        const updateModule = await Module.update(moduleID, updateData);
 
         res.json({
             message: 'Module updated successfully',
             module: {
-                moduleid: moduleid,
-                courseid: updateModule.courseid,
+                moduleID: moduleID,
+                courseID: updateModule.courseID,
                 title: updateModule.title,
                 description: updateModule.description,
-                modulenumber: updateModule.modulenumber,
-                expectedhours: updateModule.expectedhours,
+                moduleNumber: updateModule.moduleNumber,
+                expectedHours: updateModule.expectedHours,
                 status: updateModule.status,
             }
         });
@@ -163,8 +163,8 @@ const update = async (req, res) => {
 
 const getModule = async (req, res) => {
     try {
-        const moduleid = req.params.moduleid;
-        const module = await Module.findById(moduleid);
+        const moduleID = req.params.moduleID;
+        const module = await Module.findById(moduleID);
         if (!module) {
             return res.status(400).json({
                 error: 'Invalid module id. Module not found.'

@@ -12,9 +12,9 @@ const router = express.Router({ mergeParams: true });
 
 router.post("/register", register);
 
-router.put("/:moduleid", update);
+router.put("/:moduleID", update);
 
-router.get("/:moduleid", getModule);
+router.get("/:moduleID", getModule);
 
 router.post("/getAll", getAll);
 
@@ -22,7 +22,7 @@ router.post("/getAll", getAll);
 router.post("/getMeta", getMeta);
 
 // quiz routes
-router.use('/:moduleid/quiz', quizRoutes);
+router.use('/:moduleID/quiz', quizRoutes);
 
 
 
