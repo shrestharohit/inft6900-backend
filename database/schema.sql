@@ -58,7 +58,7 @@ CREATE TABLE "NotificationSetting" (
 CREATE TABLE "Pathway" (
     pathwayID SERIAL PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
-    description TEXT,
+    outline TEXT,
     createdDate DATE DEFAULT CURRENT_DATE
 );
 
@@ -66,8 +66,9 @@ CREATE TABLE "Course" (
     courseID SERIAL PRIMARY KEY,
     ownerID INT NOT NULL,
     title VARCHAR(150) NOT NULL,
+    category VARCHAR(150) NOT NULL, -- added by Hide
     level VARCHAR(50),
-    description TEXT,
+    outline TEXT,
     status VARCHAR(20),
     pathwayID INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -81,10 +82,13 @@ CREATE TABLE "Module" (
     courseID INT NOT NULL,
     title VARCHAR(150) NOT NULL,
     description TEXT,
+    moduleNumber INT UNIQUE NOT NULL,
+    expectedHours TIME,
     status VARCHAR(20),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (courseID) REFERENCES "Course"(courseID) ON DELETE CASCADE
+    FOREIGN KEY (courseID) REFERENCES "Course"(courseID) ON DELETE CASCADE,
+    UNIQUE ("courseid", "modulenumber")
 );
 
 -- ==================

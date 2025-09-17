@@ -2,13 +2,13 @@ const { pool } = require('../config/database');
 
 class Module {
     // Pathway to be added in Sprint 2
-    static async create({ courseid, title, description, status='draft' }) {
+    static async create({ courseid, title, description, modulenumber, status='draft' }) {
         const query = `
-            INSERT INTO "Module" ("courseid", "title", "description", "status", "created_at")
-            VALUES ($1, $2, $3, $4, NOW())
-            RETURNING "moduleid", "courseid", "title", "description", "status", "created_at"
+            INSERT INTO "Module" ("courseid", "title", "description", "modulenumber", "status", "created_at")
+            VALUES ($1, $2, $3, $4, $5, NOW())
+            RETURNING "moduleid", "courseid", "title", "description", "modulenumber", "status", "created_at"
         `;
-        const result = await pool.query(query, [courseid, title, description, status]);
+        const result = await pool.query(query, [courseid, title, description, modulenumber, status]);
         return result.rows[0];
     }
 
@@ -26,8 +26,16 @@ class Module {
         return result.rows[0];
     }
 
+    static async findByCourseIdModuleNumber(courseid, modulenumber) {
+        const query = `
+            SELECT * FROM "Module" WHERE "courseid" = $1 AND "modulenumber" = $2
+        `;
+        const result = await pool.query(query, [courseid, modulenumber]);
+        return result.rows[0];
+    }
+
     static async update(id, updateData) {
-        const allowedFields = ['courseid', 'title', 'description', 'status'];
+        const allowedFields = ['courseid', 'title', 'description', 'modulenumber', 'status'];
         const updates = [];
         const values = [];
         let paramCount = 1;
@@ -51,7 +59,7 @@ class Module {
             UPDATE "Module"
             SET ${updates.join(', ')}
             WHERE "moduleid" = $${paramCount}
-            RETURNING "moduleid", "courseid", "title", "description", "status", "updated_at"
+            RETURNING "moduleid", "courseid", "title", "description", "modulenumber", "status", "updated_at"
         `;
 
         const result = await pool.query(query, values);

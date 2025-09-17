@@ -2,13 +2,13 @@ const { pool } = require('../config/database');
 
 class Course {
     // Pathway to be added in Sprint 2
-    static async create({ ownerid, title, level, description, status='draft' }) {
+    static async create({ ownerid, title, category, level, outline, status='draft' }) {
         const query = `
-            INSERT INTO "Course" ("ownerid", "title", "level", "description", "status", "created_at")
-            VALUES ($1, $2, $3, $4, $5, NOW())
-            RETURNING "courseid", "ownerid", "title", "level", "description", "status", "created_at"
+            INSERT INTO "Course" ("ownerid", "title", "category", "level", "outline", "status", "created_at")
+            VALUES ($1, $2, $3, $4, $5, $6, NOW())
+            RETURNING "courseid", "ownerid", "title", "category", "outline", "status", "created_at"
         `;
-        const result = await pool.query(query, [ownerid, title, level, description, status]);
+        const result = await pool.query(query, [ownerid, title, category, level, outline, status]);
         return result.rows[0];
     }
 
@@ -26,6 +26,14 @@ class Course {
         return result.rows[0];
     }
 
+    static async findByCategory(category) {
+        const query = `
+            SELECT * FROM "Course" WHERE "category" = $1
+        `;
+        const result = await pool.query(query, [ownerid]);
+        return result.rows[0];
+    }
+
     static async findByOwnerId(ownerid) {
         const query = `
             SELECT * FROM "Course" WHERE "ownerid" = $1
@@ -35,7 +43,7 @@ class Course {
     }
 
     static async update(id, updateData) {
-        const allowedFields = ['ownerid', 'title', 'level', 'description', 'status'];
+        const allowedFields = ['ownerid', 'title', 'category', 'level', 'outline', 'status'];
         const updates = [];
         const values = [];
         let paramCount = 1;
@@ -59,11 +67,19 @@ class Course {
             UPDATE "Course"
             SET ${updates.join(', ')}
             WHERE "courseid" = $${paramCount}
-            RETURNING "courseid", "ownerid", "title", "level", "description", "status", "updated_at"
+            RETURNING "courseid", "ownerid", "title", "category", "level", "outline", "status", "updated_at"
         `;
 
         const result = await pool.query(query, values);
         return result.rows[0];
+    }
+
+    static async getAllCategories() {
+        const query = `
+            SELECT DISTINCT "category" FROM "Course"
+        `;
+        const result = await pool.query(query);
+        return result.rows;
     }
 
     static async getAll() {

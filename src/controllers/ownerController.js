@@ -20,7 +20,14 @@ const register = async (req, res) => {
       });
     }
 
-    // Check if owner actually exists
+    // Check if user role is CourseOwner
+    if (existingUser.role !== 'course_owner') {
+      return res.status(400).json({ 
+        error: 'User role must be course owner.' 
+      });
+    }
+
+    // Check if owner has already registered
     const existingOwner = await CourseOwner.findById(ownerid);
     if (existingOwner) {
       return res.status(400).json({ 
@@ -28,7 +35,7 @@ const register = async (req, res) => {
       });
     }
 
-    // Create user
+    // Create owner
     const newOwner = await CourseOwner.create({
       ownerid,
       department

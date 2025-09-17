@@ -1,5 +1,5 @@
 // Application Constants
-const VALID_USER_ROLES = ['student', 'course_instructor', 'admin'];
+const VALID_USER_ROLES = ['student', 'course_owner', 'admin'];
 
 const VALID_COURSE_STATUS = ['draft', 'wait_for_approval', 'active', 'inactive'];
 const VALID_COURSE_LEVEL = ['beginner', 'intermediate', 'advanced'];

@@ -4,10 +4,10 @@ const { VALID_MODULE_STATUS } = require('../config/constants');
 
 const register = async (req, res) => {
     try {
-        const { courseid, title, description, status } = req.body;
+        const { courseid, title, description, modulenumber, expectedhours, status } = req.body;
 
         // Basic validataion
-        if (!courseid || !title || !status) {
+        if (!courseid || !title || !modulenumber || !status) {
             return res.status(400).json({
                 error: 'Course ID, owner ID, title, and status are required'
             });
@@ -23,10 +23,25 @@ const register = async (req, res) => {
         }
 
         // Validate course ID
-        const moduleCourse = Course.findById(courseid)
+        const moduleCourse = await Course.findById(courseid)
         if (!moduleCourse) {
             return res.status(400).json({
                 error: 'Invalid course ID. Course does not exist.'
+            });
+        }
+
+        // Validate module number
+        if (!modulenumber) {
+            return res.status(400).json({
+                error: 'Module number is required.'
+            });
+        }
+
+        // Validate module number
+        const existingModuleNumber = await Module.findByCourseIdModuleNumber(courseid, modulenumber)
+        if (existingModuleNumber) {
+            return res.status(400).json({
+                error: 'Selected module number already used in the selected course'
             });
         }
 
@@ -35,6 +50,8 @@ const register = async (req, res) => {
             courseid, 
             title, 
             description, 
+            modulenumber,
+            expectedhours,
             status: moduleStatus
         });
 
@@ -45,6 +62,8 @@ const register = async (req, res) => {
                 courseid: newModule.courseid,
                 title: newModule.title,
                 description: newModule.description,
+                modulenumber: newModule.modulenumber,
+                expectedhours: newModule.expectedhours,
                 status: newModule.status,
             }
         })
@@ -59,7 +78,7 @@ const register = async (req, res) => {
 
 const update = async (req, res) => {
     try {
-        const { moduleid, courseid, title, description, status } = req.body;
+        const { moduleid, courseid, title, description, modulenumber, expectedhours, status } = req.body;
 
         // Check if moduleID exists
         const existingModule = await Module.findById(moduleid);
@@ -84,19 +103,43 @@ const update = async (req, res) => {
             });
         }
 
+        
+        // Validate module number
+        if (!modulenumber) {
+            return res.status(400).json({
+                error: 'Module number is required.'
+            });
+        }
+
+
+        // Validate module number
+        const currentCourseId = courseid !== undefined ? courseid : existingModule.courseid;
+        const currentModuleNumber = modulenumber !== undefined ? modulenumber : existingModule.modulenumber;
+        const existingModuleNumber = await Module.findByCourseIdModuleNumber(currentCourseId, currentModuleNumber);
+
+        if (existingModuleNumber && existingModuleNumber.moduleid !== parseInt(moduleid)) {
+            return res.status(400).json({
+                error: 'Selected module number already used in the selected course'
+            });
+        }
+
         // Validate status
-        moduleStatus = status;
-        if (moduleStatus !== undefined && !VALID_MODULE_STATUS.includes(moduleStatus)) {
+        modulestatus = status;
+        if (modulestatus !== undefined && !VALID_MODULE_STATUS.includes(modulestatus)) {
             return res.status(400).json({
                 error: `Invalid status. Must be:${VALID_MODULE_STATUS.join(', ')} `
             });
         }
 
+
+        
         // Prepare update data
         const updateData = {};
         if (title !== undefined) updateData.title = title;
         if (description !== undefined) updateData.description = description;
-        if (status !== undefined) updateData.status = moduleStatus;
+        if (modulenumber !== undefined) updateData.modulenumber = modulenumber;
+        if (expectedhours !== undefined) updateData.expectedhours = expectedhours;
+        if (status !== undefined) updateData.status = modulestatus;
 
         // Update module
         const updateModule = await Module.update(moduleid, updateData);
@@ -108,6 +151,8 @@ const update = async (req, res) => {
                 courseid: updateModule.courseid,
                 title: updateModule.title,
                 description: updateModule.description,
+                modulenumber: updateModule.modulenumber,
+                expectedhours: updateModule.expectedhours,
                 status: updateModule.status,
             }
         });

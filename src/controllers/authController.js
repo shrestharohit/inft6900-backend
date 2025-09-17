@@ -82,6 +82,7 @@ const register = async (req, res) => {
           requiresVerification: true
         });
       }
+      
 
       // Normal case
       res.status(201).json({
@@ -92,9 +93,9 @@ const register = async (req, res) => {
       });
 
     } else {
-      // Admin and course_instructor are automatically verified
+      // Admin and course_owner are automatically verified
       await User.markEmailVerified(email);
-      
+
       res.status(201).json({
         message: 'Registration successful! Your account is ready to use.',
         user: {
