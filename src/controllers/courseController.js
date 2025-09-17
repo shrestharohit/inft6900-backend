@@ -71,7 +71,8 @@ const register = async (req, res) => {
 
 const update = async (req, res) => {
     try {
-        const { courseid, ownerid, title, category, level, outline, status } = req.body;
+        const courseid = req.params.courseid;
+        const { ownerid, title, category, level, outline, status } = req.body;
 
         // Validate courseId
         if (!courseid) {
@@ -80,19 +81,19 @@ const update = async (req, res) => {
             });
         }
 
+        // Check if courseId exists
+        const existingCourse = await Course.findById(courseid);
+        if (!existingCourse) {
+            return res.status(404).json({
+                error: 'Course not found'
+            });
+        }
+
         // Validate owner id
         const existingOwner = CourseOwner.findById(ownerid)
         if (!existingOwner) {
             return res.status(400).json({
                 error: 'Invalid owner ID. Course Owner does not exist.'
-            });
-        }
-
-        // Check if courseId exists
-        const existingCourse = await Course.findById(courseid);
-        if (!existingCourse) {
-            return res.status(404).json({
-                error: 'User not found'
             });
         }
 
@@ -156,7 +157,7 @@ const getAll = async (req, res) => {
 }
 
 
-const getCourseMeta = (req, res) => {
+const getMeta = (req, res) => {
     res.json({
         status: VALID_COURSE_STATUS,
         level: VALID_COURSE_LEVEL
@@ -165,12 +166,12 @@ const getCourseMeta = (req, res) => {
 
 const getCourse = async (req, res) => {
   try {
-    const courseId = req.params.id || req.query.courseid; // Get courseid from header or query param
+    const courseId = req.params.courseid || req.query.courseid; // Get courseid from header or query param
 
-    // Validate userId is provided
+    // Validate course id is provided
     if (!courseId) {
       return res.status(400).json({ 
-        error: 'Course ID is required in header (userID) or query parameter (userId)' 
+        error: 'Course ID is required in header (courseID) or query parameter (courseID)' 
       });
     }
 
@@ -196,6 +197,6 @@ module.exports = {
   update,
   getAllCategories,
   getAll,
-  getCourseMeta,
+  getMeta,
   getCourse
 };

@@ -2,13 +2,13 @@ const { pool } = require('../config/database');
 
 class Quiz {
     // Pathway to be added in Sprint 2
-    static async create({ courseid, title, description, status = 'draft' }) {
+    static async create({ moduleid, title, timelimit, status }) {
         const query = `
-        INSERT INTO "Quiz" (courseid, title, description, status, created_at)
+        INSERT INTO "Quiz" (moduleid, title, timelimit, status, created_at)
         VALUES ($1, $2, $3, $4, NOW())
-        RETURNING quizid, courseid, title, description, status, created_at
+        RETURNING quizid, moduleid, title, timelimit, status, created_at
         `;
-        const result = await pool.query(query, [courseid, title, description, status]);
+        const result = await pool.query(query, [moduleid, title, timelimit, status]);
         return result.rows[0];
     }
 
@@ -18,14 +18,14 @@ class Quiz {
         return result.rows[0];
     }
 
-    static async findByCourse(courseid) {
-        const query = `SELECT * FROM "Quiz" WHERE courseid = $1 ORDER BY created_at DESC`;
-        const result = await pool.query(query, [courseid]);
+    static async findByModule(moduleid) {
+        const query = `SELECT * FROM "Quiz" WHERE moduleid = $1 ORDER BY created_at DESC`;
+        const result = await pool.query(query, [moduleid]);
         return result.rows;
     }
 
     static async update(quizid, updateData) {
-        const allowedFields = ['title', 'description', 'status'];
+        const allowedFields = ['title', 'timeLimit', 'status'];
         const updates = [];
         const values = [];
         let paramCount = 1;
@@ -47,7 +47,7 @@ class Quiz {
         UPDATE "Quiz"
         SET ${updates.join(', ')}
         WHERE quizid = $${paramCount}
-        RETURNING quizid, courseid, title, description, status, updated_at
+        RETURNING quizid, moduleid, title, timelimit, status, updated_at
         `;
         const result = await pool.query(query, values);
         return result.rows[0];

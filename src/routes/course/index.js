@@ -4,25 +4,29 @@ const {
   update,
   getAllCategories,
   getAll,
-  getCourseMeta,
+  getMeta,
   getCourse,
-} = require("../controllers/courseController");
+} = require("../../controllers/courseController");
+const moduleRoutes = require('./module');
+
 
 const router = express.Router();
 
 router.post("/register", register);
 
-router.post("/update", update);
+router.put("/:courseid", update);
 
 router.post("/getAllCategories", getAllCategories);
 
 router.post("/getAll", getAll);
 
 // Return valid status and level options
-router.post("/getCourseMeta", getCourseMeta);
+router.post("/getMeta", getMeta);
 
+router.get("/:courseid", getCourse);
 
-router.get("/:id", getCourse);
+// module routes
+router.use('/:courseid/module', moduleRoutes);
 
 
 module.exports = router;

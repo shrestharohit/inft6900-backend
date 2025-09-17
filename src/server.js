@@ -6,8 +6,9 @@ require('dotenv').config();
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const ownerRoutes = require('./routes/ownerRoutes');
-const courseRoutes = require('./routes/courseRoutes');
-const moduleRoutes = require('./routes/moduleRoutes');
+const courseRoutes = require('./routes/course');
+// const moduleRoutes = require('./routes/moduleRoutes');
+// const quizRoutes = require('./routes/course/quiz');
 
 // Import database connection
 const { connectDB } = require('./config/database');
@@ -44,7 +45,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/owner', ownerRoutes);
 app.use('/api/course', courseRoutes);
-app.use('/api/module', moduleRoutes);
+// app.use('/api/module', moduleRoutes);
+// app.use('/api/quiz', quizRoutes);
 
 // ✅ Health check
 app.get('/health', (req, res) => {
