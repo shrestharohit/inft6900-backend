@@ -1,30 +1,29 @@
 const { pool } = require('../config/database');
 
 class Quiz {
-    // Pathway to be added in Sprint 2
-    static async create({ moduleid, title, timelimit, status }) {
+    static async create({ moduleID, title, timeLimit, status }) {
         const query = `
-        INSERT INTO "Quiz" (moduleid, title, timelimit, status, created_at)
+        INSERT INTO "Quiz" ("moduleID", title, "timeLimit", "status", "created_at")
         VALUES ($1, $2, $3, $4, NOW())
-        RETURNING quizid, moduleid, title, timelimit, status, created_at
+        RETURNING "quizID", "moduleID", title, "timeLimit", "status", "created_at"
         `;
-        const result = await pool.query(query, [moduleid, title, timelimit, status]);
+        const result = await pool.query(query, [moduleID, title, timeLimit, status]);
         return result.rows[0];
     }
 
-    static async findById(quizid) {
-        const query = `SELECT * FROM "Quiz" WHERE quizid = $1`;
-        const result = await pool.query(query, [quizid]);
+    static async findById(quizID) {
+        const query = `SELECT * FROM "Quiz" WHERE "quizID" = $1`;
+        const result = await pool.query(query, [quizID]);
         return result.rows[0];
     }
 
-    static async findByModule(moduleid) {
-        const query = `SELECT * FROM "Quiz" WHERE moduleid = $1 ORDER BY created_at DESC`;
-        const result = await pool.query(query, [moduleid]);
+    static async findByModule(moduleID) {
+        const query = `SELECT * FROM "Quiz" WHERE "moduleID" = $1 ORDER BY "created_at" DESC`;
+        const result = await pool.query(query, [moduleID]);
         return result.rows;
     }
 
-    static async update(quizid, updateData) {
+    static async update(quizID, updateData) {
         const allowedFields = ['title', 'timeLimit', 'status'];
         const updates = [];
         const values = [];
@@ -40,18 +39,18 @@ class Quiz {
 
         if (updates.length === 0) throw new Error('No valid fields to update');
 
-        updates.push(`updated_at = NOW()`);
-        values.push(quizid);
+        updates.push(`"updated_at" = NOW()`);
+        values.push(quizID);
 
         const query = `
         UPDATE "Quiz"
         SET ${updates.join(', ')}
-        WHERE quizid = $${paramCount}
-        RETURNING quizid, moduleid, title, timelimit, status, updated_at
+        WHERE "quizID" = $${paramCount}
+        RETURNING "quizID", "moduleID", "title", "timeLimit", "status", "updated_at"
         `;
         const result = await pool.query(query, values);
         return result.rows[0];
     }
-    }
+}
 
 module.exports = Quiz;

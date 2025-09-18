@@ -2,13 +2,13 @@ const { pool } = require('../config/database');
 
 class CourseOwner {
     // Pathway to be added in Sprint 2
-    static async create({ ownerid, department }) {
+    static async create({ ownerID, department }) {
         const query = `
-            INSERT INTO "CourseOwner" ("ownerid", "department", "created_at")
+            INSERT INTO "CourseOwner" ("ownerID", "department", "created_at")
             VALUES ($1, $2, NOW())
-            RETURNING "ownerid", "department", "created_at"
+            RETURNING "ownerID", "department", "created_at"
         `;
-        const result = await pool.query(query, [ownerid, department]);
+        const result = await pool.query(query, [ownerID, department]);
         return result.rows[0];
     }
 
@@ -20,7 +20,7 @@ class CourseOwner {
 
     static async findById(id) {
         const query = `
-            SELECT * FROM "CourseOwner" WHERE "ownerid" = $1
+            SELECT * FROM "CourseOwner" WHERE "ownerID" = $1
         `;
         const result = await pool.query(query, [id]);
         return result.rows[0];
@@ -51,7 +51,7 @@ class CourseOwner {
             UPDATE "CourseOwner"
             SET ${updates.join(', ')}
             WHERE "courseid" = $${paramCount}
-            RETURNING "ownerid", "department", "updated_at"
+            RETURNING "ownerID", "department", "updated_at"
         `;
 
         const result = await pool.query(query, values);

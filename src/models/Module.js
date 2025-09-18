@@ -2,40 +2,40 @@ const { pool } = require('../config/database');
 
 class Module {
     // Pathway to be added in Sprint 2
-    static async create({ courseid, title, description, modulenumber, status='draft' }) {
+    static async create({ courseID, title, description, moduleNumber, expectedHours, status='draft' }) {
         const query = `
-            INSERT INTO "Module" ("courseid", "title", "description", "modulenumber", "status", "created_at")
-            VALUES ($1, $2, $3, $4, $5, NOW())
-            RETURNING "moduleid", "courseid", "title", "description", "modulenumber", "status", "created_at"
+            INSERT INTO "Module" ("courseID", "title", "description", "moduleNumber", "expectedHours", "status", "created_at")
+            VALUES ($1, $2, $3, $4, $5, $6, NOW())
+            RETURNING "moduleID", "courseID", "title", "description", "moduleNumber", "expectedHours", "status", "created_at"
         `;
-        const result = await pool.query(query, [courseid, title, description, modulenumber, status]);
+        const result = await pool.query(query, [courseID, title, description, moduleNumber, expectedHours, status]);
         return result.rows[0];
     }
 
-    static async findByCourseId(courseid) {
-        const query = 'SELECT * FROM "Module" WHERE "courseid" = $1';
-        const result = await pool.query(query, [courseid]);
+    static async findByCourseId(courseID) {
+        const query = 'SELECT * FROM "Module" WHERE "courseID" = $1';
+        const result = await pool.query(query, [courseID]);
         return result.rows;
     }
 
     static async findById(id) {
         const query = `
-            SELECT * FROM "Module" WHERE "moduleid" = $1
+            SELECT * FROM "Module" WHERE "moduleID" = $1
         `;
         const result = await pool.query(query, [id]);
         return result.rows[0];
     }
 
-    static async findByCourseIdModuleNumber(courseid, modulenumber) {
+    static async findByCourseIdModuleNumber(courseID, moduleNumber) {
         const query = `
-            SELECT * FROM "Module" WHERE "courseid" = $1 AND "modulenumber" = $2
+            SELECT * FROM "Module" WHERE "courseID" = $1 AND "moduleNumber" = $2
         `;
-        const result = await pool.query(query, [courseid, modulenumber]);
+        const result = await pool.query(query, [courseID, moduleNumber]);
         return result.rows[0];
     }
 
     static async update(id, updateData) {
-        const allowedFields = ['courseid', 'title', 'description', 'modulenumber', 'status'];
+        const allowedFields = ['courseID', 'title', 'description', 'moduleNumber', 'expectedHours', 'status'];
         const updates = [];
         const values = [];
         let paramCount = 1;
@@ -58,8 +58,8 @@ class Module {
         const query = `
             UPDATE "Module"
             SET ${updates.join(', ')}
-            WHERE "moduleid" = $${paramCount}
-            RETURNING "moduleid", "courseid", "title", "description", "modulenumber", "status", "updated_at"
+            WHERE "moduleID" = $${paramCount}
+            RETURNING "moduleID", "courseID", "title", "description", "moduleNumber", "expectedHours", "status", "updated_at"
         `;
 
         const result = await pool.query(query, values);

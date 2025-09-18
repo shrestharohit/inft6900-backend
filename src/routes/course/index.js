@@ -14,7 +14,7 @@ const router = express.Router();
 
 router.post("/register", register);
 
-router.put("/:courseid", update);
+router.put("/:courseID", update);
 
 router.post("/getAllCategories", getAllCategories);
 
@@ -23,10 +23,10 @@ router.post("/getAll", getAll);
 // Return valid status and level options
 router.post("/getMeta", getMeta);
 
-router.get("/:courseid", getCourse);
+router.get("/:courseID", getCourse);
 
 // module routes
-router.use('/:courseid/module', moduleRoutes);
+router.use('/:courseID/module', moduleRoutes);
 
 
 module.exports = router;

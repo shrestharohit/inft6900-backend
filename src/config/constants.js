@@ -5,8 +5,9 @@ const VALID_COURSE_STATUS = ['draft', 'wait_for_approval', 'active', 'inactive']
 const VALID_COURSE_LEVEL = ['beginner', 'intermediate', 'advanced'];
 
 const VALID_MODULE_STATUS = ['draft', 'wait_for_approval', 'active', 'inactive'];
-
 const VALID_QUIZ_STATUS = ['draft', 'wait_for_approval', 'active', 'inactive'];
+const VALID_QUESTION_STATUS = ['active', 'inactive'];
+const VALID_OPTION_STATUS = ['active', 'inactive'];
 
 const VALID_CONTENT_STATUS = ['draft', 'wait_for_approval', 'active', 'inactive'];
 
@@ -17,4 +18,6 @@ module.exports = {
   VALID_MODULE_STATUS,
   VALID_QUIZ_STATUS,
   VALID_CONTENT_STATUS,
+  VALID_QUESTION_STATUS,
+  VALID_OPTION_STATUS,
 };

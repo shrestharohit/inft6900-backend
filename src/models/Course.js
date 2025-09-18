@@ -2,13 +2,13 @@ const { pool } = require('../config/database');
 
 class Course {
     // Pathway to be added in Sprint 2
-    static async create({ ownerid, title, category, level, outline, status='draft' }) {
+    static async create({ ownerID, title, category, level, outline, status='draft' }) {
         const query = `
-            INSERT INTO "Course" ("ownerid", "title", "category", "level", "outline", "status", "created_at")
+            INSERT INTO "Course" ("ownerID", "title", "category", "level", "outline", "status", "created_at")
             VALUES ($1, $2, $3, $4, $5, $6, NOW())
-            RETURNING "courseid", "ownerid", "title", "category", "outline", "status", "created_at"
+            RETURNING "courseID", "ownerID", "title", "category", "outline", "status", "created_at"
         `;
-        const result = await pool.query(query, [ownerid, title, category, level, outline, status]);
+        const result = await pool.query(query, [ownerID, title, category, level, outline, status]);
         return result.rows[0];
     }
 
@@ -20,7 +20,7 @@ class Course {
 
     static async findById(id) {
         const query = `
-            SELECT * FROM "Course" WHERE "courseid" = $1
+            SELECT * FROM "Course" WHERE "courseID" = $1
         `;
         const result = await pool.query(query, [id]);
         return result.rows[0];
@@ -30,20 +30,20 @@ class Course {
         const query = `
             SELECT * FROM "Course" WHERE "category" = $1
         `;
-        const result = await pool.query(query, [ownerid]);
+        const result = await pool.query(query, [ownerID]);
         return result.rows[0];
     }
 
-    static async findByOwnerId(ownerid) {
+    static async findByOwnerId(ownerID) {
         const query = `
-            SELECT * FROM "Course" WHERE "ownerid" = $1
+            SELECT * FROM "Course" WHERE "ownerID" = $1
         `;
-        const result = await pool.query(query, [ownerid]);
+        const result = await pool.query(query, [ownerID]);
         return result.rows[0];
     }
 
     static async update(id, updateData) {
-        const allowedFields = ['ownerid', 'title', 'category', 'level', 'outline', 'status'];
+        const allowedFields = ['ownerID', 'title', 'category', 'level', 'outline', 'status'];
         const updates = [];
         const values = [];
         let paramCount = 1;
@@ -66,8 +66,8 @@ class Course {
         const query = `
             UPDATE "Course"
             SET ${updates.join(', ')}
-            WHERE "courseid" = $${paramCount}
-            RETURNING "courseid", "ownerid", "title", "category", "level", "outline", "status", "updated_at"
+            WHERE "courseID" = $${paramCount}
+            RETURNING "courseID", "ownerID", "title", "category", "level", "outline", "status", "updated_at"
         `;
 
         const result = await pool.query(query, values);
