@@ -7,6 +7,7 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const ownerRoutes = require('./routes/ownerRoutes');
 const courseRoutes = require('./routes/course');
+const contentRoutes = require('./routes/course/module/content/contentRoutes');
 // const moduleRoutes = require('./routes/moduleRoutes');
 // const quizRoutes = require('./routes/course/quiz');
 
@@ -45,6 +46,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/owner', ownerRoutes);
 app.use('/api/course', courseRoutes);
+app.use('/api/content', contentRoutes);
 // app.use('/api/module', moduleRoutes);
 // app.use('/api/quiz', quizRoutes);
 

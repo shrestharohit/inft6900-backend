@@ -8,10 +8,13 @@ const VALID_MODULE_STATUS = ['draft', 'wait_for_approval', 'active', 'inactive']
 
 const VALID_QUIZ_STATUS = ['draft', 'wait_for_approval', 'active', 'inactive'];
 
+const VALID_CONTENT_STATUS = ['draft', 'wait_for_approval', 'active', 'inactive'];
+
 module.exports = {
   VALID_USER_ROLES,
   VALID_COURSE_STATUS,
   VALID_COURSE_LEVEL,
   VALID_MODULE_STATUS,
   VALID_QUIZ_STATUS,
+  VALID_CONTENT_STATUS,
 };

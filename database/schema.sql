@@ -63,7 +63,7 @@ CREATE TABLE "Pathway" (
 );
 
 CREATE TABLE "Course" (
-    courseID SERIAL PRIMARY KEY,
+    courseid SERIAL PRIMARY KEY,
     ownerID INT NOT NULL,
     title VARCHAR(150) NOT NULL,
     category VARCHAR(150) NOT NULL, -- added by Hide
@@ -78,16 +78,16 @@ CREATE TABLE "Course" (
 );
 
 CREATE TABLE "Module" (
-    moduleID SERIAL PRIMARY KEY,
-    courseID INT NOT NULL,
+    moduleid SERIAL PRIMARY KEY,
+    courseid INT NOT NULL,
     title VARCHAR(150) NOT NULL,
     description TEXT,
-    moduleNumber INT UNIQUE NOT NULL,
+    modulenumber INT UNIQUE NOT NULL,
     expectedHours TIME,
     status VARCHAR(20),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (courseID) REFERENCES "Course"(courseID) ON DELETE CASCADE,
+    FOREIGN KEY (courseid) REFERENCES "Course"(courseid) ON DELETE CASCADE,
     UNIQUE ("courseid", "modulenumber")
 );
 
@@ -112,40 +112,41 @@ CREATE TABLE "Enrolment" (
 );
 
 CREATE TABLE "ModuleAccess" (
-    accessID SERIAL PRIMARY KEY,
-    moduleID INT NOT NULL,
-    studentID INT NOT NULL,
-    accessDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    accessid SERIAL PRIMARY KEY,
+    moduleid INT NOT NULL,
+    studentid INT NOT NULL,
+    accessdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     duration INTERVAL,
-    FOREIGN KEY (moduleID) REFERENCES "Module"(moduleID) ON DELETE CASCADE,
-    FOREIGN KEY (studentID) REFERENCES "Student"(studentID) ON DELETE CASCADE
+    FOREIGN KEY (moduleid) REFERENCES "Module"(moduleid) ON DELETE CASCADE,
+    FOREIGN KEY (studentid) REFERENCES "Student"(studentid) ON DELETE CASCADE
 );
 
 -- ==================
 -- CONTENT & QUIZZES
 -- ==================
 CREATE TABLE "Content" (
-    contentID SERIAL PRIMARY KEY,
-    moduleID INT NOT NULL,
+    contentid SERIAL PRIMARY KEY,
+    moduleid INT NOT NULL,
     title VARCHAR(150),
     description TEXT,
-    contentType VARCHAR(50),
-    pageNumber INT,
+    status VARCHAR(50),
+    contenttype VARCHAR(50),
+    pagenumber INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (moduleID) REFERENCES "Module"(moduleID) ON DELETE CASCADE
+    FOREIGN KEY (moduleid) REFERENCES "Module"(moduleid) ON DELETE CASCADE
 );
 
 CREATE TABLE "Quiz" (
-    quizID SERIAL PRIMARY KEY,
-    moduleID INT NOT NULL,
+    quizid SERIAL PRIMARY KEY,
+    moduleid INT NOT NULL,
     title VARCHAR(150),
     -- totalMarks INT,
     timeLimit TIME,
     status VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (moduleID) REFERENCES "Module"(moduleID) ON DELETE CASCADE
+    FOREIGN KEY (moduleid) REFERENCES "Module"(moduleid) ON DELETE CASCADE
 );
 
 CREATE TABLE "Question" (
