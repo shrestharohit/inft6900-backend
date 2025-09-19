@@ -12,14 +12,14 @@ const register = async (req, res) => {
             return res.status(400).json({ 
                 error: 'Course ID is required in header (courseID) or query parameter (courseID)' 
             });
-        }
+        };
 
         // Basic validataion
         if (!title || !moduleNumber || !status) {
             return res.status(400).json({
                 error: 'Course ID, owner ID, title, and status are required'
             });
-        }
+        };
 
         // Validate status
         const moduleStatus = status || 'draft'
@@ -28,7 +28,7 @@ const register = async (req, res) => {
             return res.status(400).json({
                 error: `Invalid status. Must be:${VALID_MODULE_STATUS.join(', ')} `
             });
-        }
+        };
 
         // Validate course ID
         const moduleCourse = await Course.findById(courseID)
@@ -36,14 +36,14 @@ const register = async (req, res) => {
             return res.status(400).json({
                 error: 'Invalid course ID. Course does not exist.'
             });
-        }
+        };
 
         // Validate module number
         if (!moduleNumber) {
             return res.status(400).json({
                 error: 'Module number is required.'
             });
-        }
+        };
 
         // Check if module number is already used in the course
         const existingModuleNumber = await Module.findByCourseIdModuleNumber(courseID, moduleNumber)
@@ -51,7 +51,7 @@ const register = async (req, res) => {
             return res.status(400).json({
                 error: 'Selected module number already used in the selected course'
             });
-        }
+        };
 
         // Create course
         const newModule = await Module.create({

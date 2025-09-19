@@ -13,17 +13,15 @@ const router = express.Router({ mergeParams: true });
 
 router.post("/register", register);
 
-router.put("/:quizID", update);
+router.put("/", update);
 
-router.get("/:quizID", getQuiz);
-
-router.post("/getAll", getAllInModule);
+router.get("/", getQuiz);
 
 // Return valid status options
 router.post("/getMeta", getMeta);
 
 
-router.use('/:quizID/question', questionRoutes);
+router.use('/question', questionRoutes);
 
 
 module.exports = router;

@@ -68,24 +68,10 @@ const register = async (req, res) => {
 
 const update = async (req, res) => {
     try {
+        // To shorten the API route, use module ID to get the quiz.
+        // Each module can only have 1 quiz, so this works.
         const moduleID = req.params.moduleID;
-        const quizID = req.params.quizID;
         const { title, timeLimit, status } = req.body;
-
-        // Check if quiz ID exists
-        const existinQuiz = await Quiz.findById(quizID);
-        if (!existinQuiz) {
-            return res.status(404).json({
-                error: 'Quiz not found'
-            });
-        };
-
-        // Validate quizid
-        if (!quizID) {
-            return res.status(400).json({
-                error: 'Quiz ID is required'
-            });
-        }
 
         // Check if moduleID exists
         const existingModule = await Module.findById(moduleID);
@@ -94,6 +80,14 @@ const update = async (req, res) => {
                 error: 'Module not found'
             });
         }
+
+        // Check if quiz under the selected module exists
+        const existingQuiz = await Quiz.findByModule(moduleID);
+        if (!existingQuiz) {
+            return res.status(404).json({
+                error: 'Quiz not found'
+            });
+        };
 
         // Validate status
         const quizStatus = status;
@@ -105,6 +99,7 @@ const update = async (req, res) => {
         
         // Prepare update data
         const updateData = {};
+        const quizID = existingQuiz.quizID;
         if (title !== undefined) updateData.title = title;
         if (timeLimit !== undefined) updateData.timeLimit = timeLimit;
         if (status !== undefined) updateData.status = quizStatus;
@@ -115,7 +110,7 @@ const update = async (req, res) => {
         res.json({
             message: 'Quiz updated successfully',
             quiz: {
-                quizid: updateQuiz.quizid,
+                quizID: updateQuiz.quizID,
                 moduleID: updateQuiz.moduleID,
                 title: updateQuiz.title,
                 timeLimit: updateQuiz.timeLimit,
@@ -132,8 +127,10 @@ const update = async (req, res) => {
 
 const getQuiz = async (req, res) => {
     try {
-        const quizID = req.params.quizID;
-        const quiz = await Quiz.findById(quizID);
+        // To shorten the API route, use module ID to get the quiz.
+        // Each module can only have 1 quiz, so this works.
+        const moduleID = req.params.moduleID;
+        const quiz = await Quiz.findByModule(moduleID);
         if (!quiz) {
             return res.status(400).json({
                 error: 'Invalid quiz id. Quiz not found.'
@@ -148,12 +145,6 @@ const getQuiz = async (req, res) => {
     }
 }
 
-const getAllInModule = async (req, res) => {
-    const moduleID = req.params.moduleID;
-    const quiz = await Quiz.findByModule(moduleID);
-    res.json(quiz);
-}
-
 
 const getMeta = (req, res) => {
     res.json({
@@ -166,6 +157,5 @@ module.exports = {
   register,
   update,
   getQuiz,
-  getAllInModule,
   getMeta,
 };
