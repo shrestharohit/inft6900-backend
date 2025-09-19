@@ -10,19 +10,20 @@ const quizRoutes = require('./quiz');
 
 const router = express.Router({ mergeParams: true });
 
+// Return valid status options
+router.get("/_meta", getMeta);
+
+router.get("/", getAll);
+
 router.post("/register", register);
 
-router.put("/:moduleID", update);
+router.put("/:moduleNumber", update);
 
-router.get("/:moduleID", getModule);
+router.get("/:moduleNumber", getModule);
 
-router.post("/getAll", getAll);
-
-// Return valid status options
-router.post("/getMeta", getMeta);
 
 // quiz routes
-router.use('/:moduleID/quiz', quizRoutes);
+router.use('/:moduleNumber/quiz', quizRoutes);
 
 
 

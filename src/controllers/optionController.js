@@ -1,24 +1,38 @@
 const Question = require('../models/Question');
 const AnswerOption = require('../models/AnswerOption');
+const Quiz = require('../models/Quiz');
+const Module = require('../models/Module');
 const { VALID_OPTION_STATUS } = require('../config/constants');
 
 const register = async (req, res) => {
     try {
-        const questionID = req.params.questionID;
+        const questionNumber = req.params.questionNumber;
+        const moduleNumber = req.params.moduleNumber;
+        const courseID = req.params.courseID;
+
         const { optionText, isCorrect, optionOrder, feedbackText, status } = req.body;
 
-        // Validate question id is provided
-        if (!questionID) {
-            return res.status(400).json({ 
-                error: 'Question ID is required in header (questionID) or query parameter (questionID)'
+        // Validate course ID and module Number
+        const module = await Module.findByCourseIdModuleNumber(courseID, moduleNumber);
+        if (!module) {
+            return res.status(400).json({
+                error: 'Invalid course ID and module number. Module not found.'
+            });
+        };
+
+        // Check if quiz is already created for the module
+        const quiz = await Quiz.findByModule(module.moduleID);
+        if (!quiz) {
+            return res.status(400).json({
+                error: 'Invalid quiz number. Quiz not found.'
             });
         }
 
-        // Validate module ID
-        const optionQuestion = await Question.findById(questionID);
-        if (!optionQuestion) {
+        // Check if question is already created for the module
+        const question = await Question.findByQuizIdQuestionNumber(quiz.quizID, questionNumber);
+        if (!question) {
             return res.status(400).json({
-                error: 'Invalid question ID. Question does not exist.'
+                error: 'Invalid question number. Question not found.'
             });
         }
 
@@ -30,7 +44,7 @@ const register = async (req, res) => {
         }
 
         // Validate if question number is already used in the same quiz
-        const existingoptionOrder = await AnswerOption.findByQuestionIdOptionOrder(questionID, optionOrder);
+        const existingoptionOrder = await AnswerOption.findByQuestionIdOptionOrder(question.questionID, optionOrder);
         if (existingoptionOrder) {
             return res.status(400).json({
                 error: 'Selected option order already used in the selected question'
@@ -38,7 +52,7 @@ const register = async (req, res) => {
         };
 
         // Validate if there are no multiple correct answers in question
-        const existingCorrectOption = await AnswerOption.findAnswerForQuestion(questionID);
+        const existingCorrectOption = await AnswerOption.findAnswerForQuestion(question.questionID);
         if (existingCorrectOption && isCorrect == true) {
             return res.status(400).json({
                 error: 'Selected question already has correct answer'
@@ -56,12 +70,12 @@ const register = async (req, res) => {
 
         // Create course
         const newOption = await AnswerOption.create({
-            questionID, 
+            questionID: question.questionID, 
             optionText,
             isCorrect, 
             optionOrder, 
             feedbackText, 
-            status
+            status: optionStatus
         });
 
         res.json({
@@ -87,45 +101,55 @@ const register = async (req, res) => {
 
 const update = async (req, res) => {
     try {
-        const questionID = req.params.questionID;
-        const optionID = req.params.optionID;
-        const { qoptionText, isCorrect, optionOrder, feedbackText, status } = req.body;
+        const currentOptionOrder = req.params.optionOrder;
+        const questionNumber = req.params.questionNumber;
+        const moduleNumber = req.params.moduleNumber;
+        const courseID = req.params.courseID;
+        
+        const { optionOrder, optionText, isCorrect, feedbackText, status } = req.body;
 
-        // Validate option ID
-        if (!optionID) {
+        // Validate course ID and module Number
+        const module = await Module.findByCourseIdModuleNumber(courseID, moduleNumber);
+        if (!module) {
             return res.status(400).json({
-                error: 'Option ID is required'
+                error: 'Invalid course ID and module number. Module not found.'
             });
         };
 
-        // Check if option ID exists
-        const existingOption = await AnswerOption.findById(optionID);
+        // Check if quiz is already created for the module
+        const quiz = await Quiz.findByModule(module.moduleID);
+        if (!quiz) {
+            return res.status(400).json({
+                error: 'Invalid quiz number. Quiz not found.'
+            });
+        }
+
+        // Check if question is already created for the module
+        const question = await Question.findByQuizIdQuestionNumber(quiz.quizID, questionNumber);
+        if (!question) {
+            return res.status(400).json({
+                error: 'Invalid question number. Question not found.'
+            });
+        }
+
+        // Validate if option exists in the quiz
+        const existingOption = await AnswerOption.findByQuestionIdOptionOrder(question.questionID, currentOptionOrder);
         if (!existingOption) {
-            return res.status(404).json({
-                error: 'Answer option not found'
-            });
-        };
-
-        // Check if question exists
-        const existingQuestion = await Question.findById(questionID);
-        if (questionID !== undefined && !existingQuestion) {
-            return res.status(404).json({
-                error: 'Question not found'
+            return res.status(400).json({
+                error: 'Invalid option order. Answer option not found.'
             });
         };
 
         // Validate if question number is already used in the same quiz
-        const currentoptionOrder = optionOrder !== undefined ? optionOrder : existingOption.optionOrder;
-        const existingoptionOrder = await AnswerOption.findByQuestionIdOptionOrder(questionID, currentoptionOrder);
-
-        if (existingoptionOrder && existingoptionOrder.optionID !== parseInt(optionID)) {
+        const isUsedOptionOrder = !!(await AnswerOption.findByQuestionIdOptionOrder(question.questionID, currentOptionOrder));
+        if (optionOrder && optionOrder !== parseInt(currentOptionOrder) && isUsedOptionOrder) {
             return res.status(400).json({
                 error: 'Selected option order already used in the selected question'
             });
         };
 
         // Validate if there are no multiple correct answers in question
-        const existingCorrectOption = await AnswerOption.findAnswerForQuestion(questionID);
+        const existingCorrectOption = await AnswerOption.findAnswerForQuestion(question.questionID);
         if (existingCorrectOption && existingOption.isCorrect == false && isCorrect == true) {
             return res.status(400).json({
                 error: 'Selected question already has correct answer'
@@ -142,18 +166,18 @@ const update = async (req, res) => {
         
         // Prepare update data
         const updateData = {};
-        if (qoptionText !== undefined) updateData.optiontext = qoptionText;
+        if (optionText !== undefined) updateData.optiontext = optionText;
         if (isCorrect !== undefined) updateData.isCorrect = isCorrect;
         if (optionOrder !== undefined) updateData.optionOrder = optionOrder;
         if (feedbackText !== undefined) updateData.feedbackText = feedbackText;
         if (status !== undefined) updateData.status = optionStatus;
 
         // Update module
-        const updateOption = await AnswerOption.update(optionID, updateData);
+        const updateOption = await AnswerOption.update(existingOption.optionID, updateData);
 
         res.json({
             message: 'Answer option updated successfully',
-            module: {
+            option: {
                 optionID: updateOption.optionID,
                 optiontext: updateOption.optiontext,
                 isCorrect: updateOption.isCorrect,
@@ -165,19 +189,47 @@ const update = async (req, res) => {
         });
 
     } catch(error) {
-        console.error('Update question error:', error);
+        console.error('Update option error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };
 
 const getOption = async (req, res) => {
     try {
-        const optionID = req.params.optionID;
-        const option = await Question.findById(optionID);
+        const optionOrder = req.params.optionOrder;
+        const questionNumber = req.params.questionNumber;
+        const moduleNumber = req.params.moduleNumber;
+        const courseID = req.params.courseID;
+        
+        // Validate course ID and module Number
+        const module = await Module.findByCourseIdModuleNumber(courseID, moduleNumber);
+        if (!module) {
+            return res.status(400).json({
+                error: 'Invalid course ID and module number. Module not found.'
+            });
+        };
+
+        // Check if quiz is already created for the module
+        const quiz = await Quiz.findByModule(module.moduleID);
+        if (!quiz) {
+            return res.status(400).json({
+                error: 'Invalid quiz number. Quiz not found.'
+            });
+        }
+
+        // Check if question is already created for the module
+        const question = await Question.findByQuizIdQuestionNumber(quiz.quizID, questionNumber);
+        if (!question) {
+            return res.status(400).json({
+                error: 'Invalid question number. Question not found.'
+            });
+        }
+
+        const option = await AnswerOption.findByQuestionIdOptionOrder(question.questionID, optionOrder);
 
         if (!option) {
             return res.status(400).json({
-                error: 'Invalid option id. Option not found.'
+                error: 'Invalid option order. Option not found.'
             });
         }
 
@@ -190,16 +242,81 @@ const getOption = async (req, res) => {
 }
 
 const getAllInQuestion = async (req, res) => {
-    const questionID = req.params.questionID;
-    const options = await AnswerOption.findByquestionID(questionID);
-    res.json(options);
+    try {
+        const questionNumber = req.params.questionNumber;
+        const moduleNumber = req.params.moduleNumber;
+        const courseID = req.params.courseID;
+        
+        // Validate course ID and module Number
+        const module = await Module.findByCourseIdModuleNumber(courseID, moduleNumber);
+        if (!module) {
+            return res.status(400).json({
+                error: 'Invalid course ID and module number. Module not found.'
+            });
+        };
+
+        // Check if quiz is already created for the module
+        const quiz = await Quiz.findByModule(module.moduleID);
+        if (!quiz) {
+            return res.status(400).json({
+                error: 'Invalid quiz number. Quiz not found.'
+            });
+        }
+
+        // Check if question is already created for the module
+        const question = await Question.findByQuizIdQuestionNumber(quiz.quizID, questionNumber);
+        if (!question) {
+            return res.status(400).json({
+                error: 'Invalid question number. Question not found.'
+            });
+        }
+
+        const options = await AnswerOption.findByQuestionID(question.questionID);
+        res.json(options);
+
+    } catch(error) {
+        console.error('Get all options error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 };
 
 
 const getAnswerInQuestion = async (req, res) => {
-    const questionID = req.params.questionID;
-    const options = await AnswerOption.findAnswerForQuestion(questionID);
-    res.json(options);
+    try {
+        const questionNumber = req.params.questionNumber;
+        const moduleNumber = req.params.moduleNumber;
+        const courseID = req.params.courseID;
+        
+        // Validate course ID and module Number
+        const module = await Module.findByCourseIdModuleNumber(courseID, moduleNumber);
+        if (!module) {
+            return res.status(400).json({
+                error: 'Invalid course ID and module number. Module not found.'
+            });
+        };
+
+        // Check if quiz is already created for the module
+        const quiz = await Quiz.findByModule(module.moduleID);
+        if (!quiz) {
+            return res.status(400).json({
+                error: 'Invalid quiz number. Quiz not found.'
+            });
+        }
+
+        // Check if question is already created for the module
+        const question = await Question.findByQuizIdQuestionNumber(quiz.quizID, questionNumber);
+        if (!question) {
+            return res.status(400).json({
+                error: 'Invalid question number. Question not found.'
+            });
+        }
+        
+        const option = await AnswerOption.findAnswerForQuestion(question.questionID);
+        res.json(option);
+    } catch(error) {
+        console.error('Get answer error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 };
 
 const getMeta = (req, res) => {

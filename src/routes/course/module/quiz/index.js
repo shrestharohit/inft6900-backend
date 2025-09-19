@@ -11,15 +11,14 @@ const questionRoutes = require('./question')
 
 const router = express.Router({ mergeParams: true });
 
+// Return valid status options
+router.get("/_meta", getMeta);
+
 router.post("/register", register);
 
 router.put("/", update);
 
 router.get("/", getQuiz);
-
-// Return valid status options
-router.post("/getMeta", getMeta);
-
 
 router.use('/question', questionRoutes);
 

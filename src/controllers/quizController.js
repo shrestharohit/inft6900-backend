@@ -2,46 +2,58 @@ const Module = require('../models/Module');
 const Quiz = require('../models/Quiz');
 const { VALID_QUIZ_STATUS } = require('../config/constants');
 
+// To shorten the API route, use module ID to get the quiz.
+// Each module can only have 1 quiz, so this works.
+
 const register = async (req, res) => {
     try {
-        const moduleID = req.params.moduleID;
+        const courseID = req.params.courseID;
+        const moduleNumber = req.params.moduleNumber;
         const { title, timeLimit, status } = req.body;
 
         // Validate course id is provided
-        if (!moduleID) {
+        if (!moduleNumber) {
             return res.status(400).json({ 
-                error: 'Module ID is required in header (moduleID) or query parameter (moduleID)' 
+                error: 'Module number is required.' 
             });
-        }
+        };
 
         // Basic validataion
         if (!title || !status) {
             return res.status(400).json({
                 error: 'Title and status are required'
             });
-        }
+        };
 
         // Validate status
-        const quizStatus = status || 'draft'
+        const quizStatus = status || 'draft';
 
         if (!VALID_QUIZ_STATUS.includes(quizStatus)) {
             return res.status(400).json({
                 error: `Invalid status. Must be:${VALID_QUIZ_STATUS.join(', ')} `
             });
-        }
+        };
 
         // Validate module ID
-        const quizModule = await Module.findById(moduleID)
+        const quizModule = await Module.findByCourseIdModuleNumber(courseID, moduleNumber);
         if (!quizModule) {
             return res.status(400).json({
-                error: 'Invalid module ID. Module does not exist.'
+                error: 'Invalid course ID and module number. Module not found.'
+            });
+        };
+
+        // Check if there is already a quiz created for the module
+        const exists = !!(await Quiz.findByModule(quizModule.moduleID));
+        if (exists) {
+            return res.status(400).json({
+                error: 'Quiz already exists. Each module can only have 1 quiz.'
             });
         }
 
         // Create course
         const newQuiz = await Quiz.create({
-            moduleID, 
-            title, 
+            moduleID: quizModule.moduleID, 
+            title,
             timeLimit, 
             status: quizStatus
         });
@@ -68,21 +80,27 @@ const register = async (req, res) => {
 
 const update = async (req, res) => {
     try {
-        // To shorten the API route, use module ID to get the quiz.
-        // Each module can only have 1 quiz, so this works.
-        const moduleID = req.params.moduleID;
+        const courseID = req.params.courseID;
+        const moduleNumber = req.params.moduleNumber;
         const { title, timeLimit, status } = req.body;
 
-        // Check if moduleID exists
-        const existingModule = await Module.findById(moduleID);
-        if (moduleID !== undefined && !existingModule) {
+        // Validate course number is provided
+        if (!moduleNumber) {
+            return res.status(400).json({ 
+                error: 'Module number is required.' 
+            });
+        };
+
+        // Validate module number and course ID
+        const existingModule = await Module.findByCourseIdModuleNumber(courseID, moduleNumber);
+        if (moduleNumber !== undefined && !existingModule) {
             return res.status(404).json({
-                error: 'Module not found'
+                error: 'Invalid course ID and module number. Module not found.'
             });
         }
 
         // Check if quiz under the selected module exists
-        const existingQuiz = await Quiz.findByModule(moduleID);
+        const existingQuiz = await Quiz.findByModule(existingModule.moduleID);
         if (!existingQuiz) {
             return res.status(404).json({
                 error: 'Quiz not found'
@@ -96,7 +114,7 @@ const update = async (req, res) => {
                 error: `Invalid status. Must be:${VALID_QUIZ_STATUS.join(', ')} `
             });
         }
-        
+
         // Prepare update data
         const updateData = {};
         const quizID = existingQuiz.quizID;
@@ -129,11 +147,22 @@ const getQuiz = async (req, res) => {
     try {
         // To shorten the API route, use module ID to get the quiz.
         // Each module can only have 1 quiz, so this works.
-        const moduleID = req.params.moduleID;
-        const quiz = await Quiz.findByModule(moduleID);
+        const moduleNumber = req.params.moduleNumber;
+        const courseID = req.params.courseID;
+
+        // Validate course ID and module Number
+        const module = await Module.findByCourseIdModuleNumber(courseID, moduleNumber);
+        if (!module) {
+            return res.status(400).json({
+                error: 'Invalid course ID and module number. Module not found.'
+            });
+        };
+
+        // Check if quiz is already created for the module
+        const quiz = await Quiz.findByModule(module.moduleID);
         if (!quiz) {
             return res.status(400).json({
-                error: 'Invalid quiz id. Quiz not found.'
+                error: 'Quiz not found.'
             });
         }
 
@@ -141,7 +170,6 @@ const getQuiz = async (req, res) => {
     } catch (error) {
         console.error('Get quiz error:', error);
         res.status(500).json({ error: 'Internal server error' });
-
     }
 }
 
