@@ -1,8 +1,10 @@
 const express = require('express');
+const cors = require('cors');
 require('dotenv').config();
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 // Import database connection
 const { connectDB } = require('./config/database');
@@ -13,32 +15,52 @@ const PORT = process.env.PORT || 3001;
 // Test database connection
 connectDB();
 
-// Middleware
+// ✅ Enable CORS (allow frontend origin)
+app.use(
+  cors({
+    origin: [
+      'http://localhost:5173', // Vite default
+      'http://localhost:5174', // sometimes Vite uses another port
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
+
+// ✅ Middleware
 app.use(express.json());
 
-// Routes
-app.use('/api/auth', authRoutes);
+// ✅ Simple request logger
+app.use((req, res, next) => {
+  console.log(`➡️  ${req.method} ${req.originalUrl}`);
+  next();
+});
 
-// Health check
+// ✅ Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
+
+// ✅ Health check
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
+  res.json({
+    status: 'OK',
     timestamp: new Date().toISOString(),
-    message: 'Brainwave API is running'
+    message: 'Brainwave API is running',
   });
 });
 
-// Error handling
+// ✅ Error handling
 app.use((error, req, res, next) => {
-  console.error('Error:', error.message);
+  console.error('❌ Error:', error.stack || error.message);
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// 404 handler
+// ✅ 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
+// ✅ Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/health`);

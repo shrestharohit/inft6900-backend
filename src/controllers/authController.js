@@ -67,21 +67,30 @@ const register = async (req, res) => {
       // Store OTP in user record
       await User.setOTP(email, otpCode, expiresAt);
 
-      // Send OTP email
+      // Send OTP
       const emailResult = await sendOTPEmail(email, otpCode, firstName);
-      
+
       if (!emailResult.success) {
-        return res.status(500).json({ 
-          error: 'Failed to send verification email. Please try again.' 
+        console.warn("⚠️ Failed to send OTP email, falling back to console only:", emailResult.error);
+
+        // ✅ Still return success so frontend can go to /login2fa
+        return res.status(201).json({
+          message: 'Registration successful! Please check your OTP in terminal (email not sent).',
+          email: email,
+          otpCode, // ⚠️ include only for dev testing, remove in prod
+          expiresIn: '10 minutes',
+          requiresVerification: true
         });
       }
 
+      // Normal case
       res.status(201).json({
         message: 'Registration successful! Please check your email for verification code.',
         email: email,
         expiresIn: '10 minutes',
         requiresVerification: true
       });
+
     } else {
       // Admin and course_instructor are automatically verified
       await User.markEmailVerified(email);
@@ -369,11 +378,55 @@ const resendOTP = async (req, res) => {
   }
 };
 
+const resetPassword = async (req, res) => {
+  try {
+    const { email, newPassword, confirmPassword } = req.body;
+
+    // Basic validation
+    if (!email || !newPassword || !confirmPassword) {
+      return res.status(400).json({ error: 'Email, new password and confirm password are required' });
+    }
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ error: 'Passwords do not match' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    }
+
+    // Find user
+    const user = await User.findByEmail(email);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // ✅ Use model method instead of raw query
+    const updatedUser = await User.updatePassword(email, hashedPassword);
+
+    if (!updatedUser) {
+      return res.status(500).json({ error: 'Failed to update password' });
+    }
+
+    res.json({
+      message: 'Password reset successful! You can now log in with your new password.',
+      user: updatedUser
+    });
+
+  } catch (error) {
+    console.error('❌ Reset password error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
 module.exports = {
   register,
   login,
   getCurrentUser,
   updateCurrentUser,
   verifyOTP,
-  resendOTP
+  resendOTP,
+  resetPassword
 };
