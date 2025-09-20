@@ -52,13 +52,15 @@ const register = async (req, res) => {
         res.json({
             message: 'Course registered successfully',
             course: {
-                id: newCourse.courseID,
+                courseID: newCourse.courseID,
                 ownerID: newCourse.ownerID,
+                pathwayID: newCourse.pathwayID,
                 title: newCourse.title,
                 category: newCourse.category,
                 level: newCourse.level,
                 outline: newCourse.outline,
                 status: newCourse.status,
+                created_at: newCourse.created_at
             }
         })
 
@@ -90,8 +92,7 @@ const update = async (req, res) => {
         }
 
         // Validate owner id
-        const existingOwner = await CourseOwner.findById(ownerID)
-        if (!existingOwner) {
+        if (ownerID && !(await CourseOwner.findById(ownerID))) {
             return res.status(400).json({
                 error: 'Invalid owner ID. Course Owner does not exist.'
             });
@@ -128,13 +129,15 @@ const update = async (req, res) => {
         res.json({
             message: 'Course updated successfully',
             course: {
-                id: updateCourse.courseID,
+                courseID: updateCourse.courseID,
                 ownerID: updateCourse.ownerID,
+                pathwayID: updateCourse.pathwayID,
                 title: updateCourse.title,
                 category: updateCourse.category,
                 level: updateCourse.level,
                 outline: updateCourse.outline,
                 status: updateCourse.status,
+                updated_at: updateCourse.updated_at
             }
         })
 
@@ -146,7 +149,7 @@ const update = async (req, res) => {
 
 
 const getAllCategories = async (req, res) => {
-    const categories = await Course.getAllCategories();
+    const categories = (await Course.getAllCategories()).map(row=>row.category);
     res.json(categories);
 }
 
@@ -179,7 +182,7 @@ const getCourse = async (req, res) => {
     const course = await Course.findById(courseId);
     if (!course) {
       return res.status(404).json({ 
-        error: 'Course not found' 
+        error: 'Course not found'
       });
     }
 

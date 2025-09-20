@@ -50,7 +50,7 @@ class CourseOwner {
         const query = `
             UPDATE "CourseOwner"
             SET ${updates.join(', ')}
-            WHERE "courseid" = $${paramCount}
+            WHERE "ownerID" = $${paramCount}
             RETURNING "ownerID", "department", "updated_at"
         `;
 

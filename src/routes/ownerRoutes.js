@@ -8,6 +8,6 @@ const router = express.Router();
 
 router.post("/register", register);
 
-router.post("/update", update);
+router.put("/:ownerID", update);
 
 module.exports = router;

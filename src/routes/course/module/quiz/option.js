@@ -10,18 +10,19 @@ const {
 
 const router = express.Router({ mergeParams: true });
 
+// Return valid status options
+router.get("/_meta", getMeta);
+
+router.get("/", getAllInQuestion);
+
 router.post("/register", register);
 
-router.put("/:optionID", update);
+router.get("/answer", getAnswerInQuestion);
 
-router.get("/:optionID", getOption);
+router.put("/:optionOrder", update);
 
-router.post("/getAll", getAllInQuestion);
+router.get("/:optionOrder", getOption);
 
-router.post("/getAnswer", getAnswerInQuestion);
-
-// Return valid status options
-router.post("/optionID", getMeta);
 
 
 module.exports = router;

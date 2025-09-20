@@ -17,7 +17,7 @@ class AnswerOption {
         return result.rows[0];
     }
 
-    static async findByquestionID(questionID) {
+    static async findByQuestionID(questionID) {
         const query = `SELECT * FROM "AnswerOption" WHERE "questionID" = $1 ORDER BY "optionOrder" DESC`;
         const result = await pool.query(query, [questionID]);
         return result.rows;

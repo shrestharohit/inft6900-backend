@@ -20,7 +20,7 @@ class Quiz {
     static async findByModule(moduleID) {
         const query = `SELECT * FROM "Quiz" WHERE "moduleID" = $1 ORDER BY "created_at" DESC`;
         const result = await pool.query(query, [moduleID]);
-        return result.rows;
+        return result.rows[0];
     }
 
     static async update(quizID, updateData) {

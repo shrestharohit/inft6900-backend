@@ -57,7 +57,8 @@ const register = async (req, res) => {
 
 const update = async (req, res) => {
   try {
-    const { ownerID, department } = req.body;
+    const ownerID = req.params.ownerID;
+    const { department } = req.body;
 
     // Validate userId is provided
     if (!ownerID) {

@@ -6,7 +6,7 @@ class Course {
         const query = `
             INSERT INTO "Course" ("ownerID", "title", "category", "level", "outline", "status", "created_at")
             VALUES ($1, $2, $3, $4, $5, $6, NOW())
-            RETURNING "courseID", "ownerID", "title", "category", "outline", "status", "created_at"
+            RETURNING *
         `;
         const result = await pool.query(query, [ownerID, title, category, level, outline, status]);
         return result.rows[0];
@@ -67,7 +67,7 @@ class Course {
             UPDATE "Course"
             SET ${updates.join(', ')}
             WHERE "courseID" = $${paramCount}
-            RETURNING "courseID", "ownerID", "title", "category", "level", "outline", "status", "updated_at"
+            RETURNING *
         `;
 
         const result = await pool.query(query, values);

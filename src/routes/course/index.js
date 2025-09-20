@@ -12,16 +12,16 @@ const moduleRoutes = require('./module');
 
 const router = express.Router();
 
+// Return valid status and level options
+router.get("/_meta", getMeta);
+
+router.get("/", getAll);
+
 router.post("/register", register);
 
 router.put("/:courseID", update);
 
-router.post("/getAllCategories", getAllCategories);
-
-router.post("/getAll", getAll);
-
-// Return valid status and level options
-router.post("/getMeta", getMeta);
+router.get("/categories", getAllCategories);
 
 router.get("/:courseID", getCourse);
 
