@@ -130,8 +130,8 @@ CREATE TABLE "Content" (
     "moduleID" INT NOT NULL,
     "title" VARCHAR(150),
     "description" TEXT,
-    "contentType" VARCHAR(50),
     "pageNumber" INT,
+    "status" VARCHAR(50),
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("moduleID") REFERENCES "Module"("moduleID") ON DELETE CASCADE
