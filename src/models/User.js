@@ -44,7 +44,7 @@ class User {
       throw new Error('No valid fields to update');
     }
 
-    updates.push(`updated_at = NOW()`);
+    updates.push(`"updated_at" = NOW()`);
     values.push(id);
 
     const query = `
@@ -67,7 +67,7 @@ class User {
     return result.rows;
   }
 
-  // OTP Methods
+  // 🔹 OTP Methods
   static async setOTP(email, otpCode, expiresAt) {
     const query = `
       UPDATE "User"
@@ -98,6 +98,20 @@ class User {
     const result = await pool.query(query, [email]);
     return result.rows[0];
   }
+
+  // 🔹 Reset Password
+  static async updatePassword(email, newHashedPassword) {
+    const query = `
+      UPDATE "User"
+      SET "passwordHash" = $1, "updated_at" = NOW()
+      WHERE "email" = $2
+      RETURNING "userID", "firstName", "lastName", "email", "role", "isEmailVerified";
+    `;
+    const result = await pool.query(query, [newHashedPassword, email]);
+    return result.rows[0];
+  }
+
+  
 }
 
 module.exports = User;

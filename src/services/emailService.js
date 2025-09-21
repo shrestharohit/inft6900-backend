@@ -1,16 +1,16 @@
-const nodemailer = require('nodemailer');
+const nodemailer = require("nodemailer");
 
 // Email configuration for MailerSend
 const createTransporter = () => {
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT,
-    secure: false, // true for 465, false for other ports
-    // requireTLS: true, // ✅ important for MailerSend
+    secure: false,
+    requireTLS: process.env.SMPT_FROM_EMAIL ? true : false, 
     auth: {
-      user: process.env.SMTP_USER, // MailerSend SMTP username
-      pass: process.env.SMTP_PASS  // MailerSend SMTP password
-    }
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
   });
 };
 
@@ -28,9 +28,9 @@ const sendOTPEmail = async (email, otp, firstName) => {
     console.log(`📩 OTP for ${email} (${firstName}): ${otp}`);
 
     const mailOptions = {
-      from: process.env.SMTP_USER, // Must be verified sender in MailerSend
+      from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,
       to: email,
-      subject: 'Brainwave - Email Verification Code',
+      subject: "Brainwave - Email Verification Code",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #333;">Welcome to Brainwave!</h2>
@@ -49,20 +49,19 @@ const sendOTPEmail = async (email, otp, firstName) => {
             This is an automated message from Brainwave. Please do not reply to this email.
           </p>
         </div>
-      `
+      `,
     };
 
     const result = await transporter.sendMail(mailOptions);
-    console.log('✅ OTP email sent successfully:', result.messageId);
+    console.log("✅ OTP email sent successfully:", result.messageId);
     return { success: true, messageId: result.messageId };
-
   } catch (error) {
-    console.error('❌ Failed to send OTP email:', error);
+    console.error("❌ Failed to send OTP email:", error);
     return { success: false, error: error.message };
   }
 };
 
 module.exports = {
   generateOTP,
-  sendOTPEmail
+  sendOTPEmail,
 };
