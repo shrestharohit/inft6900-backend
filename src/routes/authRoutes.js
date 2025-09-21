@@ -11,8 +11,6 @@ const {
 
 const router = express.Router();
 
-// 🔹 Auth Routes
-
 router.post("/register", register);
 
 router.post("/verify-otp", verifyOTP);
@@ -27,5 +25,6 @@ router.post("/reset-password", resetPassword);
 // Profile routes
 router.get("/user", getCurrentUser);   // ✅ fetch user profile
 router.put("/user", updateCurrentUser); // ✅ update user profile
+
 
 module.exports = router;
