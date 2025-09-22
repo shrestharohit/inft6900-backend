@@ -22,9 +22,4 @@ router.post("/login", login);
 router.post("/reset-password", resetPassword);
 
 
-// Profile routes
-router.get("/user", getCurrentUser);   // ✅ fetch user profile
-router.put("/user", updateCurrentUser); // ✅ update user profile
-
-
 module.exports = router;
