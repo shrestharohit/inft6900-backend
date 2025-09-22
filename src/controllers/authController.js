@@ -198,7 +198,7 @@ const login = async (req, res) => {
 
 const getCurrentUser = async (req, res) => {
   try {
-    const userId = req.headers['userid'] || req.query.userId; // Get userId from header or query param
+    const userId = req.headers['X-User-Id'] || req.query.userId; // Get userId from header or query param
 
     // Validate userId is provided
     if (!userId) {
@@ -234,7 +234,7 @@ const getCurrentUser = async (req, res) => {
 
 const updateCurrentUser = async (req, res) => {
   try {
-    const userId = req.headers['userid'] || req.query.userId; // Get userId from header or query param
+    const userId = req.headers['X-User-Id'] || req.query.userId; // Get userId from header or query param
     const { firstName, lastName } = req.body;
 
     // Validate userId is provided

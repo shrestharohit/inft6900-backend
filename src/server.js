@@ -28,7 +28,7 @@ app.use(
       'http://localhost:5174', // sometimes Vite uses another port
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Id', 'X-Requested-With'],
   })
 );
 
