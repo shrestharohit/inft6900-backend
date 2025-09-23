@@ -47,8 +47,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/owner', ownerRoutes);
 app.use('/api/course', courseRoutes);
 app.use('/api/content', contentRoutes);
-// app.use('/api/module', moduleRoutes);
-// app.use('/api/quiz', quizRoutes);
+// app.use('/api/enrolment', enrolmentRoutes);
 
 // ✅ Health check
 app.get('/health', (req, res) => {

@@ -11,32 +11,37 @@ class AnswerOption {
         return result.rows[0];
     }
 
-    static async findById(optionID) {
+    static async findById(optionID, client = null) {
+        const db = client || pool;
         const query = `SELECT * FROM "AnswerOption" WHERE "optionID" = $1`;
-        const result = await pool.query(query, [optionID]);
+        const result = await db.query(query, [optionID]);
         return result.rows[0];
     }
 
-    static async findByQuestionID(questionID) {
-        const query = `SELECT * FROM "AnswerOption" WHERE "questionID" = $1 ORDER BY "optionOrder" DESC`;
-        const result = await pool.query(query, [questionID]);
+    static async findByQuestionID(questionID, client = null) {
+        const db = client || pool;
+        const query = `SELECT * FROM "AnswerOption" WHERE "questionID" = $1 AND "status" = 'active' ORDER BY "optionOrder" DESC`;
+        const result = await db.query(query, [questionID]);
         return result.rows;
     }
 
-    static async findByQuestionIdOptionOrder(questionID, optionOrder) {
-        const query = `SELECT * FROM "AnswerOption" WHERE "questionID" = $1 AND "optionOrder" = $2`;
-        const result = await pool.query(query, [questionID, optionOrder]);
+    static async findByQuestionIdOptionOrder(questionID, optionOrder, client = null) {
+        const db = client || pool;
+        const query = `SELECT * FROM "AnswerOption" WHERE "questionID" = $1 AND "optionOrder" = $2 AND "status" = 'active'`;
+        const result = await db.query(query, [questionID, optionOrder]);
         return result.rows[0];
     }
     
-    static async findAnswerForQuestion(questionID) {
-        const query = `SELECT * FROM "AnswerOption" WHERE "questionID" = $1 AND "isCorrect" = true`;
-        const result = await pool.query(query, [questionID]);
+    static async findAnswerForQuestion(questionID, client = null) {
+        const db = client || pool;
+        const query = `SELECT * FROM "AnswerOption" WHERE "questionID" = $1 AND "isCorrect" = true AND "status" = 'active'`;
+        const result = await db.query(query, [questionID]);
         return result.rows[0];
     }
 
-    static async update(optionID, updateData) {
-        const allowedFields = ['optionText', 'isCorrect', 'optionOrder', 'feedbackText', 'status'];
+    static async update(optionID, updateData, client = null) {
+        const db = client || pool;
+        const allowedFields = ['optionText', 'isCorrect', 'feedbackText', 'status'];
         const updates = [];
         const values = [];
         let paramCount = 1;
@@ -60,7 +65,7 @@ class AnswerOption {
         WHERE "optionID" = $${paramCount}
         RETURNING "optionID", "questionID", "optionText", "isCorrect", "optionOrder", "feedbackText", "status", "updated_at"
         `;
-        const result = await pool.query(query, values);
+        const result = await db.query(query, values);
         return result.rows[0];
     }
 }

@@ -11,6 +11,8 @@ const VALID_OPTION_STATUS = ['active', 'inactive'];
 
 const VALID_CONTENT_STATUS = ['draft', 'wait_for_approval', 'active', 'inactive'];
 
+const VALID_ENROLMENT_STATUS = ['enrolled', 'completed', 'disenrolled'];
+
 module.exports = {
   VALID_USER_ROLES,
   VALID_COURSE_STATUS,

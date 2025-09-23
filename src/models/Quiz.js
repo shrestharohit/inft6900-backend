@@ -11,19 +11,22 @@ class Quiz {
         return result.rows[0];
     }
 
-    static async findById(quizID) {
+    static async findById(quizID, client = null) {
+        const db = client || pool;
         const query = `SELECT * FROM "Quiz" WHERE "quizID" = $1`;
-        const result = await pool.query(query, [quizID]);
+        const result = await db.query(query, [quizID]);
         return result.rows[0];
     }
 
-    static async findByModule(moduleID) {
+    static async findByModule(moduleID, client = null) {
+        const db = client || pool;
         const query = `SELECT * FROM "Quiz" WHERE "moduleID" = $1 ORDER BY "created_at" DESC`;
-        const result = await pool.query(query, [moduleID]);
+        const result = await db.query(query, [moduleID]);
         return result.rows[0];
     }
 
-    static async update(quizID, updateData) {
+    static async update(quizID, updateData, client = null) {
+        const db = client || pool;
         const allowedFields = ['title', 'timeLimit', 'status'];
         const updates = [];
         const values = [];
@@ -48,9 +51,17 @@ class Quiz {
         WHERE "quizID" = $${paramCount}
         RETURNING "quizID", "moduleID", "title", "timeLimit", "status", "updated_at"
         `;
-        const result = await pool.query(query, values);
+        const result = await db.query(query, values);
         return result.rows[0];
+    };
+
+    static async delete(quizID, client = null) {
+        const db = client || pool;
+        const query = `DELETE FROM "Quiz" WHERE "quizID" = $1`;
+        await db.query(query, [quizID]);
+        return `Quiz ID {$quizID} is successfully deleted`;
     }
+
 }
 
 module.exports = Quiz;

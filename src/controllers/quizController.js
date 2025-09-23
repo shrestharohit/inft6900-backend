@@ -1,15 +1,24 @@
 const Module = require('../models/Module');
 const Quiz = require('../models/Quiz');
+const Question = require('../models/Question');
+const AnswerOption = require('../models/AnswerOption');
 const { VALID_QUIZ_STATUS } = require('../config/constants');
+const {
+    registerQuestion,
+    updateQuestion,
+    inactivateQuestion,
+} = require('./questionController')
+
+const { pool } = require('../config/database');
+
 
 // To shorten the API route, use module ID to get the quiz.
 // Each module can only have 1 quiz, so this works.
 
 const register = async (req, res) => {
     try {
-        const courseID = req.params.courseID;
-        const moduleNumber = req.params.moduleNumber;
-        const { title, timeLimit, status } = req.body;
+        const { courseID, moduleNumber } = req.params;
+        const { title, timeLimit, status, questions } = req.body;
 
         // Validate course id is provided
         if (!moduleNumber) {
@@ -19,15 +28,14 @@ const register = async (req, res) => {
         };
 
         // Basic validataion
-        if (!title || !status) {
+        if (!title || !status || !questions ) {
             return res.status(400).json({
-                error: 'Title and status are required'
+                error: 'Title, status and questions are required'
             });
         };
 
         // Validate status
         const quizStatus = status || 'draft';
-
         if (!VALID_QUIZ_STATUS.includes(quizStatus)) {
             return res.status(400).json({
                 error: `Invalid status. Must be:${VALID_QUIZ_STATUS.join(', ')} `
@@ -50,13 +58,30 @@ const register = async (req, res) => {
             });
         }
 
-        // Create course
+        // Create Quiz
         const newQuiz = await Quiz.create({
             moduleID: quizModule.moduleID, 
             title,
             timeLimit, 
             status: quizStatus
         });
+
+        // try creating questions
+        const newQuestions = []
+        for (const question of questions) {
+            try {
+                const newQuestion = await registerQuestion(newQuiz, question);
+                newQuestions.push(newQuestion);
+            } catch (error) {
+                // delete created quiz
+                Quiz.delete(newQuiz.quizID);
+
+                console.error('Question registration error:', error.message);
+                return res.status(400).json({
+                    error: error.message
+                });
+            }
+        };
 
         res.json({
             message: 'Quiz registered successfully',
@@ -66,23 +91,26 @@ const register = async (req, res) => {
                 title: newQuiz.title,
                 timeLimit: newQuiz.timeLimit,
                 status: newQuiz.status,
+                quiestions: newQuestions,
                 created_at: newQuiz.created_at
             }
         })
 
 
     } catch(error) {
-        console.error('Registration error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: `Registration error:{$error.message}`  });
+        
     }
 };
 
 
 const update = async (req, res) => {
+    const client = await pool.connect();
+    await client.query('BEGIN')
+
     try {
-        const courseID = req.params.courseID;
-        const moduleNumber = req.params.moduleNumber;
-        const { title, timeLimit, status } = req.body;
+        const { courseID, moduleNumber } = req.params;
+        const { title, timeLimit, status, questions } = req.body;
 
         // Validate course number is provided
         if (!moduleNumber) {
@@ -92,7 +120,7 @@ const update = async (req, res) => {
         };
 
         // Validate module number and course ID
-        const existingModule = await Module.findByCourseIdModuleNumber(courseID, moduleNumber);
+        const existingModule = await Module.findByCourseIdModuleNumber(courseID, moduleNumber, client);
         if (moduleNumber !== undefined && !existingModule) {
             return res.status(404).json({
                 error: 'Invalid course ID and module number. Module not found.'
@@ -100,7 +128,7 @@ const update = async (req, res) => {
         }
 
         // Check if quiz under the selected module exists
-        const existingQuiz = await Quiz.findByModule(existingModule.moduleID);
+        const existingQuiz = await Quiz.findByModule(existingModule.moduleID, client);
         if (!existingQuiz) {
             return res.status(404).json({
                 error: 'Quiz not found'
@@ -113,7 +141,34 @@ const update = async (req, res) => {
             return res.status(400).json({
                 error: `Invalid status. Must be:${VALID_QUIZ_STATUS.join(', ')} `
             });
+        };
+
+        // Validate question's data type
+        if (!Array.isArray(questions)) {
+            return res.status(400).json({ error: 'Questions must be an array.' });
         }
+        
+        // Try updating questions first
+        const questionNumbers = (await Question.findByQuizId(existingQuiz.quizID, client)).map(q => q.questionNumber);
+        for (const number of questionNumbers) {
+            if (!questions.map(q => q.questionNumber).includes(number)) {
+                const deletedQuestion = await Question.findByQuizIdQuestionNumber(existingQuiz.quizID, number, client);
+                await inactivateQuestion(deletedQuestion, client);
+            }
+        }
+        
+        const updatedQuestions = [];
+        try {
+            for (const question of questions) {
+                const updatedQuestion = await updateQuestion(existingQuiz, question, client);
+                updatedQuestions.push(updatedQuestion);
+            }
+        } catch(error) {
+            console.error('Question update error:', error.message);
+            return res.status(400).json({
+                error: error.message
+            });
+        };
 
         // Prepare update data
         const updateData = {};
@@ -123,7 +178,8 @@ const update = async (req, res) => {
         if (status !== undefined) updateData.status = quizStatus;
 
         // Update module
-        const updateQuiz = await Quiz.update(quizID, updateData);
+        const updateQuiz = await Quiz.update(quizID, updateData, client);
+        await client.query('COMMIT');
 
         res.json({
             message: 'Quiz updated successfully',
@@ -133,13 +189,17 @@ const update = async (req, res) => {
                 title: updateQuiz.title,
                 timeLimit: updateQuiz.timeLimit,
                 status: updateQuiz.status,
+                questions: updatedQuestions,
                 udpated_at: updateQuiz.udpated_at
             }
         });
 
     } catch(error) {
+        await client.query('ROLLBACK');
         console.error('Update quiz error:', error);
         res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        client.release();
     }
 };
 

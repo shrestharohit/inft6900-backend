@@ -98,15 +98,13 @@ CREATE TABLE "Module" (
 CREATE TABLE "Enrolment" (
     "enrolmentID" SERIAL PRIMARY KEY,
     "enrolDate" DATE DEFAULT CURRENT_DATE,
-    "enrolmentType" VARCHAR(50),
-    "enrolmentStatus" VARCHAR(20),
     "pathwayID" INT,
     "courseID" INT,
     "studentID" INT NOT NULL,
-    "completionStatus" VARCHAR(50),
-    "lastAccessDate" DATE,
+    "status" VARCHAR(50), -- what status
     "completionDate" DATE,
     "disenrolledDate" DATE,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("pathwayID") REFERENCES "Pathway"("pathwayID"),
     FOREIGN KEY ("courseID") REFERENCES "Course"("courseID"),
     FOREIGN KEY ("studentID") REFERENCES "Student"("studentID") ON DELETE CASCADE
