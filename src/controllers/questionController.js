@@ -13,7 +13,7 @@ const { pool } = require('../config/database');
 
 
 const registerQuestion = async (quiz, question) => {
-    const { questionNumber, questionText, status, options =[] } = question
+    const { questionNumber, questionText, status, options } = question
 
     // Basic validataion
     if (!questionNumber || !questionText || !status || !options) {
