@@ -2,8 +2,8 @@ const express = require("express");
 const {
   register,
   update,
-  getAllInModule,
   getQuiz,
+  getDetail,
   getMeta
 } = require("../../../../controllers/quizController");
 
@@ -22,5 +22,6 @@ router.get("/", getQuiz);
 
 router.use('/question', questionRoutes);
 
+router.get("/detail", getDetail);
 
 module.exports = router;

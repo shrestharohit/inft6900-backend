@@ -234,6 +234,47 @@ const getQuiz = async (req, res) => {
 }
 
 
+const getDetail = async (req, res) => {
+    try {
+        // To shorten the API route, use module ID to get the quiz.
+        // Each module can only have 1 quiz, so this works.
+        const moduleNumber = req.params.moduleNumber;
+        const courseID = req.params.courseID;
+
+        // Validate course ID and module Number
+        const module = await Module.findByCourseIdModuleNumber(courseID, moduleNumber);
+        if (!module) {
+            return res.status(400).json({
+                error: 'Invalid course ID and module number. Module not found.'
+            });
+        };
+
+        // Check if quiz is already created for the module
+        const quiz = await Quiz.findByModule(module.moduleID);
+        if (!quiz) {
+            return res.status(400).json({
+                error: 'Quiz not found.'
+            });
+        }
+
+        // Get all questions and options
+        const questions = await Question.findByQuizId(quiz.quizID);
+        const questionList = []
+        for (question of questions) {
+            const options = await AnswerOption.findByQuestionID(question.questionID);
+            question['options'] = options;
+            questionList.push(question);
+        }
+
+        quiz['questions'] = questionList;
+
+        res.json(quiz);
+    } catch (error) {
+        console.error('Get quiz error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
 const getMeta = (req, res) => {
     res.json({
         status: VALID_QUIZ_STATUS,
@@ -245,5 +286,6 @@ module.exports = {
   register,
   update,
   getQuiz,
+  getDetail,
   getMeta,
 };
