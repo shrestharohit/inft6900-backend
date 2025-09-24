@@ -1,13 +1,13 @@
 const { pool } = require('../config/database');
 
 class Enrolment {
-    static async create({ enrolDate, pathwayID, courseID, studentID, status='enrolled' }) {
+    static async create({ pathwayID, courseID, studentID, status='enrolled' }) {
         const query = `
-            INSERT INTO "Module" ("enrolDate", "pathwayID", "courseID", "studentID", "status")
+            INSERT INTO "Enrolment" ("enrolDate", "pathwayID", "courseID", "studentID", "status")
             VALUES (NOW(), $1, $2, $3, $4)
             RETURNING *
         `;
-        const result = await pool.query(query, [enrolDate, pathwayID, courseID, studentID, status]);
+        const result = await pool.query(query, [pathwayID, courseID, studentID, status]);
         return result.rows[0];
     }
 
@@ -39,7 +39,7 @@ class Enrolment {
 
     static async findByCourseIdStudentId(courseID, studentID) {
         const query = `
-            SELECT * FROM "Module" WHERE "courseID" = $1 AND "studentID" = $2
+            SELECT * FROM "Enrolment" WHERE "courseID" = $1 AND "studentID" = $2
         `;
         const result = await pool.query(query, [courseID, studentID]);
         return result.rows[0];
@@ -47,14 +47,14 @@ class Enrolment {
 
     static async findByPathwayIdStudentId(pathwayID, studentID) {
         const query = `
-            SELECT * FROM "Module" WHERE "pathwayID" = $1 AND "studentID" = $2
+            SELECT * FROM "Enrolment" WHERE "pathwayID" = $1 AND "studentID" = $2
         `;
         const result = await pool.query(query, [pathwayID, studentID]);
         return result.rows[0];
     }
     
     static async update(id, updateData) {
-        const allowedFields = ['pathwayID', 'status', 'completionDate', 'disenrolledDate'];
+        const allowedFields = ['pathwayID', 'status'];
         const updates = [];
         const values = [];
         let paramCount = 1;
@@ -71,14 +71,22 @@ class Enrolment {
             throw new Error('No valid fields to update');
         }
 
+        if(updates.status === 'disenrolled') {
+            updates.push(`"disenrolDate" = NOW()`);
+        }
+
+        if(updates.status === 'completed') {
+            updates.push(`"completeDate" = NOW()`);
+        }
+
         updates.push(`"updated_at" = NOW()`);
         values.push(id);
 
         const query = `
             UPDATE "Enrolment"
             SET ${updates.join(', ')}
-            WHERE "moduleID" = $${paramCount}
-            RETURNING "pathwayID", "status", "completionDate", "disenrolledDate", "updated_at"
+            WHERE "enrolmentID" = $${paramCount}
+            RETURNING *
         `;
 
         const result = await pool.query(query, values);

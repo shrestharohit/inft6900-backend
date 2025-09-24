@@ -2,16 +2,15 @@ const express = require("express");
 const {
   enrolCourse,
   disenrolCourse,
-  updateCourseEnrolment,
+  getCourseEnrolment,
+// pathway to be added after Zoey is done with pathway APIs
 //   enrolPathway,
 //   disenrolPathway,
 //   updatePathwayEnrolment,
   getStudentEnrolment,
   getAll,
   getMeta,
-} = require("../../controllers/courseController");
-const moduleRoutes = require('./module');
-
+} = require("../controllers/enrolmentController");
 
 const router = express.Router();
 
@@ -20,11 +19,11 @@ router.get("/_meta", getMeta);
 
 router.get("/", getAll);
 
+router.get("/course/:courseID/", getCourseEnrolment);
+
 router.post("/course/:courseID", enrolCourse);
 
 router.put("/course/:courseID/disenrol", disenrolCourse);
-
-router.put("/course/:courseID/update", updateCourseEnrolment);
 
 // router.post("/pathway/:pathwayID", enrolPathway);
 
@@ -32,7 +31,7 @@ router.put("/course/:courseID/update", updateCourseEnrolment);
 
 // router.put("/pathway/:pathwayID/update", updatePathwayEnrolment);
 
-router.get("/:studentID", getStudentEnrolment);
+router.get("/student/:studentID", getStudentEnrolment);
 
 
 module.exports = router;
