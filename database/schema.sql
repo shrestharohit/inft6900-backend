@@ -181,8 +181,9 @@ CREATE TABLE "QuizAttempt" (
     "enrolmentID" INT NOT NULL,
     "startTime" TIMESTAMP,
     "endTime" TIMESTAMP,
-    "score" INT,
+    "score" DOUBLE PRECISION,
     "passed" BOOLEAN,
+    "count" INT, -- required to manage multiple attempts
     FOREIGN KEY ("quizID") REFERENCES "Quiz"("quizID") ON DELETE CASCADE,
     FOREIGN KEY ("enrolmentID") REFERENCES "Enrolment"("enrolmentID") ON DELETE CASCADE
 );
@@ -192,8 +193,7 @@ CREATE TABLE "AttemptAnswer" (
     "attemptID" INT NOT NULL,
     "questionID" INT NOT NULL,
     "optionID" INT NOT NULL,
-    "answerText" TEXT,
-    -- isCorrect BOOLEAN,  -- <- this may not be necessary since it is already defined in answeroption
+    "isCorrect" BOOLEAN,
     FOREIGN KEY ("attemptID") REFERENCES "QuizAttempt"("attemptID") ON DELETE CASCADE,
     FOREIGN KEY ("questionID") REFERENCES "Question"("questionID") ON DELETE CASCADE,
     FOREIGN KEY ("optionID") REFERENCES "AnswerOption"("optionID") ON DELETE CASCADE

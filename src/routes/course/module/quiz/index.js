@@ -24,4 +24,18 @@ router.use('/question', questionRoutes);
 
 router.get("/detail", getDetail);
 
+///////////////////////////////
+// Student APIs
+///////////////////////////////
+
+const {
+  startAttempt,
+  submitAttemp
+} = require("../../../../controllers/attemptController");
+
+
+router.post("/start", startAttempt);
+
+router.put("/submit", submitAttemp);
+
 module.exports = router;

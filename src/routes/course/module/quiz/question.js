@@ -1,7 +1,5 @@
 const express = require("express");
 const {
-  registerQuestion,
-  updateQuestion,
   getQuestion,
   getAllInQuiz,
   getMeta,
@@ -15,10 +13,6 @@ const router = express.Router({ mergeParams: true });
 router.get("/_meta", getMeta);
 
 router.get("/", getAllInQuiz);
-
-router.post("/register", registerQuestion);
-
-router.put("/:questionNumber", updateQuestion);
 
 router.get("/:questionNumber", getQuestion);
 

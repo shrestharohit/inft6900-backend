@@ -1,7 +1,5 @@
 const express = require("express");
 const {
-  registerOption,
-  updateOption,
   getOption,
   getAllInQuestion,
   getAnswerInQuestion,
@@ -15,11 +13,7 @@ router.get("/_meta", getMeta);
 
 router.get("/", getAllInQuestion);
 
-router.post("/register", registerOption);
-
 router.get("/answer", getAnswerInQuestion);
-
-router.put("/:optionOrder", updateOption);
 
 router.get("/:optionOrder", getOption);
 
