@@ -98,15 +98,37 @@ const submitAttemp = async (req, res) => {
     try {
         const { attemptID, answers } = req.body;
 
+        // Check if attemptID is provided
+        if (!attemptID) {
+            return res.status(400).json({
+                error: 'Attempt ID is required.'
+            });
+        }
+
         // Validate attempt ID Quiz
         const attempt = await QuizAttempt.findById(attemptID, client);
+        if(!attempt) {
+            return res.status(400).json({
+                error: 'Invalid attemp ID. Quiz Attempt not found.'
+            });
+        };
+
+        // Return error if user has already submitted the selected attempt before
+        if(attempt.endTime) {
+            return res.status(400).json({
+                error: 'Cannot resubmit the quiz attempt. Please restart the quiz first and submit the attempt again.'
+            });
+        }
 
         // Try registering each attempt answer
         let correctCount = 0;
+        const counter = {}
         for (const answer of answers) {
             try {
                 const newAnswer = await registerAnswer(attempt, answer, client);
-                console.log('Registered answer:', newAnswer);
+                const { questionID } = answer;
+                console.log(questionID)
+                counter[questionID] = (counter[questionID] || 0) + 1;
                 if (newAnswer.attemptAnswer.isCorrect) {
                     correctCount++;
                 }
@@ -114,11 +136,19 @@ const submitAttemp = async (req, res) => {
                 return res.status(400).json({
                     error: error.message
                 });
-            }
+            };
+        };
+
+        // Validate if there is any question with multiple answers
+        const duplicates = Object.entries(counter).filter(([_, count]) => count > 1).map(([questionID]) => questionID);
+        if (duplicates.length > 0) {
+            return res.status(400).json({
+                error: 'Multiple answers found in the same question. Each question can take only one answer.'
+            });
         }
 
+        // Calculate the score and judge if the user passed the quiz or not
         const totalQuestions = (await Question.findByQuizId(attempt.quizID, client)).length;
-        // console.log(correctCount)
         const score = correctCount / totalQuestions;
         const passed = score >= 0.8;
 
@@ -144,6 +174,8 @@ const submitAttemp = async (req, res) => {
                 answers : attemptResults
             }
         });
+
+        await client.query('COMMIT');
     } catch(error) {
         await client.query('ROLLBACK');
         res.status(500).json({ error: `Registration error:${error.message}`  });

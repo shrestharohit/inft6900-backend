@@ -5,16 +5,10 @@ const Quiz = require('../models/Quiz');
 const Question = require('../models/Question');
 const AnswerOption = require('../models/AnswerOption');
 const AttemptAnswer = require('../models/AttemptAnswer');
-const {
-    // registerQuestion,
-    // updateQuestion,
-    // inactivateQuestion,
-} = require('./answerController')
 
-
-const registerAnswer = async (attempt, answers, client) => {
+const registerAnswer = async (attempt, answer, client) => {
     try {
-        const { questionID, optionID } = answers;
+        const { questionID, optionID } = answer;
 
         // Basic validataion
         if (!questionID || !optionID) {
@@ -32,7 +26,7 @@ const registerAnswer = async (attempt, answers, client) => {
         if (!option) {
             throw new Error('Invalid option ID. Option not found.');
         };
-        
+        console.log(`Creating attempt answer for: ${attempt.attemptID}, ${questionID}, ${optionID}`);
         // Register answer
         const attemptAnswer = await AttemptAnswer.create({
             attemptID: attempt.attemptID, 

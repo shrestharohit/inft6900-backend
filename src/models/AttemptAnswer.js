@@ -9,16 +9,13 @@ class AttemptAnswer {
             $1 AS "attemptID", 
             $2 AS "questionID",
             $3 AS "optionID",
-            CASE 
-                WHEN $3 = a."correctOption" THEN true
-                ELSE false
-            END AS "isCorrect"
-        FROM
-            (SELECT "optionID" AS "correctOption" FROM "AnswerOption" a
-            WHERE "questionID" = $2 AND "isCorrect" = true) AS a
+            ao."isCorrect"
+        FROM "AnswerOption" ao
+        WHERE ao."optionID" = $3
         RETURNING *
         `;
         const result = await db.query(query, [attemptID, questionID, optionID]);
+        console.log(result)
         return result.rows[0];
     }
 
@@ -39,7 +36,7 @@ class AttemptAnswer {
         const query = `
         SELECT aa.*, ao."feedbackText" 
         FROM "AttemptAnswer" aa
-        LEFT JOIN "AnswerOption" ao ON aa."questionID" = ao."questionID"
+        LEFT JOIN "AnswerOption" ao ON aa."questionID" = ao."questionID" AND aa."optionID" = ao."optionID"
         WHERE "attemptID" = $1`;
         const result = await db.query(query, [attemptID]);
         return result.rows;

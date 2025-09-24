@@ -146,17 +146,18 @@ const update = async (req, res) => {
         // Validate question's data type
         if (!Array.isArray(questions)) {
             return res.status(400).json({ error: 'Questions must be an array.' });
-        }
-        
-        // Try updating questions first
+        };
+
+        // any missing question will be treated as deleted (inactive)
         const questionNumbers = (await Question.findByQuizId(existingQuiz.quizID, client)).map(q => q.questionNumber);
         for (const number of questionNumbers) {
             if (!questions.map(q => q.questionNumber).includes(number)) {
                 const deletedQuestion = await Question.findByQuizIdQuestionNumber(existingQuiz.quizID, number, client);
                 await inactivateQuestion(deletedQuestion, client);
-            }
-        }
-        
+            };
+        };
+
+        // Try updating questions
         const updatedQuestions = [];
         try {
             for (const question of questions) {
