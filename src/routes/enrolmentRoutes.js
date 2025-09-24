@@ -1,10 +1,13 @@
 const express = require("express");
 const {
-  enrol,
-  complete,
-  disenrol,
-  getEnrolledCourses,
-  getEnrolledStudents,
+  enrolCourse,
+  disenrolCourse,
+  updateCourseEnrolment,
+//   enrolPathway,
+//   disenrolPathway,
+//   updatePathwayEnrolment,
+  getStudentEnrolment,
+  getAll,
   getMeta,
 } = require("../../controllers/courseController");
 const moduleRoutes = require('./module');
@@ -17,16 +20,19 @@ router.get("/_meta", getMeta);
 
 router.get("/", getAll);
 
-router.post("/register", register);
+router.post("/course/:courseID", enrolCourse);
 
-router.put("/:courseID", update);
+router.put("/course/:courseID/disenrol", disenrolCourse);
 
-router.get("/categories", getAllCategories);
+router.put("/course/:courseID/update", updateCourseEnrolment);
 
-router.get("/:courseID", getCourse);
+// router.post("/pathway/:pathwayID", enrolPathway);
 
-// module routes
-router.use('/:courseID/module', moduleRoutes);
+// router.put("/pathway/:pathwayID/disenrol", disenrolPathway);
+
+// router.put("/pathway/:pathwayID/update", updatePathwayEnrolment);
+
+router.get("/:studentID", getStudentEnrolment);
 
 
 module.exports = router;

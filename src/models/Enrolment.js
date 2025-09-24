@@ -1,14 +1,13 @@
 const { pool } = require('../config/database');
 
 class Enrolment {
-    // Pathway to be added in Sprint 2
-    static async create({ pathwayID, courseID, studentID, status='enrolled' }) {
+    static async create({ enrolDate, pathwayID, courseID, studentID, status='enrolled' }) {
         const query = `
             INSERT INTO "Module" ("enrolDate", "pathwayID", "courseID", "studentID", "status")
             VALUES (NOW(), $1, $2, $3, $4)
-            RETURNING "moduleID", "courseID", "title", "description", "moduleNumber", "expectedHours", "status"
+            RETURNING *
         `;
-        const result = await pool.query(query, [courseID, title, description, moduleNumber, expectedHours, status]);
+        const result = await pool.query(query, [enrolDate, pathwayID, courseID, studentID, status]);
         return result.rows[0];
     }
 
@@ -38,7 +37,7 @@ class Enrolment {
         return result.rows[0];
     }
 
-    static async findByCourseIdMStudentId(courseID, studentID) {
+    static async findByCourseIdStudentId(courseID, studentID) {
         const query = `
             SELECT * FROM "Module" WHERE "courseID" = $1 AND "studentID" = $2
         `;
@@ -46,6 +45,14 @@ class Enrolment {
         return result.rows[0];
     }
 
+    static async findByPathwayIdStudentId(pathwayID, studentID) {
+        const query = `
+            SELECT * FROM "Module" WHERE "pathwayID" = $1 AND "studentID" = $2
+        `;
+        const result = await pool.query(query, [pathwayID, studentID]);
+        return result.rows[0];
+    }
+    
     static async update(id, updateData) {
         const allowedFields = ['pathwayID', 'status', 'completionDate', 'disenrolledDate'];
         const updates = [];

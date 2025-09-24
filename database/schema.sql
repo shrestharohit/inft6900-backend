@@ -101,13 +101,13 @@ CREATE TABLE "Enrolment" (
     "pathwayID" INT,
     "courseID" INT,
     "studentID" INT NOT NULL,
-    "status" VARCHAR(50), -- what status
+    "status" VARCHAR(50),
     "completionDate" DATE,
     "disenrolledDate" DATE,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("pathwayID") REFERENCES "Pathway"("pathwayID"),
     FOREIGN KEY ("courseID") REFERENCES "Course"("courseID"),
-    FOREIGN KEY ("studentID") REFERENCES "Student"("studentID") ON DELETE CASCADE
+    FOREIGN KEY ("studentID") REFERENCES "User"("userID") ON DELETE CASCADE -- alter FK constraint required
 );
 
 CREATE TABLE "ModuleAccess" (
