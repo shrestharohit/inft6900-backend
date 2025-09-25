@@ -7,9 +7,16 @@ require('dotenv').config();
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 
-const courseRoutes = require('./routes/course/courseRoutes');
+const contentRoutes = require('./routes/course/module/content/contentRoutes');
+const pathwayRoutes = require('./routes/pathwayRoutes');
+const moduleAccessRoutes = require('./routes/moduleAccessRoutes'); 
+const certificateRoutes = require('./routes/course/certificateRoutes');
+const discussionBoardRoutes = require('./routes/course/discussion/discussionBoardRoutes');
+const boardPostRoutes = require('./routes/course/discussion/post/boardPostRoutes');
+const scheduleRoutes = require('./routes/course/scheduleRoutes');
+const announcementRoutes = require('./routes/course/announcementRoutes');
+
 const moduleRoutes = require('./routes/course/moduleRoutes');
-const contentRoutes = require('./routes/course/contentRoutes');
 const quizRoutes = require('./routes/course/quiz/quizRoutes');
 const questionRoutes = require('./routes/course/quiz/questionRoutes');
 const optionRoutes = require('./routes/course/quiz/optionRoutes');
@@ -65,6 +72,14 @@ app.use('/api/user', userRoutes);
 app.use('/api/course', courseRoutes);
 app.use('/api/module', moduleRoutes);
 app.use('/api/content', contentRoutes);
+app.use('/api/pathway', pathwayRoutes);
+app.use('/api/moduleAccess', moduleAccessRoutes); 
+app.use('/api/certificate', certificateRoutes);
+app.use('/api/discussion-board', discussionBoardRoutes);
+app.use('/api/board-post', boardPostRoutes);
+app.use('/api/course/:courseid/schedules', scheduleRoutes);
+app.use('/api/announcement', announcementRoutes);
+
 app.use('/api/quiz', quizRoutes);
 app.use('/api/question', questionRoutes);
 app.use('/api/option', optionRoutes);

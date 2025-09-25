@@ -60,7 +60,8 @@ CREATE TABLE "Pathway" (
     "pathwayID" SERIAL PRIMARY KEY,
     "name" VARCHAR(150) NOT NULL,
     "outline" TEXT,
-    "createdDate" DATE DEFAULT CURRENT_DATE
+    "status" VARCHAR(20),
+    "createdDate" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE "Course" (
@@ -113,11 +114,11 @@ CREATE TABLE "Enrolment" (
 CREATE TABLE "ModuleAccess" (
     "accessID" SERIAL PRIMARY KEY,
     "moduleID" INT NOT NULL,
-    "studentID" INT NOT NULL,
+    "userID" INT NOT NULL,
     "accessDate" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "duration" INTERVAL,
     FOREIGN KEY ("moduleID") REFERENCES "Module"("moduleID") ON DELETE CASCADE,
-    FOREIGN KEY ("studentID") REFERENCES "Student"("studentID") ON DELETE CASCADE
+    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE
 );
 
 -- ==================
@@ -212,12 +213,64 @@ CREATE TABLE "AttemptAnswer" (
 -- ==================
 CREATE TABLE "Certificate" (
     "certificateID" SERIAL PRIMARY KEY,
-    "studentID" INT NOT NULL,
+    "userID" INT NOT NULL,
     "courseID" INT,
-    "issueDate" DATE DEFAULT CURRENT_DATE,
+    "issueDate" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "content" TEXT,
     "certificateURL" TEXT,
-    FOREIGN KEY ("studentID") REFERENCES "Student"("studentID"),
+    FOREIGN KEY ("userID") REFERENCES "User"("userID"),
     FOREIGN KEY ("courseID") REFERENCES "Course"("courseID")
+);
+
+-- ==================
+-- DISCUSSION BOARD
+-- ==================
+CREATE TABLE "DiscussionBoard" (
+    "boardID" SERIAL PRIMARY KEY,
+    "courseID" INT NOT NULL,
+    "title" VARCHAR(200) NOT NULL,
+    "status" VARCHAR(50) DEFAULT 'active',
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY ("courseID") REFERENCES "Course"("courseID") ON DELETE CASCADE
+);
+
+CREATE TABLE "BoardPost" (
+    "postID" SERIAL PRIMARY KEY,
+    "boardID" INT NOT NULL,
+    "userID" INT NOT NULL,
+    "postText" TEXT NOT NULL,
+    "status" VARCHAR(50) DEFAULT 'active',
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY ("boardID") REFERENCES "DiscussionBoard"("boardID") ON DELETE CASCADE,
+    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE
+);
+
+-- ==================
+-- SCHEDULE
+-- ==================
+CREATE TABLE "Schedule" (
+    "scheduleID" SERIAL PRIMARY KEY,
+    "userID" INT NOT NULL,
+    "moduleID" INT NOT NULL,
+    "scheduledDateTime" TIMESTAMP NOT NULL,
+    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE,
+    FOREIGN KEY ("moduleID") REFERENCES "Module"("moduleID") ON DELETE CASCADE
+);
+
+-- ==================
+-- ANNOUNCEMENT
+-- ==================
+CREATE TABLE "Announcement" (
+    "announcementID" SERIAL PRIMARY KEY,
+    "courseID" INT NOT NULL,
+    "title" VARCHAR(200) NOT NULL,
+    "message" TEXT NOT NULL,
+    "status" VARCHAR(50) DEFAULT 'active',
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY ("courseID") REFERENCES "Course"("courseID") ON DELETE CASCADE
 );
 
 -- ==================
