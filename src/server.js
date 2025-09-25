@@ -1,10 +1,28 @@
 const express = require('express');
+const session = require('express-session');
 const cors = require('cors');
 require('dotenv').config();
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
+
+const contentRoutes = require('./routes/course/contentRoutes');
+const pathwayRoutes = require('./routes/pathwayRoutes');
+const moduleAccessRoutes = require('./routes/moduleAccessRoutes'); 
+const certificateRoutes = require('./routes/course/certificateRoutes');
+const discussionBoardRoutes = require('./routes/course/discussion/discussionBoardRoutes');
+const boardPostRoutes = require('./routes/course/discussion/post/boardPostRoutes');
+const scheduleRoutes = require('./routes/course/scheduleRoutes');
+const announcementRoutes = require('./routes/course/announcementRoutes');
+
+const courseRoutes = require('./routes/course/courseRoutes');
+const moduleRoutes = require('./routes/course/moduleRoutes');
+const quizRoutes = require('./routes/course/quiz/quizRoutes');
+const questionRoutes = require('./routes/course/quiz/questionRoutes');
+const optionRoutes = require('./routes/course/quiz/optionRoutes');
+
+const enrolmentRoutes = require('./routes/enrolmentRoutes');
 
 // Import database connection
 const { connectDB } = require('./config/database');
@@ -30,6 +48,18 @@ app.use(
 // ✅ Middleware
 app.use(express.json());
 
+// Session Middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 15 * 60 * 1000, // 15 minutes
+    httpOnly: true,
+    secure: false // set true if HTTPS
+  }
+}));
+
 // ✅ Simple request logger
 app.use((req, res, next) => {
   console.log(`➡️  ${req.method} ${req.originalUrl}`);
@@ -39,6 +69,23 @@ app.use((req, res, next) => {
 // ✅ Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
+
+app.use('/api/course', courseRoutes);
+app.use('/api/module', moduleRoutes);
+app.use('/api/content', contentRoutes);
+app.use('/api/pathway', pathwayRoutes);
+app.use('/api/moduleAccess', moduleAccessRoutes); 
+app.use('/api/certificate', certificateRoutes);
+app.use('/api/discussion-board', discussionBoardRoutes);
+app.use('/api/board-post', boardPostRoutes);
+app.use('/api/course/:courseid/schedules', scheduleRoutes);
+app.use('/api/announcement', announcementRoutes);
+
+app.use('/api/quiz', quizRoutes);
+app.use('/api/question', questionRoutes);
+app.use('/api/option', optionRoutes);
+
+app.use('/api/enrolment', enrolmentRoutes);
 
 // ✅ Health check
 app.get('/health', (req, res) => {

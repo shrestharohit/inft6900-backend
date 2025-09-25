@@ -4,14 +4,14 @@ const {
   login,
   verifyOTP,
   resendOTP,
+  sendResetPasswordOTP,
+  verifyResetOTP,
   resetPassword,
   getCurrentUser,
   updateCurrentUser
 } = require("../controllers/authController");
 
 const router = express.Router();
-
-// 🔹 Auth Routes
 
 router.post("/register", register);
 
@@ -21,11 +21,17 @@ router.post("/resend-otp", resendOTP);
 
 router.post("/login", login);
 
+
+router.post("/send-resetotp", sendResetPasswordOTP);
+
+router.post("/verify-resetotp", verifyResetOTP);
+
 router.post("/reset-password", resetPassword);
 
 
 // Profile routes
 router.get("/user", getCurrentUser);   // ✅ fetch user profile
 router.put("/user", updateCurrentUser); // ✅ update user profile
+
 
 module.exports = router;

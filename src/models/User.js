@@ -1,11 +1,11 @@
 const { pool } = require('../config/database');
 
 class User {
-  static async create({ firstName, lastName, email, passwordHash, role = 'learner' }) {
+  static async create({ firstName, lastName, email, passwordHash, role }) {
     const query = `
       INSERT INTO "User" ("firstName", "lastName", "email", "passwordHash", "role", "created_at")
       VALUES ($1, $2, $3, $4, $5, NOW())
-      RETURNING "userID", "firstName", "lastName", "email", "role", "isEmailVerified", "created_at"
+      RETURNING "userID", "firstName", "lastName", "email", "passwordHash", "role", "created_at"
     `;
     const result = await pool.query(query, [firstName, lastName, email, passwordHash, role]);
     return result.rows[0];
@@ -83,6 +83,15 @@ class User {
     const query = `
       SELECT * FROM "User"
       WHERE "email" = $1 AND "otpCode" = $2 AND "otpExpiresAt" > NOW() AND "isEmailVerified" = FALSE
+    `;
+    const result = await pool.query(query, [email, otpCode]);
+    return result.rows[0];
+  }
+
+  static async verifyResetOTP(email, otpCode) {
+    const query = `
+      SELECT * FROM "User"
+      WHERE "email" = $1 AND "otpCode" = $2 AND "otpExpiresAt" > NOW()
     `;
     const result = await pool.query(query, [email, otpCode]);
     return result.rows[0];
