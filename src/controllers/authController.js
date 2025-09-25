@@ -1,17 +1,53 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const { VALID_USER_ROLES } = require('../config/constants');
-const { generateOTP, sendOTPEmail, sendOTPEmailForpasswordReset } = require('../services/emailService');
+const { generateOTP, sendOTPEmail, sendOTPEmailForpasswordReset, sendInitialPassword } = require('../services/emailService');
 
 const register = async (req, res) => {
   try {
     const { firstName, lastName, email, password, role } = req.body;
 
-    // Basic validation
-    if (!firstName || !lastName || !email || !password) {
+    // Validate role
+    const userRole = role || 'student';
+    let userPassword = ""
+    
+    if (!VALID_USER_ROLES.includes(userRole)) {
       return res.status(400).json({ 
-        error: 'First name, last name, email, and password are required' 
+        error: `Invalid role. Must be: ${VALID_USER_ROLES.join(', ')}` 
       });
+    }
+
+    // Basic validation for student
+    if (userRole === 'student') {
+      if (!firstName || !lastName || !email ||!password) {
+        return res.status(400).json({ 
+          error: 'First name, last name, email and password are required' 
+        });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ 
+          error: 'Password must be at least 6 characters long' 
+        });
+      }
+      
+      userPassword = password;
+    }
+
+    // Basic validation for non-students
+    if (['admin', 'course_owner'].includes(userRole)) {
+      if (!firstName || !lastName || !email) {
+        return res.status(400).json({ 
+          error: 'First name, last name and email are required' 
+        });
+      }
+
+      // initial password generation
+      const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=";
+      for (let i=0; i < 12; i++) {
+        const random = Math.floor(Math.random() * chars.length);
+        userPassword += chars[random];
+      }
     }
 
     // Email validation
@@ -19,13 +55,6 @@ const register = async (req, res) => {
     if (!emailRegex.test(email)) {
       return res.status(400).json({ 
         error: 'Please provide a valid email address' 
-      });
-    }
-
-    // Password validation
-    if (password.length < 6) {
-      return res.status(400).json({ 
-        error: 'Password must be at least 6 characters long' 
       });
     }
 
@@ -37,17 +66,8 @@ const register = async (req, res) => {
       });
     }
 
-    // Validate role
-    const userRole = role || 'student';
-    
-    if (!VALID_USER_ROLES.includes(userRole)) {
-      return res.status(400).json({ 
-        error: `Invalid role. Must be: ${VALID_USER_ROLES.join(', ')}` 
-      });
-    }
-
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(userPassword, 10);
 
     // Create user
     const newUser = await User.create({
@@ -82,7 +102,6 @@ const register = async (req, res) => {
           requiresVerification: true
         });
       }
-      
 
       // Normal case
       res.status(201).json({
@@ -96,17 +115,22 @@ const register = async (req, res) => {
       // Admin and course_owner are automatically verified
       await User.markEmailVerified(email);
 
+      const emailResult = await sendInitialPassword(email, userPassword, firstName);
+      
+      if (!emailResult.success) {
+        console.warn("⚠️ Failed to send initial password, falling back to console only:", emailResult.error);
+
+        // ✅ Still return success so frontend can go to /login2fa
+        return res.status(201).json({
+          message: 'Registration successful! Please check initial password in terminal (email not sent).',
+          email: email,
+          userPassword // ⚠️ include only for dev testing, remove in prod
+        });
+      }
+
+      // Normal case
       res.status(201).json({
-        message: 'Registration successful! Your account is ready to use.',
-        user: {
-          id: newUser.userID,
-          firstName: newUser.firstName,
-          lastName: newUser.lastName,
-          email: newUser.email,
-          role: newUser.role,
-          isEmailVerified: true
-        },
-        requiresVerification: false
+        message: 'Registration successful! Initial password sent to a new user'
       });
     }
 

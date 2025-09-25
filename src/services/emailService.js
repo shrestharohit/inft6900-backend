@@ -104,8 +104,53 @@ const sendOTPEmailForpasswordReset = async (email, otp, firstName) => {
   }
 };
 
+
+// Send inital password for admin and course owner
+const sendInitialPassword = async (email, password, firstName) => {
+  try {
+    const transporter = createTransporter();
+
+    // ✅ Always log OTP to backend terminal for now
+    console.log(`📩 Initial password for ${email} (${firstName}): ${password}`);
+
+    const mailOptions = {
+      from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,
+      to: email,
+      subject: "Brainwave - Your account has been created",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Welcome to Brainwave!</h2>
+          <p>Hi ${firstName},</p>
+          <p>Your account has been created by our admin. Here is the initial password:</p>
+          
+          <div style="background-color: #f4f4f4; padding: 20px; text-align: center; margin: 20px 0;">
+            <h1 style="color: #007bff; font-size: 32px; margin: 0; letter-spacing: 5px;">${password}</h1>
+          </div>
+          
+          <p>Please do not share this password wtih anyone.</p>
+          <p>If you did not request for account registration, please ignore this email.</p>
+          
+          <hr style="margin: 30px 0;">
+          <p style="color: #666; font-size: 12px;">
+            This is an automated message from Brainwave. Please do not reply to this email.
+          </p>
+        </div>
+      `,
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log("✅ Initial password email sent successfully:", result.messageId);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error("❌ Failed to send iInitial password email:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+
 module.exports = {
   generateOTP,
   sendOTPEmail,
   sendOTPEmailForpasswordReset,
+  sendInitialPassword
 };
