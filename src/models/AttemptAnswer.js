@@ -25,7 +25,6 @@ class AttemptAnswer {
         }
 
         const result = await db.query(query, [attemptID, questionID, optionID]);
-        console.log(result)
         return result.rows[0];
     }
 
@@ -84,36 +83,6 @@ class AttemptAnswer {
         return result.rows;
     }
 
-    // // Not needed?
-    // static async update(attemptAnswerID, updateData, client = null) {
-    //     const db = client || pool;
-    //     const allowedFields = [optiondID];
-    //     const updates = [];
-    //     const values = [];
-    //     let paramCount = 1;
-
-    //     for (const [key, value] of Object.entries(updateData)) {
-    //         if (allowedFields.includes(key) && value !== undefined) {
-    //             updates.push(`"${key}" = $${paramCount}`);
-    //             values.push(value);
-    //             paramCount++;
-    //         }
-    //     };
-
-    //     if (updates.length === 0) throw new Error('No valid fields to update');
-
-    //     updates.push(`"endTime" = NOW()`);
-    //     values.push(attemptAnswerID);
-
-    //     const query = `
-    //     UPDATE "AttemptAnswer"
-    //     SET ${updates.join(', ')}
-    //     WHERE "attemptAnswerID" = $${paramCount}
-    //     RETURNING *
-    //     `;
-    //     const result = await db.query(query, values);
-    //     return result.rows[0];
-    // }
 }
 
 module.exports = AttemptAnswer;

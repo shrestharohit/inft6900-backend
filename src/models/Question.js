@@ -15,7 +15,6 @@ class Question {
         const db = client || pool;
         const query = `SELECT * FROM "Question" WHERE "questionID" = $1 AND "status" = 'active'`;
         const result = await db.query(query, [questionID]);
-        console.log(result)
         return result.rows[0];
     }
 

@@ -16,13 +16,13 @@ const registerAnswer = async (attempt, answer, client) => {
         };
 
         // Validate question ID
-        const question = await Question.findById(questionID, client);
+        const question = await Question.findById(questionID);
         if (!question) {
             throw new Error('Invalid quesiton ID. Question not found.');
         };
         
         // Validate option ID
-        const option = await AnswerOption.findById(optionID, client);
+        const option = await AnswerOption.findById(optionID);
         if (optionID !== null && !option) {
             throw new Error('Invalid option ID. Option not found.');
         };
@@ -34,7 +34,17 @@ const registerAnswer = async (attempt, answer, client) => {
             optionID: optionID
         }, client);
 
-        return { attemptAnswer };
+        // Prepare answer data
+        const processedAnswer = attemptAnswer;
+        const correctOption = await AnswerOption.findAnswerForQuestion(questionID)
+        processedAnswer.correctOptionID = correctOption.optionID;
+
+        if (!attemptAnswer.optionID) {
+            answer = await AnswerOption.findById(processedAnswer.correctOptionID)
+            processedAnswer.feedbackText = answer.feedbackText;
+        }
+
+        return { attemptAnswer: processedAnswer};
     } catch(error) {
         throw error;
     }

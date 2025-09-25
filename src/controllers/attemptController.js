@@ -47,11 +47,17 @@ const startAttempt = async(req, res) => {
 
         // Validate enrolment
         const enrolment = await Enrolment.findById(enrolmentID);
+        if (!enrolment) {
+            return res.status(400).json({
+                error: 'Enrolment not found'
+            });
+        }
+
         const enrolledCourse = enrolment.courseID;
         const module = await Quiz.findById(quizID)
         const quizCourse = await Module.findById(module.moduleID);
 
-        if (!enrolment || enrolledCourse !== quizCourse.courseID) {
+        if (enrolledCourse !== quizCourse.courseID) {
             return res.status(400).json({
                 error: 'Enrolment has not been made for the course'
             });
@@ -123,12 +129,13 @@ const submitAttemp = async (req, res) => {
 
         // Try registering each attempt answer
         let correctCount = 0;
+        let attemptAnswers = [];
         const counter = {}
         for (const answer of processedAnswers) {
             try {
                 const newAnswer = await registerAnswer(attempt, answer, client);
+                attemptAnswers.push(newAnswer);
                 const { questionID } = answer;
-                console.log(questionID)
                 counter[questionID] = (counter[questionID] || 0) + 1;
                 if (newAnswer.attemptAnswer.isCorrect) {
                     correctCount++;
@@ -159,7 +166,7 @@ const submitAttemp = async (req, res) => {
             passed: passed
         }, client);
 
-        const attemptResults = await AttemptAnswer.findByAttemptID(attempt.attemptID, client);
+        // const attemptResults = await AttemptAnswer.findByAttemptID(attempt.attemptID, client);
 
         res.json({
             message: 'Attempt submitted successfully',
@@ -172,7 +179,7 @@ const submitAttemp = async (req, res) => {
                 endTime: updatedAttempt.endTime,
                 score: updatedAttempt.score,
                 passed: updatedAttempt.passed,
-                answers : attemptResults
+                answers : attemptAnswers
             }
         });
 
@@ -208,7 +215,27 @@ const getQuizResult = async (req, res) => {
 
         // Get options under the attemp
         const answers = await AttemptAnswer.findByAttemptID(attempt.attemptID);
-        attempt.answers = answers;
+
+        processedAnswers = [];
+        let processedAnswer = null;
+        let correctOption = null;
+
+        // Prepare answer data
+        for (answer of answers) {
+            processedAnswer = answer;
+            correctOption = await AnswerOption.findAnswerForQuestion(answer.questionID)
+
+            if (!answer.optionID) {
+                correctOption = await AnswerOption.findById(correctOption.optionID)
+                processedAnswer.feedbackText = correctOption.feedbackText;
+            }
+
+            processedAnswer.correctOptionID = correctOption.optionID;
+
+            processedAnswers.push(processedAnswer);
+        }
+
+        attempt.answers = processedAnswers;
 
         res.json(attempt);
     } catch(error) {
