@@ -44,7 +44,7 @@ router.post("/:quizID/start", startAttempt);
 
 router.put("/:quizID/submit", submitAttemp);
 
-router.get("/:quizID/:attemptID/result", getQuizResult);
+router.get("/:quizID/result/:attemptID", getQuizResult);
 
 
 module.exports = router;

@@ -11,8 +11,8 @@ const registerAnswer = async (attempt, answer, client) => {
         const { questionID, optionID } = answer;
 
         // Basic validataion
-        if (!questionID || !optionID) {
-            throw new Error('Attempt answer registration error: Question ID and option ID are required');
+        if (!questionID) {
+            throw new Error('Attempt answer registration error: Question ID is required');
         };
 
         // Validate question ID
@@ -23,10 +23,10 @@ const registerAnswer = async (attempt, answer, client) => {
         
         // Validate option ID
         const option = await AnswerOption.findById(optionID, client);
-        if (!option) {
+        if (optionID !== null && !option) {
             throw new Error('Invalid option ID. Option not found.');
         };
-        console.log(`Creating attempt answer for: ${attempt.attemptID}, ${questionID}, ${optionID}`);
+        
         // Register answer
         const attemptAnswer = await AttemptAnswer.create({
             attemptID: attempt.attemptID, 

@@ -20,54 +20,42 @@ const QuizAttempt = require('../models/QuizAttempt');
 
 const startAttempt = async(req, res) => {
     try {
-        const { courseID, moduleNumber } = req.params;
-        const { studentID } = req.body;
+        const { quizID } = req.params;
+        const { enrolmentID } = req.body;
 
         // Validate course id is provided
-        if (!moduleNumber || !courseID) {
+        if (!quizID) {
             return res.status(400).json({ 
-                error: 'Module number and course ID are required.' 
+                error: 'Quiz ID required.' 
             });
         };
 
         // Basic validataion
-        if (!studentID) {
+        if (!enrolmentID) {
             return res.status(400).json({
-                error: 'Student ID and answers are required'
-            });
-        };
-
-        // Validate module ID and course ID
-        const quizModule = await Module.findByCourseIdModuleNumber(courseID, moduleNumber);
-        if (!quizModule) {
-            return res.status(400).json({
-                error: 'Invalid course ID and module number. Module not found.'
+                error: 'Enrolment ID required'
             });
         };
 
         // Check if there is any quiz for the module
-        const quiz = await Quiz.findByModule(quizModule.moduleID);
+        const quiz = await Quiz.findById(quizID);
         if (!quiz) {
             return res.status(400).json({
                 error: 'Invalid course ID and module number. Quiz not found.'
             });
         };
 
-        // Validate student ID
-        const student = await User.findById(studentID);
-        if (!student || student.role !== 'student') {
-            return res.status(400).json({
-                error: 'Invalid student ID. Student does not exist.'
-            });
-        };
-
         // Validate enrolment
-        const enrolment = await Enrolment.findByCourseIdStudentId(courseID, studentID);
-        if (!enrolment) {
+        const enrolment = await Enrolment.findById(enrolmentID);
+        const enrolledCourse = enrolment.courseID;
+        const module = await Quiz.findById(quizID)
+        const quizCourse = await Module.findById(module.moduleID);
+
+        if (!enrolment || enrolledCourse !== quizCourse.courseID) {
             return res.status(400).json({
-                error: 'Invalid student ID. Student not enrolling the course.'
+                error: 'Enrolment has not been made for the course'
             });
-        };
+        }
 
         // Create attempt
         const newAttempt = await QuizAttempt.start({
@@ -120,10 +108,23 @@ const submitAttemp = async (req, res) => {
             });
         }
 
+        // Give a null value to unanswered questions
+        const processedAnswers = answers === undefined ? [] : answers;
+        const answeredQuestionIDs = processedAnswers.map(row => row.questionID);
+        const questions = await Question.findByQuizId(attempt.quizID);
+        for (question of questions) {
+            if (!answeredQuestionIDs.includes(question.questionID)) {
+                processedAnswers.push({
+                        'questionID': question.questionID,
+                        'optionID': null
+                    })
+            }
+        }
+
         // Try registering each attempt answer
         let correctCount = 0;
         const counter = {}
-        for (const answer of answers) {
+        for (const answer of processedAnswers) {
             try {
                 const newAnswer = await registerAnswer(attempt, answer, client);
                 const { questionID } = answer;
@@ -187,8 +188,33 @@ const submitAttemp = async (req, res) => {
 
 
 const getQuizResult = async (req, res) => {
-    const { courseID, moduleNumber, attemptCount } = req.params;
-    const { studentID } = req.body;
+    try{
+        const { attemptID } = req.params;
+
+        // Validate if attemptID and enrolmentID are provided
+        if (!attemptID) {
+            return res.status(400).json({
+                error: 'Attempt ID and enrolment ID are required.'
+            });
+        }
+
+        // Validate if attemptID exists
+        const attempt = await QuizAttempt.findById(attemptID);
+        if (!attempt) {
+            return res.status(400).json({
+                error: 'Attempt ID not found.'
+            });
+        }
+
+        // Get options under the attemp
+        const answers = await AttemptAnswer.findByAttemptID(attempt.attemptID);
+        attempt.answers = answers;
+
+        res.json(attempt);
+    } catch(error) {
+        console.error('Get quiz result error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 
 }
 

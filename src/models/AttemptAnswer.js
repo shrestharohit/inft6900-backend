@@ -3,17 +3,27 @@ const { pool } = require('../config/database');
 class AttemptAnswer {
     static async create({ attemptID, questionID, optionID }, client) {
         const db = client || pool;
-        const query = `
-        INSERT INTO "AttemptAnswer" ("attemptID", "questionID", "optionID", "isCorrect")
-        SELECT 
-            $1 AS "attemptID", 
-            $2 AS "questionID",
-            $3 AS "optionID",
-            ao."isCorrect"
-        FROM "AnswerOption" ao
-        WHERE ao."optionID" = $3
-        RETURNING *
-        `;
+        let query = '';
+        if (!optionID) {
+            query = `
+            INSERT INTO "AttemptAnswer" ("attemptID", "questionID", "optionID", "isCorrect")
+            VALUES($1, $2, $3, false)
+            RETURNING *
+            `;
+        } else {
+            query = `
+            INSERT INTO "AttemptAnswer" ("attemptID", "questionID", "optionID", "isCorrect")
+            SELECT 
+                $1 AS "attemptID", 
+                $2 AS "questionID",
+                $3 AS "optionID",
+                ao."isCorrect"
+            FROM "AnswerOption" ao
+            WHERE ao."optionID" = $3
+            RETURNING *
+            `;
+        }
+
         const result = await db.query(query, [attemptID, questionID, optionID]);
         console.log(result)
         return result.rows[0];

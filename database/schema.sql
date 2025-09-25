@@ -192,7 +192,7 @@ CREATE TABLE "AttemptAnswer" (
     "attemptAnswerID" SERIAL PRIMARY KEY,
     "attemptID" INT NOT NULL,
     "questionID" INT NOT NULL,
-    "optionID" INT NOT NULL,
+    "optionID" INT,
     "isCorrect" BOOLEAN,
     FOREIGN KEY ("attemptID") REFERENCES "QuizAttempt"("attemptID") ON DELETE CASCADE,
     FOREIGN KEY ("questionID") REFERENCES "Question"("questionID") ON DELETE CASCADE,
