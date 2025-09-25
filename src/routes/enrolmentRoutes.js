@@ -11,6 +11,7 @@ const {
   getUserEnrolment,
   getAll,
   getMeta,
+  testFunction
 } = require("../controllers/enrolmentController");
 
 const router = express.Router();

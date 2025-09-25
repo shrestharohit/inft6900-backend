@@ -7,15 +7,15 @@ const register = async (req, res) => {
         const { title, userID, category, level, outline, status } = req.body;
 
         // Basic validataion
-        if (!title || !category || !level || !outline || !status) {
+        if (!title || !level || !status) {
             return res.status(400).json({
-                error: 'Title, userID, level, outline and status are required'
+                error: 'Title, userID, level and status are required'
             });
         }
 
         // Validate owner id
-        const existingOwner = await User.findById(userID)
-        if (!existingOwner) {
+        const existingUser = await User.findById(userID)
+        if (!existingUser || existingUser.role !== 'course_owner') {
             return res.status(400).json({
                 error: 'Invalid user ID. Course Owner does not exist.'
             });
@@ -92,7 +92,8 @@ const update = async (req, res) => {
         }
 
         // Validate owner id
-        if (userID && !(await User.findById(userID))) {
+        const existingUser = await User.findById(userID);
+        if (!userID || existingUser.role !== 'course_owner') {
             return res.status(400).json({
                 error: 'Invalid user ID. Course Owner does not exist.'
             });

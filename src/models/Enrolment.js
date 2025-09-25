@@ -50,7 +50,7 @@ class Enrolment {
             SELECT * FROM "Enrolment" WHERE "pathwayID" = $1 AND "userID" = $2
         `;
         const result = await pool.query(query, [pathwayID, userID]);
-        return result.rows[0];
+        return result.rows;
     }
     
     static async update(id, updateData) {
@@ -116,6 +116,17 @@ class Enrolment {
             LIMIT 3
         `;
         const result = await pool.query(query);
+        return result.rows;
+    }
+
+    static async getUserEnrolledPathways(userID) {
+        const query =`
+            SELECT DISTINCT("pathwayID")
+            FROM "Enrolment"
+            WHERE "userID" = $1
+        `
+
+        const result = await pool.query(query, [userID]);
         return result.rows;
     }
 

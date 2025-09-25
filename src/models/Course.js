@@ -38,9 +38,7 @@ class Course {
 
     static async findByPathwayId(pathwayID) {
         const query = `
-            SELECT * FROM "Course" c
-            RIGHT JOIN "Pathway" p on c."courseID" = p."courseID"
-            WHERE p."pathwayID" = $1
+            SELECT * FROM "Course" WHERE "pathwayID" = $1
         `;
         const result = await pool.query(query, [pathwayID]);
         return result.rows;

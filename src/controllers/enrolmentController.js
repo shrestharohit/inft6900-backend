@@ -9,6 +9,7 @@ const enrolCourse = async (req, res) => {
     try {
         const courseID = req.params.courseID;
         const { userID } = req.body;
+        let pathwayID = null;
 
         // Validate course id is provided
         if (!courseID) {
@@ -40,8 +41,19 @@ const enrolCourse = async (req, res) => {
             });
         };
 
+        // Check if the user is doing pathway or single course
+        const isPathway = await isPathwayEnrolled(userID, courseID);
+        if (isPathway) {
+            pathwayID = enrolledCourse.pathwayID;
+        };
+
         // If user is taking a pathway, validate pre-requisite
-        
+        const passedPrerequisite = await valdiatePrerequisite(userID, pathwayID, enrolledCourse.courseID)
+        if (!passedPrerequisite) {
+            return res.status(400).json({
+                error: 'Invalid enrolment. User does not meet pre-requisite for this course.'
+            })
+        };
 
         // Check if the student has already enrolled the course
         const existingEnrolment = await Enrolment.findByCourseIdUserID(courseID, userID);
@@ -60,7 +72,7 @@ const enrolCourse = async (req, res) => {
         else {
             newEnrolment = await Enrolment.create({
                 pathwayID,
-                courseID, 
+                courseID,
                 userID,
             });
         }
@@ -232,7 +244,6 @@ const refreshStatus = async (enrolmentID) => {
 
         // switch to completed if all quizzes are passed
         quizzes = await Quiz.findByCourseID(enrolment.courseID);
-        console.log(quizzes)
         let completed = false;
         for (let quiz of quizzes) {
             if (!quiz.passed) {
@@ -276,6 +287,71 @@ const getMeta = (req, res) => {
 }
 
 
+// Get user's current level in the pathway
+const getUserLevel = async (userID, pathwayID) => {
+    const levels = {
+        'beginner': 1,
+        'intermediate': 2,
+        'advanced': 3,
+    }
+ 
+    let level = 1;
+    const enrolledCourses = await Enrolment.findByPathwayIdUserID(pathwayID, userID);
+
+    for (const course of enrolledCourses) {
+        if (course.status === "completed" && levels[course.level] > level) {
+            level = levels[course.level];
+        }
+    }
+    return level;
+}
+
+
+// Check if the user is enrolling pathway for the course or not
+const isPathwayEnrolled = async (userID, courseID) => {
+    // get all pathways user is taking
+    const pathwaysQuery = await Enrolment.getUserEnrolledPathways(userID);
+    const pathways = pathwaysQuery.map(row => row.pathwayID).filter(id => id !== null);
+    const enrolledCourse = await Course.findById(courseID);
+
+    // if user is not taking pathway of the enrolled course, then always true
+    if (pathways.includes(enrolledCourse.pathwayID)) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+// Validate if the user satisfies pre-requisite for pathway or not
+const valdiatePrerequisite = async (userID, pathwayID, courseID) => {
+    const levels = {
+        'beginner': 1,
+        'intermediate': 2,
+        'advanced': 3,
+    }
+
+    // if enrolled course does not have pathway, then always true
+    if (!pathwayID) {
+        return true;
+    }
+
+    // if user is not taking pathway of the enrolled course, then always true
+    if (!isPathwayEnrolled(userID, courseID)) {
+        return true;
+    }
+
+    // if user has completed a course higher level than the enrolled course, then alwasy true
+    const userLevel = await getUserLevel(userID, pathwayID);
+    const enrolledCourse = await Course.findById(courseID)
+    console.log(enrolledCourse.level)
+    if (userLevel > levels[enrolledCourse.level]) {
+        return true;
+    }
+
+    return false;
+}
+
+
 module.exports = {
     enrolCourse,
     disenrolCourse,
@@ -287,5 +363,5 @@ module.exports = {
     getPopular,
     getUserEnrolment,
     getAll,
-    getMeta,
+    getMeta
 };
