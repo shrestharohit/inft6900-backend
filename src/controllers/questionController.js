@@ -2,133 +2,124 @@ const Quiz = require('../models/Quiz');
 const Question = require('../models/Question');
 const Module = require('../models/Module');
 const { VALID_QUESTION_STATUS } = require('../config/constants');
+const {
+    registerOption,
+    updateOption,
+    inactivateOption
+} = require('./optionController');
+const AnswerOption = require('../models/AnswerOption');
 
-const register = async (req, res) => {
-    try {
-        const moduleNumber = req.params.moduleNumber;
-        const courseID = req.params.courseID;
-        const { questionNumber, questionText, status } = req.body;
-
-        // Validate course ID and module Number
-        const module = await Module.findByCourseIdModuleNumber(courseID, moduleNumber);
-        if (!module) {
-            return res.status(400).json({
-                error: 'Invalid course ID and module number. Module not found.'
-            });
-        };
-
-        // Check if quiz is already created for the module
-        const quiz = await Quiz.findByModule(module.moduleID);
-        if (!quiz) {
-            return res.status(400).json({
-                error: 'Quiz not found.'
-            });
-        }
-        
-        // Basic validataion
-        if (!questionNumber || !questionText || !status) {
-            return res.status(400).json({
-                error: 'Question number, question text and status are required'
-            });
-        }
-
-        // Validate if question number is already used in the same quiz
-        const existingQuestionNumber = await Question.findByQuizIdQuestionNumber(quiz.quizID, questionNumber);
-        if (existingQuestionNumber) {
-            return res.status(400).json({
-                error: 'Selected quiz number already used in the selected course'
-            });
-        }
-
-        // Validate status
-        const questionStatus = status || 'active';
-
-        if (!VALID_QUESTION_STATUS.includes(questionStatus)) {
-            return res.status(400).json({
-                error: `Invalid status. Must be:${VALID_QUESTION_STATUS.join(', ')} `
-            });
-        }
-
-        // Create course
-        const newQuestion = await Question.create({
-            quizID: quiz.quizID, 
-            questionNumber, 
-            questionText, 
-            status: questionStatus
-        });
-
-        res.json({
-            message: 'Question registered successfully',
-            question: {
-                questionID: newQuestion.questionID,
-                quizID: newQuestion.quizID,
-                questionNumber: newQuestion.questionNumber,
-                questionText: newQuestion.questionText,
-                status: newQuestion.status,
-                created_at: newQuestion.created_at
-            }
-        });
+const { pool } = require('../config/database');
 
 
-    } catch(error) {
-        console.error('Registration error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+const registerQuestion = async (quiz, question) => {
+    const { questionNumber, questionText, status, options } = question
+
+    // Basic validataion
+    if (!questionNumber || !questionText || !status || !options) {
+        throw new Error('Question registration error: Question number, question text, status and options are required');
+    }
+
+    // Validate status
+    const questionStatus = status || 'active';
+    if (!VALID_QUESTION_STATUS.includes(questionStatus)) {
+        throw new Error(`Question registration error: Invalid status. Must be:${VALID_QUESTION_STATUS.join(', ')}`);
+    }
+
+    // Validate if question number is already used in the same quiz
+    const existingQuestionNumber = await Question.findByQuizIdQuestionNumber(quiz.quizID, questionNumber);
+    if (existingQuestionNumber) {
+        throw new Error('Question registration error: Selected quiz number already used in the selected course');
+    }
+
+    // Create questions
+    const newQuestion = await Question.create({
+        quizID: quiz.quizID, 
+        questionNumber, 
+        questionText, 
+        status: questionStatus
+    });
+
+    // Call option registration
+    const newOptions = []
+    for (const option of options) {
+        const newOption = await registerOption(newQuestion, option);
+        newOptions.push(newOption);
     };
+
+    return { ...newQuestion, options: newOptions };
 };
 
 
-const update = async (req, res) => {
+const updateQuestion = async (quiz, question, client) => {
     try {
-        const currentQuestionNumber = req.params.questionNumber;
-        const moduleNumber = req.params.moduleNumber;
-        const courseID = req.params.courseID;
-        const { questionNumber, questionText, status } = req.body;
+        const { questionID, questionNumber, questionText, status, options =[] } = question
 
-        // Validate course ID and module Number
-        const module = await Module.findByCourseIdModuleNumber(courseID, moduleNumber);
-        if (!module) {
-            return res.status(400).json({
-                error: 'Invalid course ID and module number. Module not found.'
-            });
+        // Basic valiadtion
+        if (!questionID) {
+             throw new Error(`Question update error: Question ID required`);
         };
 
-        // Check if quiz is already created for the module
-        const quiz = await Quiz.findByModule(module.moduleID);
-        if (!quiz) {
-            return res.status(400).json({
-                error: 'Quiz not found.'
-            });
+        // Validate if question ID exists
+        const existingQuestion = await Question.findById(questionID);
+        console.log(questionID)
+        console.log(existingQuestion)
+        if (!existingQuestion) {
+            throw new Error('Question update error: Selected question does not exist.')
+        };
+        
+        // Validate status
+        const questionStatus = status;
+        if (questionStatus !== undefined && !VALID_QUESTION_STATUS.includes(questionStatus)) {
+            throw new Error(`Question update error: Invalid status. Must be:${VALID_QUESTION_STATUS.join(', ')} `);
+        };
+
+        // Validate if there will be any multiple correct answers
+        const currentAnswer = await AnswerOption.findAnswerForQuestion(existingQuestion.questionID);
+        let answerCounter = 0;
+        for (const option of options) {
+            if (option.isCorrect && option.optionOrder !== currentAnswer?.optionOrder) {
+                answerCounter++;
+            }
+        };
+
+        if ((currentAnswer && answerCounter > 0) || answerCounter > 1) {
+            throw new Error('Option update error: Multiple correct options selected.')
+        };
+
+        // Validate if the question number is already takne
+        if (questionNumber !== existingQuestion.questionNumber) {
+            const existingQuestionNumber = await Question.findByQuizIdQuestionNumber(quiz.quizID, questionNumber);
+            if (existingQuestionNumber) {
+                throw new Error('Question update error: Selected question number already used');
+            }
+        }
+
+        // Validate option's data type
+        if (!Array.isArray(options)) {
+            throw new Error('Options must be an array.');
         }
         
-        // Validate question number
-        if (!currentQuestionNumber) {
-            return res.status(400).json({
-                error: 'Question number is required'
-            });
-        };
+        // Try updating questions first
+        const optionIDs = (await AnswerOption.findByQuestionID(existingQuestion.questionID)).map(o=> o.optionID);
+        for (const id of optionIDs) {
+            if (!options.map(o => o.optionID).includes(id)) {
+                const deletedOption = await AnswerOption.findById(id);
+                await inactivateOption(deletedOption, client);
+            }
+        }
 
-        // Check if question exists
-        const existingQuestion = await Question.findByQuizIdQuestionNumber(quiz.quizID, currentQuestionNumber);
-        if (!existingQuestion) {
-            return res.status(404).json({
-                error: 'Question not found'
-            });
-        };
-
-        // Validate if question number is already used in the same quiz
-        const isUsedQuestionNumber = !!(await Question.findByQuizIdQuestionNumber(quiz.quizID, questionNumber));
-        if (questionNumber && questionNumber !== parseInt(currentQuestionNumber) && isUsedQuestionNumber) {
-            return res.status(400).json({
-                error: 'Selected question number already used in the selected quiz'
-            });
-        };
-
-        // Validate status
-        questionStatus = status;
-        if (questionStatus !== undefined && !VALID_QUESTION_STATUS.includes(questionStatus)) {
-            return res.status(400).json({
-                error: `Invalid status. Must be:${VALID_QUESTION_STATUS.join(', ')} `
-            });
+        // Update options
+        const updatedOptions = []
+        for (const option of options) {
+            // if option ID is specified, update the specified option. otherwise, take it as a new option.
+            if (option.optionID) {
+                const updatedOption = await updateOption(existingQuestion, option, client);
+                updatedOptions.push(updatedOption);
+            } else {
+                const newOption = await registerOption(existingQuestion, option, client);
+                updatedOptions.push(newOption);
+            }
         };
         
         // Prepare update data
@@ -138,57 +129,30 @@ const update = async (req, res) => {
         if (status !== undefined) updateData.status = questionStatus;
 
         // Update module
-        const updateQuestion = await Question.update(existingQuestion.questionID, updateData);
+        const updatedQuestion =  await Question.update(existingQuestion.questionID, updateData, client);
 
-        res.json({
-            message: 'Question updated successfully',
-            question: {
-                questionID: updateQuestion.questionID,
-                quizID: updateQuestion.quizID,
-                questionNumber: updateQuestion.questionNumber,
-                questionText: updateQuestion.questionText,
-                status: updateQuestion.status,
-                udpated_at: updateQuestion.udpated_at
-            }
-        });
-
+        return { 
+            ...updatedQuestion, 
+            options: updatedOptions 
+        }
     } catch(error) {
-        console.error('Update question error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        throw error;
     }
 };
 
 const getQuestion = async (req, res) => {
     try {
-        const questionNumber = req.params.questionNumber;
-        const moduleNumber = req.params.moduleNumber;
-        const courseID = req.params.courseID;
-
-        // Validate course ID and module Number
-        const module = await Module.findByCourseIdModuleNumber(courseID, moduleNumber);
-        if (!module) {
-            return res.status(400).json({
-                error: 'Invalid course ID and module number. Module not found.'
-            });
-        };
-
-        // Check if quiz is already created for the module
-        const quiz = await Quiz.findByModule(module.moduleID);
-        if (!quiz) {
-            return res.status(400).json({
-                error: 'Quiz not found.'
-            });
-        }
+        const questionID = req.params.questionID;
 
         // Check if question exists
-        const existingQuestion = await Question.findByQuizIdQuestionNumber(quiz.quizID, questionNumber);
-        if (!existingQuestion) {
+        const question = await Question.findById(questionID);
+        if (!question) {
             return res.status(404).json({
                 error: 'Question not found'
             });
         };
 
-        res.json(existingQuestion);
+        res.json(question);
     } catch (error) {
         console.error('Get question error:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -198,33 +162,27 @@ const getQuestion = async (req, res) => {
 
 const getAllInQuiz = async (req, res) => {
     try{
-        const moduleNumber = req.params.moduleNumber;
-        const courseID = req.params.courseID;
+        const quizID = req.params.quizID;
 
-        // Validate course ID and module Number
-        const module = await Module.findByCourseIdModuleNumber(courseID, moduleNumber);
-        if (!module) {
-            return res.status(400).json({
-                error: 'Invalid course ID and module number. Module not found.'
-            });
-        };
-
-        // Check if quiz is already created for the module
-        const quiz = await Quiz.findByModule(module.moduleID);
+        // Check if quiz exists
+        const quiz = await Quiz.findById(quizID);
         if (!quiz) {
-            return res.status(400).json({
+            return res.status(404).json({
                 error: 'Quiz not found.'
             });
         }
 
-        const question = await Question.findByQuizId(quiz.quizID);
-        res.json(question);
+        const questions = await Question.findByQuizId(quiz.quizID);
+        res.json(questions);
     } catch (error) {
         console.error('Get question error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };
 
+const inactivateQuestion = async(question, client) => {
+    return await Question.update(question.questionID, {status: 'inactive'}, client);
+}
 
 const getMeta = (req, res) => {
     res.json({
@@ -234,8 +192,9 @@ const getMeta = (req, res) => {
 
 
 module.exports = {
-  register,
-  update,
+  registerQuestion,
+  updateQuestion,
+  inactivateQuestion,
   getQuestion,
   getAllInQuiz,
   getMeta,

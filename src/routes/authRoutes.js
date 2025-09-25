@@ -4,6 +4,8 @@ const {
   login,
   verifyOTP,
   resendOTP,
+  sendResetPasswordOTP,
+  verifyResetOTP,
   resetPassword,
   getCurrentUser,
   updateCurrentUser
@@ -18,6 +20,11 @@ router.post("/verify-otp", verifyOTP);
 router.post("/resend-otp", resendOTP);
 
 router.post("/login", login);
+
+
+router.post("/send-resetotp", sendResetPasswordOTP);
+
+router.post("/verify-resetotp", verifyResetOTP);
 
 router.post("/reset-password", resetPassword);
 

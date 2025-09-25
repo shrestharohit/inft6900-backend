@@ -99,18 +99,16 @@ CREATE TABLE "Module" (
 CREATE TABLE "Enrolment" (
     "enrolmentID" SERIAL PRIMARY KEY,
     "enrolDate" DATE DEFAULT CURRENT_DATE,
-    "enrolmentType" VARCHAR(50),
-    "enrolmentStatus" VARCHAR(20),
     "pathwayID" INT,
     "courseID" INT,
     "studentID" INT NOT NULL,
-    "completionStatus" VARCHAR(50),
-    "lastAccessDate" DATE,
+    "status" VARCHAR(50),
     "completionDate" DATE,
     "disenrolledDate" DATE,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("pathwayID") REFERENCES "Pathway"("pathwayID"),
     FOREIGN KEY ("courseID") REFERENCES "Course"("courseID"),
-    FOREIGN KEY ("studentID") REFERENCES "Student"("studentID") ON DELETE CASCADE
+    FOREIGN KEY ("studentID") REFERENCES "User"("userID") ON DELETE CASCADE -- alter FK constraint required
 );
 
 CREATE TABLE "ModuleAccess" (
@@ -184,8 +182,9 @@ CREATE TABLE "QuizAttempt" (
     "enrolmentID" INT NOT NULL,
     "startTime" TIMESTAMP,
     "endTime" TIMESTAMP,
-    "score" INT,
+    "score" DOUBLE PRECISION,
     "passed" BOOLEAN,
+    "count" INT, -- required to manage multiple attempts
     FOREIGN KEY ("quizID") REFERENCES "Quiz"("quizID") ON DELETE CASCADE,
     FOREIGN KEY ("enrolmentID") REFERENCES "Enrolment"("enrolmentID") ON DELETE CASCADE
 );
@@ -194,9 +193,8 @@ CREATE TABLE "AttemptAnswer" (
     "attemptAnswerID" SERIAL PRIMARY KEY,
     "attemptID" INT NOT NULL,
     "questionID" INT NOT NULL,
-    "optionID" INT NOT NULL,
-    "answerText" TEXT,
-    -- isCorrect BOOLEAN,  -- <- this may not be necessary since it is already defined in answeroption
+    "optionID" INT,
+    "isCorrect" BOOLEAN,
     FOREIGN KEY ("attemptID") REFERENCES "QuizAttempt"("attemptID") ON DELETE CASCADE,
     FOREIGN KEY ("questionID") REFERENCES "Question"("questionID") ON DELETE CASCADE,
     FOREIGN KEY ("optionID") REFERENCES "AnswerOption"("optionID") ON DELETE CASCADE

@@ -1,7 +1,7 @@
 const { pool } = require('../config/database');
 
 class User {
-  static async create({ firstName, lastName, email, passwordHash, role = 'student' }) {
+  static async create({ firstName, lastName, email, passwordHash, role }) {
     const query = `
       INSERT INTO "User" ("firstName", "lastName", "email", "passwordHash", "role", "created_at")
       VALUES ($1, $2, $3, $4, $5, NOW())
@@ -44,7 +44,7 @@ class User {
       throw new Error('No valid fields to update');
     }
 
-    updates.push(`updated_at = NOW()`);
+    updates.push(`"updated_at" = NOW()`);
     values.push(id);
 
     const query = `
@@ -67,7 +67,7 @@ class User {
     return result.rows;
   }
 
-  // OTP Methods
+  // 🔹 OTP Methods
   static async setOTP(email, otpCode, expiresAt) {
     const query = `
       UPDATE "User"
@@ -88,6 +88,15 @@ class User {
     return result.rows[0];
   }
 
+  static async verifyResetOTP(email, otpCode) {
+    const query = `
+      SELECT * FROM "User"
+      WHERE "email" = $1 AND "otpCode" = $2 AND "otpExpiresAt" > NOW()
+    `;
+    const result = await pool.query(query, [email, otpCode]);
+    return result.rows[0];
+  }
+
   static async markEmailVerified(email) {
     const query = `
       UPDATE "User"
@@ -98,6 +107,20 @@ class User {
     const result = await pool.query(query, [email]);
     return result.rows[0];
   }
+
+  // 🔹 Reset Password
+  static async updatePassword(email, newHashedPassword) {
+    const query = `
+      UPDATE "User"
+      SET "passwordHash" = $1, "updated_at" = NOW()
+      WHERE "email" = $2
+      RETURNING "userID", "firstName", "lastName", "email", "role", "isEmailVerified";
+    `;
+    const result = await pool.query(query, [newHashedPassword, email]);
+    return result.rows[0];
+  }
+
+  
 }
 
 module.exports = User;

@@ -1,17 +1,53 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const { VALID_USER_ROLES } = require('../config/constants');
-const { generateOTP, sendOTPEmail } = require('../services/emailService');
+const { generateOTP, sendOTPEmail, sendOTPEmailForpasswordReset, sendInitialPassword } = require('../services/emailService');
 
 const register = async (req, res) => {
   try {
     const { firstName, lastName, email, password, role } = req.body;
 
-    // Basic validation
-    if (!firstName || !lastName || !email || !password) {
+    // Validate role
+    const userRole = role || 'student';
+    let userPassword = ""
+    
+    if (!VALID_USER_ROLES.includes(userRole)) {
       return res.status(400).json({ 
-        error: 'First name, last name, email, and password are required' 
+        error: `Invalid role. Must be: ${VALID_USER_ROLES.join(', ')}` 
       });
+    }
+
+    // Basic validation for student
+    if (userRole === 'student') {
+      if (!firstName || !lastName || !email ||!password) {
+        return res.status(400).json({ 
+          error: 'First name, last name, email and password are required' 
+        });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ 
+          error: 'Password must be at least 6 characters long' 
+        });
+      }
+      
+      userPassword = password;
+    }
+
+    // Basic validation for non-students
+    if (['admin', 'course_owner'].includes(userRole)) {
+      if (!firstName || !lastName || !email) {
+        return res.status(400).json({ 
+          error: 'First name, last name and email are required' 
+        });
+      }
+
+      // initial password generation
+      const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*_+~|:./-";
+      for (let i=0; i < 12; i++) {
+        const random = Math.floor(Math.random() * chars.length);
+        userPassword += chars[random];
+      }
     }
 
     // Email validation
@@ -19,13 +55,6 @@ const register = async (req, res) => {
     if (!emailRegex.test(email)) {
       return res.status(400).json({ 
         error: 'Please provide a valid email address' 
-      });
-    }
-
-    // Password validation
-    if (password.length < 6) {
-      return res.status(400).json({ 
-        error: 'Password must be at least 6 characters long' 
       });
     }
 
@@ -37,17 +66,8 @@ const register = async (req, res) => {
       });
     }
 
-    // Validate role
-    const userRole = role || 'student';
-    
-    if (!VALID_USER_ROLES.includes(userRole)) {
-      return res.status(400).json({ 
-        error: `Invalid role. Must be: ${VALID_USER_ROLES.join(', ')}` 
-      });
-    }
-
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(userPassword, 10);
 
     // Create user
     const newUser = await User.create({
@@ -82,7 +102,6 @@ const register = async (req, res) => {
           requiresVerification: true
         });
       }
-      
 
       // Normal case
       res.status(201).json({
@@ -96,17 +115,22 @@ const register = async (req, res) => {
       // Admin and course_owner are automatically verified
       await User.markEmailVerified(email);
 
+      const emailResult = await sendInitialPassword(email, userPassword, firstName);
+      
+      if (!emailResult.success) {
+        console.warn("⚠️ Failed to send initial password, falling back to console only:", emailResult.error);
+
+        // ✅ Still return success so frontend can go to /login2fa
+        return res.status(201).json({
+          message: 'Registration successful! Please check initial password in terminal (email not sent).',
+          email: email,
+          userPassword // ⚠️ include only for dev testing, remove in prod
+        });
+      }
+
+      // Normal case
       res.status(201).json({
-        message: 'Registration successful! Your account is ready to use.',
-        user: {
-          id: newUser.userID,
-          firstName: newUser.firstName,
-          lastName: newUser.lastName,
-          email: newUser.email,
-          role: newUser.role,
-          isEmailVerified: true
-        },
-        requiresVerification: false
+        message: 'Registration successful! Initial password sent to a new user'
       });
     }
 
@@ -299,6 +323,7 @@ const verifyOTP = async (req, res) => {
 
     // Mark email as verified and clear OTP
     const verifiedUser = await User.markEmailVerified(email);
+    req.session.verified = true;
 
     res.status(200).json({
       message: 'Email verified successfully!',
@@ -379,9 +404,99 @@ const resendOTP = async (req, res) => {
   }
 };
 
+const sendResetPasswordOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    // Basic validation
+    if (!email) {
+      return res.status(400).json({ 
+        error: 'Email is required' 
+      });
+    }
+
+    // Check if user exists and is not verified
+    const user = await User.findByEmail(email);
+    if (!user) {
+      return res.status(404).json({ 
+        error: 'User not found' 
+      });
+    }
+
+    // Generate new OTP
+    const otpCode = generateOTP();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+
+    // Update OTP in user record
+    await User.setOTP(email, otpCode, expiresAt);
+
+    // Send new OTP email
+    const emailResult = await sendOTPEmailForpasswordReset(email, otpCode, user.firstName);
+    
+    if (!emailResult.success) {
+      return res.status(500).json({ 
+        error: 'Failed to send verification email. Please try again.' 
+      });
+    }
+
+    res.status(200).json({
+      message: 'New verification code sent successfully!',
+      email: email,
+      expiresIn: '10 minutes'
+    });
+
+  } catch (error) {
+    console.error('Password reset email error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+const verifyResetOTP = async (req, res) => {
+  try {
+    const { email, otpCode } = req.body;
+
+    // Basic validation
+    if (!email || !otpCode) {
+      return res.status(400).json({ 
+        error: 'Email and OTP code are required' 
+      });
+    }
+
+    // Verify OTP
+    const user = await User.verifyResetOTP(email, otpCode);
+    if (!user) {
+      return res.status(400).json({ 
+        error: 'Invalid or expired OTP code' 
+      });
+    }
+
+    req.session.verified = true;
+
+    res.status(200).json({
+      message: 'OTP verified successfully!',
+      user: {
+        id: user.userID,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+        isEmailVerified: user.isEmailVerified
+      }
+    });
+
+  } catch (error) {
+    console.error('OTP verification error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 const resetPassword = async (req, res) => {
   try {
     const { email, newPassword, confirmPassword } = req.body;
+
+    if (!req.session.verified) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
 
     // Basic validation
     if (!email || !newPassword || !confirmPassword) {
@@ -410,11 +525,12 @@ const resetPassword = async (req, res) => {
       return res.status(500).json({ error: 'Failed to update password' });
     }
 
+    req.session.verified = false;
     res.json({
       message: 'Password reset successful! You can now log in with your new password.',
       user: updatedUser
     });
-
+    
   } catch (error) {
     console.error('❌ Reset password error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -429,5 +545,7 @@ module.exports = {
   updateCurrentUser,
   verifyOTP,
   resendOTP,
-  resetPassword
+  sendResetPasswordOTP,
+  verifyResetOTP,
+  resetPassword,
 };
