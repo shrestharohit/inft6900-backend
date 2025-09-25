@@ -169,8 +169,30 @@ const getModule = async (req, res) => {
 }
 
 const getAll = async (req, res) => {
-    const modules = await Module.getAll();
-    res.json(modules);
+    try {
+        const courseID = req.params.courseID;
+
+        // Validate course ID
+        if (!courseID) {
+            return res.status(400).json({
+                error: 'Course ID required.'
+            });
+        }
+
+        // Check if course exists
+        const course = await Course.findById(courseID);
+        if (!course) {
+            return res.status(404).json({
+                error: 'Course not found.'
+            });
+        }
+
+        const modules = await Module.findByCourseId(courseID);
+        res.json(modules);
+    } catch (error) {
+        console.error('Get module error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 }
 
 

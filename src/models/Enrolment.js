@@ -95,7 +95,7 @@ class Enrolment {
 
     static async getPopularCourses() {
         const query =`
-            SELECT e."courseID", c."title", c."category", c."level", COUNT("userID") "count" FROM "Enrolment" e
+            SELECT e."courseID", c."title", c."category", c."level", COUNT(e."userID") "count" FROM "Enrolment" e
             LEFT JOIN "Course" c ON e."courseID" = e."courseID"
             WHERE NOT e.status = 'disenrolled'
             GROUP BY e."courseID", c."title", c."category", c."level"
@@ -108,7 +108,7 @@ class Enrolment {
 
     static async getPopularPathways() {
         const query =`
-            SELECT e."pathwayID", p."name", COUNT("userID") "count" FROM "Enrolment" e
+            SELECT e."pathwayID", p."name", COUNT(e."userID") "count" FROM "Enrolment" e
             LEFT JOIN "Pathway" p ON e."courseID" = e."courseID"
             WHERE NOT e."pathwayID" = NULL AND NOT e.status = 'disenrolled'
             GROUP BY e."pathwayID", p."name"

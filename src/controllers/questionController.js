@@ -160,6 +160,26 @@ const getQuestion = async (req, res) => {
     }
 }
 
+const getAnswerInQuestion = async (req, res) => {
+    try{
+        const questionID = req.params.questionID;
+
+        // Check if quiz exists
+        const question = await Question.findById(questionID);
+        if (!question) {
+            return res.status(404).json({
+                error: 'Question not found.'
+            });
+        }
+
+        const answer = await Question.findAnswer(questionID);
+        res.json(answer);
+    } catch (error) {
+        console.error('Get question error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
 const getAllInQuiz = async (req, res) => {
     try{
         const quizID = req.params.quizID;
@@ -196,6 +216,7 @@ module.exports = {
   updateQuestion,
   inactivateQuestion,
   getQuestion,
+  getAnswerInQuestion,
   getAllInQuiz,
   getMeta,
 };
