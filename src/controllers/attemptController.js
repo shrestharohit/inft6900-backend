@@ -186,7 +186,14 @@ const submitAttemp = async (req, res) => {
 
 
 
+const getQuizResult = async (req, res) => {
+    const { courseID, moduleNumber, attemptCount } = req.params;
+    const { studentID } = req.body;
+
+}
+
 module.exports = {
     startAttempt,
-    submitAttemp
+    submitAttemp,
+    getQuizResult
 };

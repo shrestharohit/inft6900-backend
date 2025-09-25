@@ -1,4 +1,5 @@
 const express = require('express');
+const session = require('express-session');
 const cors = require('cors');
 require('dotenv').config();
 
@@ -33,6 +34,18 @@ app.use(
 
 // ✅ Middleware
 app.use(express.json());
+
+// Session Middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 15 * 60 * 1000, // 15 minutes
+    httpOnly: true,
+    secure: false // set true if HTTPS
+  }
+}));
 
 // ✅ Simple request logger
 app.use((req, res, next) => {

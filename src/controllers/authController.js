@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const { VALID_USER_ROLES } = require('../config/constants');
-const { generateOTP, sendOTPEmail } = require('../services/emailService');
+const { generateOTP, sendOTPEmail, sendOTPEmailForpasswordReset } = require('../services/emailService');
 
 const register = async (req, res) => {
   try {
@@ -299,6 +299,7 @@ const verifyOTP = async (req, res) => {
 
     // Mark email as verified and clear OTP
     const verifiedUser = await User.markEmailVerified(email);
+    req.session.verified = true;
 
     res.status(200).json({
       message: 'Email verified successfully!',
@@ -379,9 +380,99 @@ const resendOTP = async (req, res) => {
   }
 };
 
+const sendResetPasswordOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    // Basic validation
+    if (!email) {
+      return res.status(400).json({ 
+        error: 'Email is required' 
+      });
+    }
+
+    // Check if user exists and is not verified
+    const user = await User.findByEmail(email);
+    if (!user) {
+      return res.status(404).json({ 
+        error: 'User not found' 
+      });
+    }
+
+    // Generate new OTP
+    const otpCode = generateOTP();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+
+    // Update OTP in user record
+    await User.setOTP(email, otpCode, expiresAt);
+
+    // Send new OTP email
+    const emailResult = await sendOTPEmailForpasswordReset(email, otpCode, user.firstName);
+    
+    if (!emailResult.success) {
+      return res.status(500).json({ 
+        error: 'Failed to send verification email. Please try again.' 
+      });
+    }
+
+    res.status(200).json({
+      message: 'New verification code sent successfully!',
+      email: email,
+      expiresIn: '10 minutes'
+    });
+
+  } catch (error) {
+    console.error('Password reset email error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+const verifyResetOTP = async (req, res) => {
+  try {
+    const { email, otpCode } = req.body;
+
+    // Basic validation
+    if (!email || !otpCode) {
+      return res.status(400).json({ 
+        error: 'Email and OTP code are required' 
+      });
+    }
+
+    // Verify OTP
+    const user = await User.verifyResetOTP(email, otpCode);
+    if (!user) {
+      return res.status(400).json({ 
+        error: 'Invalid or expired OTP code' 
+      });
+    }
+
+    req.session.verified = true;
+
+    res.status(200).json({
+      message: 'OTP verified successfully!',
+      user: {
+        id: user.userID,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+        isEmailVerified: user.isEmailVerified
+      }
+    });
+
+  } catch (error) {
+    console.error('OTP verification error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 const resetPassword = async (req, res) => {
   try {
     const { email, newPassword, confirmPassword } = req.body;
+
+    if (!req.session.verified) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
 
     // Basic validation
     if (!email || !newPassword || !confirmPassword) {
@@ -410,11 +501,12 @@ const resetPassword = async (req, res) => {
       return res.status(500).json({ error: 'Failed to update password' });
     }
 
+    req.session.verified = false;
     res.json({
       message: 'Password reset successful! You can now log in with your new password.',
       user: updatedUser
     });
-
+    
   } catch (error) {
     console.error('❌ Reset password error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -429,5 +521,7 @@ module.exports = {
   updateCurrentUser,
   verifyOTP,
   resendOTP,
-  resetPassword
+  sendResetPasswordOTP,
+  verifyResetOTP,
+  resetPassword,
 };

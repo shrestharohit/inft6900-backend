@@ -30,12 +30,16 @@ router.get("/detail", getDetail);
 
 const {
   startAttempt,
-  submitAttemp
+  submitAttemp,
+  getQuizResult
 } = require("../../../../controllers/attemptController");
 
 
 router.post("/start", startAttempt);
 
 router.put("/submit", submitAttemp);
+
+router.get("/:attemptCount/result", getQuizResult);
+
 
 module.exports = router;

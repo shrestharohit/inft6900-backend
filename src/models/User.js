@@ -88,6 +88,15 @@ class User {
     return result.rows[0];
   }
 
+  static async verifyResetOTP(email, otpCode) {
+    const query = `
+      SELECT * FROM "User"
+      WHERE "email" = $1 AND "otpCode" = $2 AND "otpExpiresAt" > NOW()
+    `;
+    const result = await pool.query(query, [email, otpCode]);
+    return result.rows[0];
+  }
+
   static async markEmailVerified(email) {
     const query = `
       UPDATE "User"

@@ -61,7 +61,51 @@ const sendOTPEmail = async (email, otp, firstName) => {
   }
 };
 
+
+// Send OTP email for password reset
+const sendOTPEmailForpasswordReset = async (email, otp, firstName) => {
+  try {
+    const transporter = createTransporter();
+
+    // ✅ Always log OTP to backend terminal for now
+    console.log(`📩 OTP for ${email} (${firstName}): ${otp}`);
+
+    const mailOptions = {
+      from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,
+      to: email,
+      subject: "Brainwave - Email Verification Code",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Password reset</h2>
+          <p>Hi ${firstName},</p>
+          <p>Here is a verification code to reset your password:</p>
+          
+          <div style="background-color: #f4f4f4; padding: 20px; text-align: center; margin: 20px 0;">
+            <h1 style="color: #007bff; font-size: 32px; margin: 0; letter-spacing: 5px;">${otp}</h1>
+          </div>
+          
+          <p>This code will expire in 10 minutes.</p>
+          <p>If you didn't request this code, please ignore this email.</p>
+          
+          <hr style="margin: 30px 0;">
+          <p style="color: #666; font-size: 12px;">
+            This is an automated message from Brainwave. Please do not reply to this email.
+          </p>
+        </div>
+      `,
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log("✅ OTP email sent successfully:", result.messageId);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error("❌ Failed to send OTP email:", error);
+    return { success: false, error: error.message };
+  }
+};
+
 module.exports = {
   generateOTP,
   sendOTPEmail,
+  sendOTPEmailForpasswordReset,
 };
