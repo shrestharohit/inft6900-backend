@@ -44,7 +44,7 @@ const registerAnswer = async (attempt, answer, client) => {
             processedAnswer.feedbackText = answer.feedbackText;
         }
 
-        return { attemptAnswer: processedAnswer};
+        return processedAnswer;
     } catch(error) {
         throw error;
     }

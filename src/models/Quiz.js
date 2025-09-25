@@ -25,6 +25,18 @@ class Quiz {
         return result.rows[0];
     }
 
+    static async findByCourseID(courseID, client = null) {
+        const db = client || pool;
+        const query = `
+        SELECT a.* FROM "Quiz" a
+        LEFT JOIN "Module" m ON a."moduleID" = m."moduleID"
+        WHERE m."courseID" = $1 
+        ORDER BY m."moduleNumber" DESC
+        `;
+        const result = await db.query(query, [courseID]);
+        return result.rows;
+    }
+
     static async update(quizID, updateData, client = null) {
         const db = client || pool;
         const allowedFields = ['title', 'timeLimit', 'status'];

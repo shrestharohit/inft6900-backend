@@ -5,11 +5,15 @@ const Quiz = require('../models/Quiz');
 const Question = require('../models/Question');
 const AnswerOption = require('../models/AnswerOption');
 const AttemptAnswer = require('../models/AttemptAnswer');
+
 const {
-    registerAnswer,
-    // updateQuestion,
-    // inactivateQuestion,
+    registerAnswer
 } = require('./answerController')
+
+const {
+    refreshStatus
+} = require('./enrolmentController')
+
 
 const { pool } = require('../config/database');
 const QuizAttempt = require('../models/QuizAttempt');
@@ -137,7 +141,7 @@ const submitAttemp = async (req, res) => {
                 attemptAnswers.push(newAnswer);
                 const { questionID } = answer;
                 counter[questionID] = (counter[questionID] || 0) + 1;
-                if (newAnswer.attemptAnswer.isCorrect) {
+                if (newAnswer.isCorrect) {
                     correctCount++;
                 }
             } catch(error) {
@@ -166,7 +170,13 @@ const submitAttemp = async (req, res) => {
             passed: passed
         }, client);
 
-        // const attemptResults = await AttemptAnswer.findByAttemptID(attempt.attemptID, client);
+        // if passed, refresh enrolment status
+        const enrolment = await Enrolment.findById(attempt.enrolmentID);
+        let enrolmentStatus = enrolment.status;
+        if (passed) { 
+            const udpatedEnrolment = await refreshStatus(enrolment.enrolmentID);
+            enrolmentStatus = udpatedEnrolment.status;
+        }
 
         res.json({
             message: 'Attempt submitted successfully',
@@ -180,7 +190,8 @@ const submitAttemp = async (req, res) => {
                 score: updatedAttempt.score,
                 passed: updatedAttempt.passed,
                 answers : attemptAnswers
-            }
+            },
+            enrolmentStatus: enrolmentStatus
         });
 
         await client.query('COMMIT');
@@ -191,7 +202,6 @@ const submitAttemp = async (req, res) => {
         client.release();
     }
 };
-
 
 
 const getQuizResult = async (req, res) => {

@@ -1,6 +1,7 @@
 const Enrolment = require('../models/Enrolment');
 const User = require('../models/User');
 const Course = require('../models/Course');
+const Quiz = require('../models/Quiz');
 // const Pathway = require('../models/Pathway');
 const { VALID_ENROLMENT_STATUS } = require('../config/constants');
 
@@ -228,6 +229,44 @@ const getStudentEnrolment = async (req, res) => {
     }
 };
 
+const refreshStatus = async (enrolmentID) => {
+    try {
+        // Validate enrolment
+        const enrolment = await Enrolment.findById(enrolmentID);
+        if (!enrolment) {
+            throw new Error('Enrolment not found');
+        }
+
+        let updatedEnrolment = enrolment;
+
+        // switch to in progress if the first quiz is passed
+        if (enrolment.status === 'enrolled') {
+            updatedEnrolment = await Enrolment.update(enrolmentID, {status: 'in progress'});
+        }
+
+        // switch to completed if all quizzes are passed
+        quizzes = await Quiz.findByCourseID(enrolment.courseID);
+        console.log(quizzes)
+        let completed = false;
+        for (let quiz of quizzes) {
+            if (!quiz.passed) {
+                completed = false;
+                break;
+            } else {
+                completed = true;
+            }
+        }
+
+        if (completed) {
+            updatedEnrolment = await Enrolment.update(enrolmentID, {status: 'completed'});
+        }
+        return updatedEnrolment;
+
+    } catch(error) {
+        throw new Error(`Refresh enrolment status error: ${error}`);
+    }
+}
+
 
 const getAll = async (req, res) => {
     const enrolments = await Enrolment.getAll();
@@ -246,6 +285,7 @@ module.exports = {
   enrolCourse,
   disenrolCourse,
   getCourseEnrolment,
+  refreshStatus,
 //   enrolPathway,
 //   disenrolPathway,
 //   updatePathwayEnrolment,
