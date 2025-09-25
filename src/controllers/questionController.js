@@ -53,17 +53,19 @@ const registerQuestion = async (quiz, question) => {
 
 const updateQuestion = async (quiz, question, client) => {
     try {
-        const { questionNumber, questionText, status, options =[] } = question
+        const { questionID, questionNumber, questionText, status, options =[] } = question
 
-        // Validate question number
-        if (!questionNumber) {
-             throw new Error(`Question update error: Question number required`);
+        // Basic valiadtion
+        if (!questionID) {
+             throw new Error(`Question update error: Question ID required`);
         };
 
-        // In case of new question number, register the question
-        const existingQuestion = await Question.findByQuizIdQuestionNumber(quiz.quizID, questionNumber, client);
+        // Validate if question ID exists
+        const existingQuestion = await Question.findById(questionID);
+        console.log(questionID)
+        console.log(existingQuestion)
         if (!existingQuestion) {
-            return registerQuestion(quiz, question);
+            throw new Error('Question update error: Selected question does not exist.')
         };
         
         // Validate status
@@ -73,7 +75,7 @@ const updateQuestion = async (quiz, question, client) => {
         };
 
         // Validate if there will be any multiple correct answers
-        const currentAnswer = await AnswerOption.findAnswerForQuestion(existingQuestion.questionID, client);
+        const currentAnswer = await AnswerOption.findAnswerForQuestion(existingQuestion.questionID);
         let answerCounter = 0;
         for (const option of options) {
             if (option.isCorrect && option.optionOrder !== currentAnswer?.optionOrder) {
@@ -85,16 +87,24 @@ const updateQuestion = async (quiz, question, client) => {
             throw new Error('Option update error: Multiple correct options selected.')
         };
 
+        // Validate if the question number is already takne
+        if (questionNumber !== existingQuestion.questionNumber) {
+            const existingQuestionNumber = await Question.findByQuizIdQuestionNumber(quiz.quizID, questionNumber);
+            if (existingQuestionNumber) {
+                throw new Error('Question update error: Selected question number already used');
+            }
+        }
+
         // Validate option's data type
         if (!Array.isArray(options)) {
             throw new Error('Options must be an array.');
         }
         
         // Try updating questions first
-        const optionOrders = (await AnswerOption.findByQuestionID(existingQuestion.questionID, client)).map(o=> o.optionOrder);
-        for (const order of optionOrders) {
-            if (!options.map(o => o.optionOrder).includes(order)) {
-                const deletedOption = await AnswerOption.findByQuestionIdOptionOrder(existingQuestion.questionID, order, client);
+        const optionIDs = (await AnswerOption.findByQuestionID(existingQuestion.questionID)).map(o=> o.optionID);
+        for (const id of optionIDs) {
+            if (!options.map(o => o.optionID).includes(id)) {
+                const deletedOption = await AnswerOption.findById(id);
                 await inactivateOption(deletedOption, client);
             }
         }
@@ -102,12 +112,19 @@ const updateQuestion = async (quiz, question, client) => {
         // Update options
         const updatedOptions = []
         for (const option of options) {
-            const updatedOption = await updateOption(existingQuestion, option, client);
-            updatedOptions.push(updatedOption);
+            // if option ID is specified, update the specified option. otherwise, take it as a new option.
+            if (option.optionID) {
+                const updatedOption = await updateOption(existingQuestion, option, client);
+                updatedOptions.push(updatedOption);
+            } else {
+                const newOption = await registerOption(existingQuestion, option, client);
+                updatedOptions.push(newOption);
+            }
         };
         
         // Prepare update data
         const updateData = {};
+        if (questionNumber !== undefined) updateData.questionNumber = questionNumber;
         if (questionText !== undefined) updateData.questionText = questionText;
         if (status !== undefined) updateData.status = questionStatus;
 
@@ -125,35 +142,17 @@ const updateQuestion = async (quiz, question, client) => {
 
 const getQuestion = async (req, res) => {
     try {
-        const questionNumber = req.params.questionNumber;
-        const moduleNumber = req.params.moduleNumber;
-        const courseID = req.params.courseID;
-
-        // Validate course ID and module Number
-        const module = await Module.findByCourseIdModuleNumber(courseID, moduleNumber);
-        if (!module) {
-            return res.status(400).json({
-                error: 'Invalid course ID and module number. Module not found.'
-            });
-        };
-
-        // Check if quiz is already created for the module
-        const quiz = await Quiz.findByModule(module.moduleID);
-        if (!quiz) {
-            return res.status(400).json({
-                error: 'Quiz not found.'
-            });
-        }
+        const questionID = req.params.questionID;
 
         // Check if question exists
-        const existingQuestion = await Question.findByQuizIdQuestionNumber(quiz.quizID, questionNumber);
-        if (!existingQuestion) {
+        const question = await Question.findById(questionID);
+        if (!question) {
             return res.status(404).json({
                 error: 'Question not found'
             });
         };
 
-        res.json(existingQuestion);
+        res.json(question);
     } catch (error) {
         console.error('Get question error:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -163,27 +162,18 @@ const getQuestion = async (req, res) => {
 
 const getAllInQuiz = async (req, res) => {
     try{
-        const moduleNumber = req.params.moduleNumber;
-        const courseID = req.params.courseID;
+        const quizID = req.params.quizID;
 
-        // Validate course ID and module Number
-        const module = await Module.findByCourseIdModuleNumber(courseID, moduleNumber);
-        if (!module) {
-            return res.status(400).json({
-                error: 'Invalid course ID and module number. Module not found.'
-            });
-        };
-
-        // Check if quiz is already created for the module
-        const quiz = await Quiz.findByModule(module.moduleID);
+        // Check if quiz exists
+        const quiz = await Quiz.findById(quizID);
         if (!quiz) {
-            return res.status(400).json({
+            return res.status(404).json({
                 error: 'Quiz not found.'
             });
         }
 
-        const question = await Question.findByQuizId(quiz.quizID);
-        res.json(question);
+        const questions = await Question.findByQuizId(quiz.quizID);
+        res.json(questions);
     } catch (error) {
         console.error('Get question error:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -191,7 +181,7 @@ const getAllInQuiz = async (req, res) => {
 };
 
 const inactivateQuestion = async(question, client) => {
-    await Question.update(question.questionID, {status: 'inactive'}, client);
+    return await Question.update(question.questionID, {status: 'inactive'}, client);
 }
 
 const getMeta = (req, res) => {

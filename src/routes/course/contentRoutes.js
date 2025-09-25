@@ -5,7 +5,7 @@ const {
   getAll,
   getMeta,
   getContent,
-} = require('../../../../controllers/contentController');
+} = require('../../controllers/contentController');
 
 const router = express.Router();
 

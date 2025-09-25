@@ -15,6 +15,7 @@ class Question {
         const db = client || pool;
         const query = `SELECT * FROM "Question" WHERE "questionID" = $1 AND "status" = 'active'`;
         const result = await db.query(query, [questionID]);
+        console.log(result)
         return result.rows[0];
     }
 
@@ -34,7 +35,7 @@ class Question {
 
     static async update(questionID, updateData, client = null) {
         const db = client || pool;
-        const allowedFields = ['questionText', 'status'];
+        const allowedFields = ['questionNumber', 'questionText', 'status'];
         const updates = [];
         const values = [];
         let paramCount = 1;

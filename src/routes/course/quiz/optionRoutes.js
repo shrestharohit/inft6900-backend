@@ -4,19 +4,17 @@ const {
   getAllInQuestion,
   getAnswerInQuestion,
   getMeta,
-} = require("../../../../controllers/optionController");
+} = require("../../../controllers/optionController");
 
-const router = express.Router({ mergeParams: true });
+const router = express.Router();
 
 // Return valid status options
 router.get("/_meta", getMeta);
 
-router.get("/", getAllInQuestion);
+router.get("/:questionID", getAllInQuestion);
 
 router.get("/answer", getAnswerInQuestion);
 
-router.get("/:optionOrder", getOption);
-
-
+router.get("/:optionID", getOption);
 
 module.exports = router;

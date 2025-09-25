@@ -17,20 +17,12 @@ const { pool } = require('../config/database');
 
 const register = async (req, res) => {
     try {
-        const { courseID, moduleNumber } = req.params;
-        const { title, timeLimit, status, questions } = req.body;
-
-        // Validate course id is provided
-        if (!moduleNumber) {
-            return res.status(400).json({ 
-                error: 'Module number is required.' 
-            });
-        };
+        const { moduleID, title, timeLimit, status, questions } = req.body;
 
         // Basic validataion
-        if (!title || !status || !questions ) {
+        if (!moduleID || !title || !questions ) {
             return res.status(400).json({
-                error: 'Title, status and questions are required'
+                error: 'Module ID, title, status and questions are required'
             });
         };
 
@@ -43,15 +35,15 @@ const register = async (req, res) => {
         };
 
         // Validate module ID
-        const quizModule = await Module.findByCourseIdModuleNumber(courseID, moduleNumber);
+        const quizModule = await Module.findById(moduleID);
         if (!quizModule) {
             return res.status(400).json({
-                error: 'Invalid course ID and module number. Module not found.'
+                error: 'Invalid module ID. Module not found.'
             });
         };
 
         // Check if there is already a quiz created for the module
-        const exists = !!(await Quiz.findByModule(quizModule.moduleID));
+        const exists = !!(await Quiz.findByModuleID(quizModule.moduleID));
         if (exists) {
             return res.status(400).json({
                 error: 'Quiz already exists. Each module can only have 1 quiz.'
@@ -60,7 +52,7 @@ const register = async (req, res) => {
 
         // Create Quiz
         const newQuiz = await Quiz.create({
-            moduleID: quizModule.moduleID, 
+            moduleID: moduleID, 
             title,
             timeLimit, 
             status: quizStatus
@@ -91,15 +83,14 @@ const register = async (req, res) => {
                 title: newQuiz.title,
                 timeLimit: newQuiz.timeLimit,
                 status: newQuiz.status,
-                quiestions: newQuestions,
+                questions: newQuestions,
                 created_at: newQuiz.created_at
             }
         })
 
 
     } catch(error) {
-        res.status(500).json({ error: `Registration error:{$error.message}`  });
-        
+        res.status(500).json({ error: `Registration error:${error.message}`  });
     }
 };
 
@@ -109,31 +100,27 @@ const update = async (req, res) => {
     await client.query('BEGIN')
 
     try {
-        const { courseID, moduleNumber } = req.params;
-        const { title, timeLimit, status, questions } = req.body;
+        const { quizID } = req.params;
+        const { moduleID, title, timeLimit, status, questions } = req.body;
 
-        // Validate course number is provided
-        if (!moduleNumber) {
-            return res.status(400).json({ 
-                error: 'Module number is required.' 
+        
+        // Check if quiz exists
+        const quiz = await Quiz.findById(quizID);
+        if (!quiz) {
+            return res.status(404).json({
+                error: 'Quiz not found.'
             });
         };
-
-        // Validate module number and course ID
-        const existingModule = await Module.findByCourseIdModuleNumber(courseID, moduleNumber, client);
-        if (moduleNumber !== undefined && !existingModule) {
-            return res.status(404).json({
-                error: 'Invalid course ID and module number. Module not found.'
-            });
-        }
 
         // Check if quiz under the selected module exists
-        const existingQuiz = await Quiz.findByModule(existingModule.moduleID, client);
-        if (!existingQuiz) {
-            return res.status(404).json({
-                error: 'Quiz not found'
-            });
-        };
+        if (moduleID !== quiz.moduleID) {
+            const existingQuiz = await Quiz.findByModuleID(moduleID, client);
+            if (existingQuiz) {
+                return res.status(400).json({
+                    error: 'Quiz already exists. Each module can only have 1 quiz.'
+                });
+            }
+        }
 
         // Validate status
         const quizStatus = status;
@@ -149,10 +136,10 @@ const update = async (req, res) => {
         };
 
         // any missing question will be treated as deleted (inactive)
-        const questionNumbers = (await Question.findByQuizId(existingQuiz.quizID, client)).map(q => q.questionNumber);
+        const questionNumbers = (await Question.findByQuizId(quiz.quizID, client)).map(q => q.questionNumber);
         for (const number of questionNumbers) {
             if (!questions.map(q => q.questionNumber).includes(number)) {
-                const deletedQuestion = await Question.findByQuizIdQuestionNumber(existingQuiz.quizID, number, client);
+                const deletedQuestion = await Question.findByQuizIdQuestionNumber(quiz.quizID, number, client);
                 await inactivateQuestion(deletedQuestion, client);
             };
         };
@@ -161,8 +148,13 @@ const update = async (req, res) => {
         const updatedQuestions = [];
         try {
             for (const question of questions) {
-                const updatedQuestion = await updateQuestion(existingQuiz, question, client);
-                updatedQuestions.push(updatedQuestion);
+                if (question.questionID) {
+                    const updatedQuestion = await updateQuestion(quiz, question, client);
+                    updatedQuestions.push(updatedQuestion);
+                } else {
+                    const newQuestion = await registerQuestion(quiz, question, client);
+                    updatedQuestions.push(newQuestion);
+                }
             }
         } catch(error) {
             console.error('Question update error:', error.message);
@@ -173,7 +165,6 @@ const update = async (req, res) => {
 
         // Prepare update data
         const updateData = {};
-        const quizID = existingQuiz.quizID;
         if (title !== undefined) updateData.title = title;
         if (timeLimit !== undefined) updateData.timeLimit = timeLimit;
         if (status !== undefined) updateData.status = quizStatus;
@@ -191,7 +182,7 @@ const update = async (req, res) => {
                 timeLimit: updateQuiz.timeLimit,
                 status: updateQuiz.status,
                 questions: updatedQuestions,
-                udpated_at: updateQuiz.udpated_at
+                updated_at: updateQuiz.updated_at
             }
         });
 
@@ -206,23 +197,12 @@ const update = async (req, res) => {
 
 const getQuiz = async (req, res) => {
     try {
-        // To shorten the API route, use module ID to get the quiz.
-        // Each module can only have 1 quiz, so this works.
-        const moduleNumber = req.params.moduleNumber;
-        const courseID = req.params.courseID;
-
-        // Validate course ID and module Number
-        const module = await Module.findByCourseIdModuleNumber(courseID, moduleNumber);
-        if (!module) {
-            return res.status(400).json({
-                error: 'Invalid course ID and module number. Module not found.'
-            });
-        };
+        const quizID = req.params.quizID;
 
         // Check if quiz is already created for the module
-        const quiz = await Quiz.findByModule(module.moduleID);
+        const quiz = await Quiz.findById(quizID);
         if (!quiz) {
-            return res.status(400).json({
+            return res.status(404).json({
                 error: 'Quiz not found.'
             });
         }
@@ -237,29 +217,18 @@ const getQuiz = async (req, res) => {
 
 const getDetail = async (req, res) => {
     try {
-        // To shorten the API route, use module ID to get the quiz.
-        // Each module can only have 1 quiz, so this works.
-        const moduleNumber = req.params.moduleNumber;
-        const courseID = req.params.courseID;
-
-        // Validate course ID and module Number
-        const module = await Module.findByCourseIdModuleNumber(courseID, moduleNumber);
-        if (!module) {
-            return res.status(400).json({
-                error: 'Invalid course ID and module number. Module not found.'
-            });
-        };
+        const quizID = req.params.quizID;
 
         // Check if quiz is already created for the module
-        const quiz = await Quiz.findByModule(module.moduleID);
+        const quiz = await Quiz.findById(quizID);
         if (!quiz) {
-            return res.status(400).json({
+            return res.status(404).json({
                 error: 'Quiz not found.'
             });
         }
 
         // Get all questions and options
-        const questions = await Question.findByQuizId(quiz.quizID);
+        const questions = await Question.findByQuizId(quizID);
         const questionList = []
         for (question of questions) {
             const options = await AnswerOption.findByQuestionID(question.questionID);

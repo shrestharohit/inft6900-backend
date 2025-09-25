@@ -8,11 +8,11 @@ const { pool } = require('../config/database');
 
 
 
-const registerOption = async (question, option) => {
+const registerOption = async (question, option, client) => {
     const { optionText, isCorrect, optionOrder, feedbackText, status } = option;
 
     // Basic validataion
-    if (!optionText || isCorrect===undefined || !optionOrder || !feedbackText || !status) {
+    if (!optionText || isCorrect===undefined || !optionOrder || !feedbackText) {
         throw new Error('Option registration error: Option text, isCorrect, option order, feedback text and status are required')
     };
 
@@ -49,22 +49,30 @@ const registerOption = async (question, option) => {
 
 const updateOption = async (question, option, client) => {
     try {
-        const { optionText, isCorrect, optionOrder, feedbackText, status } = option;
+        const { optionID, optionText, isCorrect, optionOrder, feedbackText, status } = option;
 
         // Validate if option exists in the quiz
-        const existingOption = await AnswerOption.findByQuestionIdOptionOrder(question.questionID, optionOrder, client);
+        const existingOption = await AnswerOption.findById(optionID);
         if (!existingOption) {
-            return registerOption(question, option);
+            throw new Error('Option update error: Selected option does not exist.')
         };
 
         // Validate if there are no multiple correct answers in question
-        const existingCorrectOption = await AnswerOption.findAnswerForQuestion(question.questionID, client);
+        const existingCorrectOption = await AnswerOption.findAnswerForQuestion(question.questionID);
         if (existingCorrectOption && existingOption.isCorrect == false && isCorrect == true) {
             throw new Error('Option update error: Selected question already has correct answer');
         };
 
+        // Validate if the option order is already takne
+        if (optionOrder !== existingOption.optionOrder) {
+            const existingOptionOrder = await AnswerOption.findByQuestionIdOptionOrder(question.questionID, optionOrder);
+            if (existingOptionOrder) {
+                throw new Error('Option update error: Selected option order already used');
+            }
+        }
+
         // Validate status
-        optionStatus = status;
+        const optionStatus = status;
         if (optionStatus !== undefined && !VALID_OPTION_STATUS.includes(optionStatus)) {
             throw new Error(`Option update error: Invalid status. Must be:${VALID_OPTION_STATUS.join(', ')} `);
         };

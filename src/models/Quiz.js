@@ -18,7 +18,7 @@ class Quiz {
         return result.rows[0];
     }
 
-    static async findByModule(moduleID, client = null) {
+    static async findByModuleID(moduleID, client = null) {
         const db = client || pool;
         const query = `SELECT * FROM "Quiz" WHERE "moduleID" = $1 ORDER BY "created_at" DESC`;
         const result = await db.query(query, [moduleID]);

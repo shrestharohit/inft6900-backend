@@ -6,9 +6,14 @@ require('dotenv').config();
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
-const ownerRoutes = require('./routes/ownerRoutes');
-const courseRoutes = require('./routes/course');
-const contentRoutes = require('./routes/course/module/content/contentRoutes');
+
+const courseRoutes = require('./routes/course/courseRoutes');
+const moduleRoutes = require('./routes/course/moduleRoutes');
+const contentRoutes = require('./routes/course/contentRoutes');
+const quizRoutes = require('./routes/course/quiz/quizRoutes');
+const questionRoutes = require('./routes/course/quiz/questionRoutes');
+const optionRoutes = require('./routes/course/quiz/optionRoutes');
+
 const enrolmentRoutes = require('./routes/enrolmentRoutes');
 
 // Import database connection
@@ -56,9 +61,14 @@ app.use((req, res, next) => {
 // ✅ Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
-app.use('/api/owner', ownerRoutes);
+
 app.use('/api/course', courseRoutes);
+app.use('/api/module', moduleRoutes);
 app.use('/api/content', contentRoutes);
+app.use('/api/quiz', quizRoutes);
+app.use('/api/question', questionRoutes);
+app.use('/api/option', optionRoutes);
+
 app.use('/api/enrolment', enrolmentRoutes);
 
 // ✅ Health check

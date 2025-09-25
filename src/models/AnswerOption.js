@@ -41,7 +41,7 @@ class AnswerOption {
 
     static async update(optionID, updateData, client = null) {
         const db = client || pool;
-        const allowedFields = ['optionText', 'isCorrect', 'feedbackText', 'status'];
+        const allowedFields = ['optionOrder', 'optionText', 'isCorrect', 'feedbackText', 'status'];
         const updates = [];
         const values = [];
         let paramCount = 1;

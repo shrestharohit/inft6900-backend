@@ -7,8 +7,6 @@ const {
   getMeta,
   getCourse,
 } = require("../../controllers/courseController");
-const moduleRoutes = require('./module');
-
 
 const router = express.Router();
 
@@ -24,9 +22,6 @@ router.put("/:courseID", update);
 router.get("/categories", getAllCategories);
 
 router.get("/:courseID", getCourse);
-
-// module routes
-router.use('/:courseID/module', moduleRoutes);
 
 
 module.exports = router;
