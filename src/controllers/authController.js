@@ -43,7 +43,7 @@ const register = async (req, res) => {
       }
 
       // initial password generation
-      const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=";
+      const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*_+~|:./-";
       for (let i=0; i < 12; i++) {
         const random = Math.floor(Math.random() * chars.length);
         userPassword += chars[random];
