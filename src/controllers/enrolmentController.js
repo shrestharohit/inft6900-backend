@@ -291,15 +291,15 @@ const getMeta = (req, res) => {
 
 
 module.exports = {
-  enrolCourse,
-  disenrolCourse,
-  getCourseEnrolment,
-  refreshStatus,
-//   enrolPathway,
-//   disenrolPathway,
-//   updatePathwayEnrolment,
-  getPopular,
-  getStudentEnrolment,
-  getAll,
-  getMeta,
+    enrolCourse,
+    disenrolCourse,
+    getCourseEnrolment,
+    refreshStatus,
+    // enrolPathway,
+    // disenrolPathway,
+    // updatePathwayEnrolment,
+    getPopular,
+    getStudentEnrolment,
+    getAll,
+    getMeta,
 };
