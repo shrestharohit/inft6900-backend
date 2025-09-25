@@ -267,6 +267,15 @@ const refreshStatus = async (enrolmentID) => {
     }
 }
 
+const getPopular = async (req, res) => {
+    const popularCourses = await Enrolment.getPopularCourses();
+    const popularPathways = await Enrolment.getPopularPathways();
+    result = {
+        popularCourses: popularCourses,
+        popularPathways: popularPathways
+    }
+    res.json(result);
+}
 
 const getAll = async (req, res) => {
     const enrolments = await Enrolment.getAll();
@@ -289,6 +298,7 @@ module.exports = {
 //   enrolPathway,
 //   disenrolPathway,
 //   updatePathwayEnrolment,
+  getPopular,
   getStudentEnrolment,
   getAll,
   getMeta,

@@ -93,6 +93,33 @@ class Enrolment {
         return result.rows[0];
     }
 
+    static async getPopularCourses() {
+        const query =`
+            SELECT e."courseID", c."title", c."category", c."level", COUNT("studentID") "count" FROM "Enrolment" e
+            LEFT JOIN "Course" c ON e."courseID" = e."courseID"
+            WHERE NOT e.status = 'disenrolled'
+            GROUP BY e."courseID", c."title", c."category", c."level"
+            ORDER BY "count" DESC
+            LIMIT 3
+        `;
+        const result = await pool.query(query);
+        return result.rows;
+    }
+
+    static async getPopularPathways() {
+        const query =`
+            SELECT e."pathwayID", p."name", COUNT("studentID") "count" FROM "Enrolment" e
+            LEFT JOIN "Pathway" p ON e."courseID" = e."courseID"
+            WHERE NOT e."pathwayID" = NULL AND NOT e.status = 'disenrolled'
+            GROUP BY e."pathwayID", p."name"
+            ORDER BY "count" DESC
+            LIMIT 3
+        `;
+        const result = await pool.query(query);
+        return result.rows;
+    }
+
+
     static async getAll() {
         const query = `
             SELECT * FROM "Enrolment" ORDER BY "enrolDate" DESC

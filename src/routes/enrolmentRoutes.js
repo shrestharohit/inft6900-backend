@@ -7,6 +7,7 @@ const {
 //   enrolPathway,
 //   disenrolPathway,
 //   updatePathwayEnrolment,
+  getPopular,
   getStudentEnrolment,
   getAll,
   getMeta,
@@ -30,6 +31,8 @@ router.put("/course/:courseID/disenrol", disenrolCourse);
 // router.put("/pathway/:pathwayID/disenrol", disenrolPathway);
 
 // router.put("/pathway/:pathwayID/update", updatePathwayEnrolment);
+
+router.get("/popular", getPopular);
 
 router.get("/student/:studentID", getStudentEnrolment);
 
