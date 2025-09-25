@@ -8,6 +8,13 @@ const userRoutes = require('./routes/userRoutes');
 const ownerRoutes = require('./routes/ownerRoutes');
 const courseRoutes = require('./routes/course');
 const contentRoutes = require('./routes/course/module/content/contentRoutes');
+const pathwayRoutes = require('./routes/pathwayRoutes');
+const moduleAccessRoutes = require('./routes/moduleAccessRoutes'); 
+const certificateRoutes = require('./routes/course/certificateRoutes');
+const discussionBoardRoutes = require('./routes/course/discussion/discussionBoardRoutes');
+const boardPostRoutes = require('./routes/course/discussion/post/boardPostRoutes');
+const scheduleRoutes = require('./routes/course/scheduleRoutes');
+const announcementRoutes = require('./routes/course/announcementRoutes');
 // const moduleRoutes = require('./routes/moduleRoutes');
 // const quizRoutes = require('./routes/course/quiz');
 
@@ -47,6 +54,13 @@ app.use('/api/user', userRoutes);
 app.use('/api/owner', ownerRoutes);
 app.use('/api/course', courseRoutes);
 app.use('/api/content', contentRoutes);
+app.use('/api/pathway', pathwayRoutes);
+app.use('/api/moduleAccess', moduleAccessRoutes); 
+app.use('/api/certificate', certificateRoutes);
+app.use('/api/discussion-board', discussionBoardRoutes);
+app.use('/api/board-post', boardPostRoutes);
+app.use('/api/course/:courseid/schedules', scheduleRoutes);
+app.use('/api/announcement', announcementRoutes);
 // app.use('/api/module', moduleRoutes);
 // app.use('/api/quiz', quizRoutes);
 

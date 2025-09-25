@@ -6,7 +6,7 @@ const createTransporter = () => {
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT,
     secure: false, // true for 465, false for other ports
-    // requireTLS: true, // ✅ important for MailerSend
+      requireTLS: true, // ✅ important for MailerSend
     auth: {
       user: process.env.SMTP_USER, // MailerSend SMTP username
       pass: process.env.SMTP_PASS  // MailerSend SMTP password
