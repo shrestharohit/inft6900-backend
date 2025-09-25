@@ -51,7 +51,7 @@ class AttemptAnswer {
         return result.rows;
     }
 
-    static async findByStudentModule(studentID, moduleID, client = null) {
+    static async findByUserModule(userID, moduleID, client = null) {
         const db = client || pool;
         const query = `
         SELECT aa.*, ao."feedbackText" 
@@ -61,13 +61,13 @@ class AttemptAnswer {
         LEFT JOIN "Quiz" q ON a."quizID" = q."quizID"
         LEFT JOIN "Module" m ON m."moduleID" = q."moduleID"
         LEFT JOIN "Enrolment" e ON m."courseID" = e."courseID"
-        WHERE e."studentID" = $1 AND m."moduleID" = $2
+        WHERE e."userID" = $1 AND m."moduleID" = $2
         `;
-        const result = await db.query(query, [studentID, moduleID]);
+        const result = await db.query(query, [userID, moduleID]);
         return result.rows;
     }
 
-    static async findByStudentCourse(studentID, courseID, client = null) {
+    static async findByUserCourse(userID, courseID, client = null) {
         const db = client || pool;
         const query = `
         SELECT aa.*, ao."feedbackText" 
@@ -77,9 +77,9 @@ class AttemptAnswer {
         LEFT JOIN "Quiz" q ON a."quizID" = q."quizID"
         LEFT JOIN "Module" m ON m."moduleID" = q."moduleID"
         LEFT JOIN "Enrolment" e ON m."courseID" = e."courseID"
-        WHERE e."studentID" = $1 AND m."moduleID" = $2
+        WHERE e."userID" = $1 AND m."moduleID" = $2
         `;
-        const result = await db.query(query, [studentID, courseID]);
+        const result = await db.query(query, [userID, courseID]);
         return result.rows;
     }
 

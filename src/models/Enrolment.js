@@ -1,13 +1,13 @@
 const { pool } = require('../config/database');
 
 class Enrolment {
-    static async create({ pathwayID, courseID, studentID, status='enrolled' }) {
+    static async create({ pathwayID, courseID, userID, status='enrolled' }) {
         const query = `
-            INSERT INTO "Enrolment" ("enrolDate", "pathwayID", "courseID", "studentID", "status")
+            INSERT INTO "Enrolment" ("enrolDate", "pathwayID", "courseID", "userID", "status")
             VALUES (NOW(), $1, $2, $3, $4)
             RETURNING *
         `;
-        const result = await pool.query(query, [pathwayID, courseID, studentID, status]);
+        const result = await pool.query(query, [pathwayID, courseID, userID, status]);
         return result.rows[0];
     }
 
@@ -23,9 +23,9 @@ class Enrolment {
         return result.rows;
     }
 
-    static async findByStudentID(studentID) {
-        const query = 'SELECT * FROM "Enrolment" WHERE "studentID" = $1';
-        const result = await pool.query(query, [studentID]);
+    static async findByUserID(userID) {
+        const query = 'SELECT * FROM "Enrolment" WHERE "userID" = $1';
+        const result = await pool.query(query, [userID]);
         return result.rows;
     }
 
@@ -37,19 +37,19 @@ class Enrolment {
         return result.rows[0];
     }
 
-    static async findByCourseIdStudentId(courseID, studentID) {
+    static async findByCourseIdUserID(courseID, userID) {
         const query = `
-            SELECT * FROM "Enrolment" WHERE "courseID" = $1 AND "studentID" = $2
+            SELECT * FROM "Enrolment" WHERE "courseID" = $1 AND "userID" = $2
         `;
-        const result = await pool.query(query, [courseID, studentID]);
+        const result = await pool.query(query, [courseID, userID]);
         return result.rows[0];
     }
 
-    static async findByPathwayIdStudentId(pathwayID, studentID) {
+    static async findByPathwayIdUserID(pathwayID, userID) {
         const query = `
-            SELECT * FROM "Enrolment" WHERE "pathwayID" = $1 AND "studentID" = $2
+            SELECT * FROM "Enrolment" WHERE "pathwayID" = $1 AND "userID" = $2
         `;
-        const result = await pool.query(query, [pathwayID, studentID]);
+        const result = await pool.query(query, [pathwayID, userID]);
         return result.rows[0];
     }
     
@@ -72,11 +72,11 @@ class Enrolment {
         }
 
         if(updates.status === 'disenrolled') {
-            updates.push(`"disenrolDate" = NOW()`);
+            updates.push(`"disenrolledDate" = NOW()`);
         }
 
         if(updates.status === 'completed') {
-            updates.push(`"completeDate" = NOW()`);
+            updates.push(`"completionDate" = NOW()`);
         }
 
         updates.push(`"updated_at" = NOW()`);
@@ -95,7 +95,7 @@ class Enrolment {
 
     static async getPopularCourses() {
         const query =`
-            SELECT e."courseID", c."title", c."category", c."level", COUNT("studentID") "count" FROM "Enrolment" e
+            SELECT e."courseID", c."title", c."category", c."level", COUNT("userID") "count" FROM "Enrolment" e
             LEFT JOIN "Course" c ON e."courseID" = e."courseID"
             WHERE NOT e.status = 'disenrolled'
             GROUP BY e."courseID", c."title", c."category", c."level"
@@ -108,7 +108,7 @@ class Enrolment {
 
     static async getPopularPathways() {
         const query =`
-            SELECT e."pathwayID", p."name", COUNT("studentID") "count" FROM "Enrolment" e
+            SELECT e."pathwayID", p."name", COUNT("userID") "count" FROM "Enrolment" e
             LEFT JOIN "Pathway" p ON e."courseID" = e."courseID"
             WHERE NOT e."pathwayID" = NULL AND NOT e.status = 'disenrolled'
             GROUP BY e."pathwayID", p."name"

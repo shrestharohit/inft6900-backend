@@ -22,24 +22,6 @@ CREATE TABLE "User" (
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE "Student" (
-    "studentID" INT PRIMARY KEY,
-    FOREIGN KEY ("studentID") REFERENCES "User"("userID") ON DELETE CASCADE
-);
-
-CREATE TABLE "Admin" (
-    "adminID" INT PRIMARY KEY,
-    FOREIGN KEY ("adminID") REFERENCES "User"("userID") ON DELETE CASCADE
-);
-
-CREATE TABLE "CourseOwner" (
-    "ownerID" INT PRIMARY KEY,
-    "department" VARCHAR(100),
-    FOREIGN KEY ("ownerID") REFERENCES "User"("userID") ON DELETE CASCADE,
-    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- is this necessary?
-    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- is this necessary? To manage changes in department, it's required...
-);
-
 -- ==================
 -- NOTIFICATIONS 
 -- ==================
@@ -66,7 +48,7 @@ CREATE TABLE "Pathway" (
 
 CREATE TABLE "Course" (
     "courseID" SERIAL PRIMARY KEY,
-    "ownerID" INT NOT NULL,
+    "userID" INT NOT NULL,
     "title" VARCHAR(150) NOT NULL,
     "category" VARCHAR(150) NOT NULL, -- added by Hide
     "level" VARCHAR(50),
@@ -75,7 +57,7 @@ CREATE TABLE "Course" (
     "pathwayID" INT,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("ownerID") REFERENCES "CourseOwner"("ownerID") ON DELETE CASCADE,
+    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE,
     FOREIGN KEY ("pathwayID") REFERENCES "Pathway"("pathwayID") ON DELETE SET NULL
 );
 
@@ -101,14 +83,14 @@ CREATE TABLE "Enrolment" (
     "enrolDate" DATE DEFAULT CURRENT_DATE,
     "pathwayID" INT,
     "courseID" INT,
-    "studentID" INT NOT NULL,
+    "userID" INT NOT NULL,
     "status" VARCHAR(50),
     "completionDate" DATE,
     "disenrolledDate" DATE,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("pathwayID") REFERENCES "Pathway"("pathwayID"),
     FOREIGN KEY ("courseID") REFERENCES "Course"("courseID"),
-    FOREIGN KEY ("studentID") REFERENCES "User"("userID") ON DELETE CASCADE -- alter FK constraint required
+    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE -- alter FK constraint required
 );
 
 CREATE TABLE "ModuleAccess" (

@@ -8,7 +8,7 @@ const {
 //   disenrolPathway,
 //   updatePathwayEnrolment,
   getPopular,
-  getStudentEnrolment,
+  getUserEnrolment,
   getAll,
   getMeta,
 } = require("../controllers/enrolmentController");
@@ -34,7 +34,7 @@ router.put("/course/:courseID/disenrol", disenrolCourse);
 
 router.get("/popular", getPopular);
 
-router.get("/student/:studentID", getStudentEnrolment);
+router.get("/user/:userID", getUserEnrolment);
 
 
 module.exports = router;

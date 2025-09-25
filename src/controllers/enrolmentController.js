@@ -2,13 +2,13 @@ const Enrolment = require('../models/Enrolment');
 const User = require('../models/User');
 const Course = require('../models/Course');
 const Quiz = require('../models/Quiz');
-// const Pathway = require('../models/Pathway');
+const Pathway = require('../models/Pathway');
 const { VALID_ENROLMENT_STATUS } = require('../config/constants');
 
 const enrolCourse = async (req, res) => {
     try {
         const courseID = req.params.courseID;
-        const { pathwayID, studentID } = req.body;
+        const { userID } = req.body;
 
         // Validate course id is provided
         if (!courseID) {
@@ -18,9 +18,9 @@ const enrolCourse = async (req, res) => {
         };
 
         // Basic validataion
-        if (!studentID) {
+        if (!userID) {
             return res.status(400).json({
-                error: 'Student ID is required'
+                error: 'User ID is required'
             });
         };
 
@@ -32,36 +32,22 @@ const enrolCourse = async (req, res) => {
             });
         };
 
-        // Validate student ID
-        const enrolledStudent = await User.findById(studentID)
-        if (!enrolledStudent || enrolledStudent.role !== 'student') {
+        // Validate user ID
+        const enrolledUser = await User.findById(userID)
+        if (!enrolledUser || enrolledUser.role !== 'student') {
             return res.status(400).json({
-                error: 'Invalid student ID. Student does not exist.'
+                error: 'Invalid user ID. Student user does not exist.'
             });
         };
 
-        // Validate pathway ID
-        // if (pathwayID) {
-        //     const enrolledPathway = await Pathway.findById(pathwayID);
-        //     if (!enrolledPathway) {
-        //         return res.status(400).json({
-        //             error: 'Invalid pathway ID. Pathway does not exist.'
-        //         });
-        //     }
-
-        //     const courses = await Course.findByPathwayId(pathwayID);
-        //     if (!courses.includes(enrolledCourse)) {
-        //         return res.status(400).json({
-        //             error: 'Invalid pathway ID for course. Selected pathway does not have the selected course.'
-        //         });
-        //     }
-        // }
+        // If user is taking a pathway, validate pre-requisite
+        
 
         // Check if the student has already enrolled the course
-        const existingEnrolment = await Enrolment.findByCourseIdStudentId(courseID, studentID);
+        const existingEnrolment = await Enrolment.findByCourseIdUserID(courseID, userID);
         if (existingEnrolment && existingEnrolment.status !== 'disenrolled') {
             return res.status(400).json({
-                error: 'Student already enrolled the selected course.'
+                error: 'User already enrolled the selected course.'
             });
         };
 
@@ -75,7 +61,7 @@ const enrolCourse = async (req, res) => {
             newEnrolment = await Enrolment.create({
                 pathwayID,
                 courseID, 
-                studentID,
+                userID,
             });
         }
 
@@ -86,7 +72,7 @@ const enrolCourse = async (req, res) => {
                 enrolmentID: newEnrolment.moduleID,
                 pathwayID: newEnrolment.pathwayID,
                 courseID: newEnrolment.courseID,
-                studentID: newEnrolment.studentID,
+                userID: newEnrolment.userID,
                 status: newEnrolment.status
             }
         })
@@ -101,7 +87,7 @@ const enrolCourse = async (req, res) => {
 const disenrolCourse = async (req, res) => {
     try {
         const courseID = req.params.courseID;
-        const { studentID } = req.body;
+        const { userID } = req.body;
 
         // Validate course id is provided
         if (!courseID) {
@@ -111,9 +97,9 @@ const disenrolCourse = async (req, res) => {
         };
 
         // Basic validataion
-        if (!studentID) {
+        if (!userID) {
             return res.status(400).json({
-                error: 'Student ID is required'
+                error: 'User ID is required'
             });
         };
 
@@ -125,19 +111,19 @@ const disenrolCourse = async (req, res) => {
             });
         };
 
-        // Validate student ID
-        const enrolledStudent = await User.findById(studentID)
-        if (!enrolledStudent || enrolledStudent.role !== 'student') {
+        // Validate user ID
+        const enrolledUser = await User.findById(userID)
+        if (!enrolledUser || enrolledUser.role !== 'student') {
             return res.status(400).json({
-                error: 'Invalid student ID. Student does not exist.'
+                error: 'Invalid user ID. Student user does not exist.'
             });
         };
 
         // Check if the student has already enrolled the course
-        const existingEnrolment = await Enrolment.findByCourseIdStudentId(courseID, studentID);
+        const existingEnrolment = await Enrolment.findByCourseIdUserID(courseID, userID);
         if (!existingEnrolment || existingEnrolment.status == 'disenrolled') {
             return res.status(400).json({
-                error: 'Student not enrolled the selected course.'
+                error: 'User not enrolled the selected course.'
             });
         };
 
@@ -151,7 +137,7 @@ const disenrolCourse = async (req, res) => {
                 enrolmentID: dienrolment.enrolmentID,
                 pathwayID: dienrolment.pathwayID,
                 courseID: dienrolment.courseID,
-                studentID: dienrolment.studentID,
+                userID: dienrolment.userID,
                 status: dienrolment.status,
                 disenrolledDate: dienrolment.disenrolledDate
             }
@@ -197,27 +183,27 @@ const getCourseEnrolment = async (req, res) => {
 };
 
 
-const getStudentEnrolment = async (req, res) => {
+const getUserEnrolment = async (req, res) => {
     try {
-        const studentID = req.params.studentID;
+        const userID = req.params.userID;
 
         // Validate course id is provided
-        if (!studentID) {
+        if (!userID) {
             return res.status(400).json({ 
-                error: 'student ID is required in header (studentID)' 
+                error: 'User ID is required in header (userID)' 
             });
         };
 
-        // Validate student ID
-        const student = await User.findById(studentID)
-        if (!student || student.role !== 'student') {
+        // Validate user ID
+        const user = await User.findById(userID)
+        if (!user || user.role !== 'student') {
             return res.status(400).json({
-                error: 'Invalid student ID. Student does not exist.'
+                error: 'Invalid user ID. Student user does not exist.'
             });
         };
 
-        // Get all enrolment made by students
-        const enrolments = await Enrolment.findByStudentID(studentID);
+        // Get all enrolment made by users
+        const enrolments = await Enrolment.findByUserID(userID);
 
         res.json({
             enrolments
@@ -299,7 +285,7 @@ module.exports = {
     // disenrolPathway,
     // updatePathwayEnrolment,
     getPopular,
-    getStudentEnrolment,
+    getUserEnrolment,
     getAll,
     getMeta,
 };

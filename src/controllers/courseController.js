@@ -1,23 +1,23 @@
 const Course = require('../models/Course');
-const CourseOwner = require('../models/CourseOwner');
+const User = require('../models/User');
 const { VALID_COURSE_STATUS, VALID_COURSE_LEVEL } = require('../config/constants');
 
 const register = async (req, res) => {
     try {
-        const { title, ownerID, category, level, outline, status } = req.body;
+        const { title, userID, category, level, outline, status } = req.body;
 
         // Basic validataion
         if (!title || !category || !level || !outline || !status) {
             return res.status(400).json({
-                error: 'Title, ownerID, level, outline and status are required'
+                error: 'Title, userID, level, outline and status are required'
             });
         }
 
         // Validate owner id
-        const existingOwner = await CourseOwner.findById(ownerID)
+        const existingOwner = await User.findById(userID)
         if (!existingOwner) {
             return res.status(400).json({
-                error: 'Invalid owner ID. Course Owner does not exist.'
+                error: 'Invalid user ID. Course Owner does not exist.'
             });
         }
 
@@ -41,7 +41,7 @@ const register = async (req, res) => {
 
         // Create course
         const newCourse = await Course.create({
-            ownerID,
+            userID,
             title, 
             category,
             level: courseLevel, 
@@ -53,7 +53,7 @@ const register = async (req, res) => {
             message: 'Course registered successfully',
             course: {
                 courseID: newCourse.courseID,
-                ownerID: newCourse.ownerID,
+                userID: newCourse.userID,
                 pathwayID: newCourse.pathwayID,
                 title: newCourse.title,
                 category: newCourse.category,
@@ -74,7 +74,7 @@ const register = async (req, res) => {
 const update = async (req, res) => {
     try {
         const courseID = req.params.courseID;
-        const { ownerID, title, category, level, outline, status } = req.body;
+        const { userID, title, category, level, outline, status } = req.body;
 
         // Validate courseId
         if (!courseID) {
@@ -92,9 +92,9 @@ const update = async (req, res) => {
         }
 
         // Validate owner id
-        if (ownerID && !(await CourseOwner.findById(ownerID))) {
+        if (userID && !(await User.findById(userID))) {
             return res.status(400).json({
-                error: 'Invalid owner ID. Course Owner does not exist.'
+                error: 'Invalid user ID. Course Owner does not exist.'
             });
         }
 
@@ -116,7 +116,7 @@ const update = async (req, res) => {
 
         // Prepare update data
         const updateData = {};
-        if (ownerID !== undefined) updateData.ownerID = ownerID;
+        if (userID !== undefined) updateData.userID = userID;
         if (title !== undefined) updateData.title = title;
         if (category !== undefined) updateData.category = category;
         if (level !== undefined) updateData.level = courseLevel;
@@ -130,7 +130,7 @@ const update = async (req, res) => {
             message: 'Course updated successfully',
             course: {
                 courseID: updateCourse.courseID,
-                ownerID: updateCourse.ownerID,
+                userID: updateCourse.userID,
                 pathwayID: updateCourse.pathwayID,
                 title: updateCourse.title,
                 category: updateCourse.category,
@@ -178,7 +178,7 @@ const getCourse = async (req, res) => {
       });
     }
 
-    // Find user by ID
+    // Find course by ID
     const course = await Course.findById(courseId);
     if (!course) {
       return res.status(404).json({ 
