@@ -67,6 +67,16 @@ class User {
     return result.rows;
   }
 
+  static async getAllNonStudents() {
+    const query = `
+      SELECT "userID", "firstName", "lastName", "email", "role", "isEmailVerified", "created_at"
+      FROM "User" WHERE NOT "role" = 'student'
+      ORDER BY "created_at" DESC
+    `;
+    const result = await pool.query(query);
+    return result.rows;
+  }
+
   // 🔹 OTP Methods
   static async setOTP(email, otpCode, expiresAt) {
     const query = `

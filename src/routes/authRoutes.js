@@ -8,7 +8,8 @@ const {
   verifyResetOTP,
   resetPassword,
   getCurrentUser,
-  updateCurrentUser
+  updateCurrentUser,
+  getNonStudentUsers
 } = require("../controllers/authController");
 
 const router = express.Router();
@@ -28,6 +29,8 @@ router.post("/verify-resetotp", verifyResetOTP);
 
 router.post("/reset-password", resetPassword);
 
+
+router.get("/users", getNonStudentUsers);
 
 // Profile routes
 router.get("/user", getCurrentUser);   // ✅ fetch user profile

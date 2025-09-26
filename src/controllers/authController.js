@@ -537,6 +537,18 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const getNonStudentUsers = async(req, res) => {
+  try {
+    const allNonStudents = await User.getAllNonStudents();
+    res.json({
+      users: allNonStudents
+    });
+
+  } catch(error) {
+    console.error('Get all non student error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
 
 module.exports = {
   register,
@@ -548,4 +560,5 @@ module.exports = {
   sendResetPasswordOTP,
   verifyResetOTP,
   resetPassword,
+  getNonStudentUsers
 };
