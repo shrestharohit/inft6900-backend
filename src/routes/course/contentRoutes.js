@@ -19,7 +19,7 @@ router.put("/:moduleid/:contentid", update);
 router.get('/module/:moduleid', getAll);
 
 // Get metadata
-router.post("/getMeta", getMeta);
+router.get("/getMeta", getMeta);
 
 // Get a single content by contentID
 router.get("/:contentid", getContent);
