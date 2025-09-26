@@ -184,14 +184,45 @@ const getCourse = async (req, res) => {
     if (!course) {
       return res.status(404).json({ 
         error: 'Course not found'
-      });        console.error('Get answer error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+      });
     }
 
     res.json(course);
 
   } catch (error) {
     console.error('Get course error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const getUserCourses = async (req, res) => {
+  try {
+    const userID = req.params.userID;
+
+    // Validate course id is provided
+    if (!userID) {
+      return res.status(400).json({ 
+        error: 'User ID is required' 
+      });
+    }
+
+    // Find course by ID
+    const courses = await Course.findByOwner(userID);
+    res.json(courses);
+
+  } catch (error) {
+    console.error('Get course by owner error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const getApprovalList = async (req, res) => {
+  try {
+    // Find course by ID
+    const course = await Course.findByStatus("wait_for_approval");
+    res.json(course);
+  } catch (error) {
+    console.error('Get wait for approval courses error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -203,5 +234,7 @@ module.exports = {
   getAllCategories,
   getAll,
   getMeta,
-  getCourse
+  getCourse,
+  getUserCourses,
+  getApprovalList
 };

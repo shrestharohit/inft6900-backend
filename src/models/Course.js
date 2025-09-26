@@ -28,6 +28,22 @@ class Course {
         return result.rows;
     }
 
+    static async findByOwner(userID) {
+        const query = `
+            SELECT * FROM "Course" WHERE "userID" = $1
+        `;
+        const result = await pool.query(query, [userID]);
+        return result.rows;
+    }
+
+    static async findByStatus(status) {
+        const query = `
+            SELECT * FROM "Course" WHERE "status" = $1
+        `;
+        const result = await pool.query(query, [status]);
+        return result.rows;
+    }
+
     static async findByUserID(userID) {
         const query = `
             SELECT * FROM "Course" WHERE "userID" = $1
