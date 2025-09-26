@@ -222,10 +222,171 @@ const getUserEnrolment = async (req, res) => {
         })
 
     } catch(error) {
-        console.error('Get course errors error:', error);
+        console.error('Get course error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+const enrolPathway = async (req, res) => {
+    try {
+        const pathwayID = req.params.pathwayID;
+        const { userID } = req.body;
+
+        // Pathway validation
+        if (!pathwayID) {
+            return res.status(400).json({
+                error: 'Pathway ID required.'
+            });
+        }
+        
+        const pathway = await Pathway.findById(pathwayID);
+        if (!pathway) {
+            return res.status(400).json({
+                error: 'Invalid pathway ID. Pathway does not exist.'
+            });
+        }
+
+        // User ID validation
+        if (!userID) {
+            return res.status(400).json({
+                error: 'User ID is required'
+            });
+        };
+
+        const user = await User.findById(userID)
+        if (!user || user.role !== 'student') {
+            return res.status(400).json({
+                error: 'Invalid user ID. Student user does not exist.'
+            });
+        };
+
+        // Validate if user has been already doing pathway or not
+        const existingEnrolments = await Enrolment.findByPathwayIdUserID(pathwayID, userID);
+        if (existingEnrolments && existingEnrolments.length > 0) {
+            return res.status(400).json({
+                error: 'User has already enrolled pathway.'
+            });
+        };
+
+        // Get the first course
+        const pathwayCourses = await Course.findByPathwayId(pathwayID);
+        if (!pathwayCourses || pathwayCourses.length === 0) {
+            return res.status(400).json({
+                error: 'Invalid pathway. No courses found in this pathway.'
+            });
+        }
+
+        const firstCourse = pathwayCourses.find(course => course.level === 'beginner')
+
+        if (!firstCourse) {
+            return res.status(400).json({
+                error: 'Pathway does not have beginner course. Please contact course owner.'
+            });
+        }
+
+        // Check current enrolments of pathway courses
+        const enrolments = [];
+        for (const pathwayCourse of pathwayCourses) {
+            let enrolment = await Enrolment.findByCourseIdUserID(pathwayCourse.courseID, userID)
+            if (enrolment) {
+                enrolments.push(enrolment);
+            }
+        }
+
+        // If user has not enrolled any course -> auto-enrol to the first course
+        if (enrolments.length === 0) {
+            const course = firstCourse;
+            // auto enrol and return
+            const firstEnrolment = await Enrolment.create({
+                pathwayID: pathwayID,
+                courseID: course.courseID,
+                userID: userID
+            })
+
+            res.json({
+                message: 'Pathway enrolment successful. The first course enrolment is done.',
+                enrolment: firstEnrolment
+            })
+        } 
+        // If user has been taking a course in pathway -> no auto-enrol, update enrolment with pathway ID
+        else {
+            const updatedEnrolments = [];
+            for (const enrolment of enrolments) {
+                let updatedEnrolment = await Enrolment.update(enrolment.enrolmentID, {pathwayID: pathwayID});
+                updatedEnrolments.push(updatedEnrolment);
+            };
+            
+            res.json({
+                message: 'Pathway enrolment successful. Now your course enrolments are registered as pathway.',
+                enrolment: updatedEnrolments
+            })
+        };
+
+
+    } catch(error) {
+        console.error('Pathway enrolment error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+const disenrolPathway = async (req, res) => {
+    try {
+        const pathwayID = req.params.pathwayID;
+        const { userID } = req.body;
+
+        // Pathway validation
+        if (!pathwayID) {
+            return res.status(400).json({
+                error: 'Pathway ID required.'
+            });
+        }
+        
+        const pathway = await Pathway.findById(pathwayID);
+        if (!pathway) {
+            return res.status(400).json({
+                error: 'Invalid pathway ID. Pathway does not exist.'
+            });
+        }
+
+        // User ID validation
+        if (!userID) {
+            return res.status(400).json({
+                error: 'User ID is required'
+            });
+        };
+
+        const user = await User.findById(userID)
+        if (!user || user.role !== 'student') {
+            return res.status(400).json({
+                error: 'Invalid user ID. Student user does not exist.'
+            });
+        };
+
+        // Validate if user has been already doing pathway or not
+        const enrolments = await Enrolment.findByPathwayIdUserID(pathwayID, userID);
+        if (enrolments.length === 0) {
+            return res.status(400).json({
+                error: 'User not enrolled selected pathway.'
+            });
+        };
+
+        // Update each enrolled course's pathway ID to null
+        const updatedEnrolments = []
+        for (const enrolment of enrolments) {
+            let udpatedEnrolment = await Enrolment.update(enrolment.enrolmentID, {pathwayID: null});
+            updatedEnrolments.push(udpatedEnrolment);
+        }
+
+        res.json({
+            message: 'Pathway disenrolment successful.',
+            enrolment: updatedEnrolments
+        })
+
+    } catch(error) {
+        console.error('Pathway enrolment error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
 
 const refreshStatus = async (enrolmentID) => {
     try {
@@ -343,7 +504,6 @@ const valdiatePrerequisite = async (userID, pathwayID, courseID) => {
     // if user has completed a course higher level than the enrolled course, then alwasy true
     const userLevel = await getUserLevel(userID, pathwayID);
     const enrolledCourse = await Course.findById(courseID)
-    console.log(enrolledCourse.level)
     if (userLevel > levels[enrolledCourse.level]) {
         return true;
     }
@@ -357,9 +517,8 @@ module.exports = {
     disenrolCourse,
     getCourseEnrolment,
     refreshStatus,
-    // enrolPathway,
-    // disenrolPathway,
-    // updatePathwayEnrolment,
+    enrolPathway,
+    disenrolPathway,
     getPopular,
     getUserEnrolment,
     getAll,

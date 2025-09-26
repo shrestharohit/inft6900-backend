@@ -97,7 +97,7 @@ class Enrolment {
         const query =`
             SELECT e."courseID", c."title", c."category", c."level", COUNT(e."userID") "count" FROM "Enrolment" e
             LEFT JOIN "Course" c ON e."courseID" = e."courseID"
-            WHERE NOT e.status = 'disenrolled'
+            WHERE NOT e."status" = 'disenrolled'
             GROUP BY e."courseID", c."title", c."category", c."level"
             ORDER BY "count" DESC
             LIMIT 3
@@ -110,7 +110,7 @@ class Enrolment {
         const query =`
             SELECT e."pathwayID", p."name", COUNT(e."userID") "count" FROM "Enrolment" e
             LEFT JOIN "Pathway" p ON e."courseID" = e."courseID"
-            WHERE NOT e."pathwayID" = NULL AND NOT e.status = 'disenrolled'
+            WHERE NOT e."pathwayID" = NULL AND NOT e."status" = 'disenrolled'
             GROUP BY e."pathwayID", p."name"
             ORDER BY "count" DESC
             LIMIT 3
@@ -123,7 +123,7 @@ class Enrolment {
         const query =`
             SELECT DISTINCT("pathwayID")
             FROM "Enrolment"
-            WHERE "userID" = $1
+            WHERE "userID" = $1 AND NOT "status" = 'disenrolled'
         `
 
         const result = await pool.query(query, [userID]);
