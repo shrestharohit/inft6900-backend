@@ -4,7 +4,7 @@ const {
   disenrolCourse,
   getCourseEnrolment,
 // pathway to be added after Zoey is done with pathway APIs
-//   enrolPathway,
+  enrolPathway,
 //   disenrolPathway,
 //   updatePathwayEnrolment,
   getPopular,
@@ -27,7 +27,7 @@ router.post("/course/:courseID", enrolCourse);
 
 router.put("/course/:courseID/disenrol", disenrolCourse);
 
-// router.post("/pathway/:pathwayID", enrolPathway);
+router.post("/pathway/:pathwayID", enrolPathway);
 
 // router.put("/pathway/:pathwayID/disenrol", disenrolPathway);
 
