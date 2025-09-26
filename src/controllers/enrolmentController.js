@@ -227,7 +227,6 @@ const getUserEnrolment = async (req, res) => {
     }
 };
 
-
 const enrolPathway = async (req, res) => {
     try {
         const pathwayID = req.params.pathwayID;
@@ -267,7 +266,7 @@ const enrolPathway = async (req, res) => {
             return res.status(400).json({
                 error: 'User has already enrolled pathway.'
             });
-        }
+        };
 
         // Get the first course
         const pathwayCourses = await Course.findByPathwayId(pathwayID);
@@ -330,6 +329,64 @@ const enrolPathway = async (req, res) => {
     }
 }
 
+const disenrolPathway = async (req, res) => {
+    try {
+        const pathwayID = req.params.pathwayID;
+        const { userID } = req.body;
+
+        // Pathway validation
+        if (!pathwayID) {
+            return res.status(400).json({
+                error: 'Pathway ID required.'
+            });
+        }
+        
+        const pathway = await Pathway.findById(pathwayID);
+        if (!pathway) {
+            return res.status(400).json({
+                error: 'Invalid pathway ID. Pathway does not exist.'
+            });
+        }
+
+        // User ID validation
+        if (!userID) {
+            return res.status(400).json({
+                error: 'User ID is required'
+            });
+        };
+
+        const user = await User.findById(userID)
+        if (!user || user.role !== 'student') {
+            return res.status(400).json({
+                error: 'Invalid user ID. Student user does not exist.'
+            });
+        };
+
+        // Validate if user has been already doing pathway or not
+        const enrolments = await Enrolment.findByPathwayIdUserID(pathwayID, userID);
+        if (enrolments.length === 0) {
+            return res.status(400).json({
+                error: 'User not enrolled selected pathway.'
+            });
+        };
+
+        // Update each enrolled course's pathway ID to null
+        const updatedEnrolments = []
+        for (const enrolment of enrolments) {
+            let udpatedEnrolment = await Enrolment.update(enrolment.enrolmentID, {pathwayID: null});
+            updatedEnrolments.push(udpatedEnrolment);
+        }
+
+        res.json({
+            message: 'Pathway disenrolment successful.',
+            enrolment: updatedEnrolments
+        })
+
+    } catch(error) {
+        console.error('Pathway enrolment error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
 
 const refreshStatus = async (enrolmentID) => {
     try {
@@ -447,7 +504,6 @@ const valdiatePrerequisite = async (userID, pathwayID, courseID) => {
     // if user has completed a course higher level than the enrolled course, then alwasy true
     const userLevel = await getUserLevel(userID, pathwayID);
     const enrolledCourse = await Course.findById(courseID)
-    console.log(enrolledCourse.level)
     if (userLevel > levels[enrolledCourse.level]) {
         return true;
     }
@@ -462,8 +518,7 @@ module.exports = {
     getCourseEnrolment,
     refreshStatus,
     enrolPathway,
-    // disenrolPathway,
-    // updatePathwayEnrolment,
+    disenrolPathway,
     getPopular,
     getUserEnrolment,
     getAll,
