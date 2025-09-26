@@ -32,6 +32,17 @@ class Question {
         return result.rows[0];
     }
 
+    static async findAnswer(questionID, client = null) {
+        const db = client || pool;
+        const query = `
+        SELECT ao.* FROM "Question" q
+        LEFT JOIN "AnswerOption" ao ON q."questionID" = ao."questionID"
+        WHERE q."questionID" = $1 AND ao."isCorrect" = TRUE AND ao."status" = 'active' AND q."status" = 'active'
+        `;
+        const result = await db.query(query, [questionID]);
+        return result.rows[0];
+    }
+
     static async update(questionID, updateData, client = null) {
         const db = client || pool;
         const allowedFields = ['questionNumber', 'questionText', 'status'];

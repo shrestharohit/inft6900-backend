@@ -6,7 +6,6 @@ require('dotenv').config();
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
-const courseRoutes = require('./routes/course/courseRoutes');
 const contentRoutes = require('./routes/course/contentRoutes');
 const pathwayRoutes = require('./routes/pathwayRoutes');
 const moduleAccessRoutes = require('./routes/moduleAccessRoutes'); 
@@ -16,6 +15,7 @@ const boardPostRoutes = require('./routes/course/discussion/post/boardPostRoutes
 const scheduleRoutes = require('./routes/course/scheduleRoutes');
 const announcementRoutes = require('./routes/course/announcementRoutes');
 
+const courseRoutes = require('./routes/course/courseRoutes');
 const moduleRoutes = require('./routes/course/moduleRoutes');
 const quizRoutes = require('./routes/course/quiz/quizRoutes');
 const questionRoutes = require('./routes/course/quiz/questionRoutes');

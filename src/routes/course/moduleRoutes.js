@@ -6,14 +6,13 @@ const {
   getAll,
   getMeta,
 } = require("../../controllers/moduleController");
-const quizRoutes = require('./quiz/quizRoutes');
 
 const router = express.Router();
 
 // Return valid status options
 router.get("/_meta", getMeta);
 
-router.get("/", getAll);
+router.get("/course/:courseID", getAll);
 
 router.post("/register", register);
 
