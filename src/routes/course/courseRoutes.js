@@ -7,7 +7,8 @@ const {
   getMeta,
   getCourse,
   getUserCourses,
-  getApprovalList
+  getApprovalList,
+  getDetail
 } = require("../../controllers/courseController");
 
 const router = express.Router();
@@ -27,5 +28,6 @@ router.get("/owner/:userID", getUserCourses);
 
 router.get("/approval-list", getApprovalList);
 
+router.get("/:courseID/detail", getDetail)
 
 module.exports = router;
