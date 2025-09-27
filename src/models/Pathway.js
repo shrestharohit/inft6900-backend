@@ -19,6 +19,31 @@ class Pathway {
         return result.rows[0];
     }
 
+    // Find pathways by status
+    static async findByStatus(status) {
+        const query = `SELECT * FROM "Pathway" WHERE "status" = $1 ORDER BY "createdDate" DESC`;
+        const result = await pool.query(query, [status]);
+        return result.rows;
+    }
+
+    // Get detailed pathway
+    static async getDetail(pathwayID) {
+        const query = `SELECT * FROM "Pathway" WHERE "pathwayID" = $1`;
+        const result = await pool.query(query, [pathwayID]);
+        return result.rows[0];
+    }
+    
+    // Get all courses in a pathway
+    static async getCourses(pathwayID) {
+        const query = `
+            SELECT c."title", c."category", c."level", c."outline"
+            FROM "Course" c
+            WHERE c."pathwayID" = $1
+        `;
+        const result = await pool.query(query, [pathwayID]);
+        return result.rows;
+    }
+
     // Update pathway
     static async update(pathwayID, updateData) {
         const allowedFields = ['name', 'outline', 'status'];

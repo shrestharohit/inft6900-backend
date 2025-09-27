@@ -4,7 +4,7 @@ const {
   updateBoard,
   getBoards,
   getBoard,
-} = require('../../../controllers/discussionBoardController');
+} = require('../../controllers/discussionBoardController');
 
 const router = express.Router();
 
