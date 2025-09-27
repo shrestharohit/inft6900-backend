@@ -154,7 +154,7 @@ const getCourseReviews = async (req, res) => {
         
         res.json({
             reviews: reviewws,
-            avgRating: avgRating,
+            avgRating: avgRating.AvgRating,
             course: course
         });
 

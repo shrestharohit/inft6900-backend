@@ -71,7 +71,7 @@ class CourseReview {
             GROUP BY c."courseID", c."title"
         `;
         const result = await db.query(query, [courseID]);
-        return result.rows;
+        return result.rows[0];
     }
 
     static async findByUserID(userID, status = ["active"], client = null) {
