@@ -20,6 +20,7 @@ const moduleRoutes = require('./routes/course/moduleRoutes');
 const quizRoutes = require('./routes/course/quiz/quizRoutes');
 const questionRoutes = require('./routes/course/quiz/questionRoutes');
 const optionRoutes = require('./routes/course/quiz/optionRoutes');
+const reviewRoutes = require('./routes/course/reviewRoutes');
 
 const enrolmentRoutes = require('./routes/enrolmentRoutes');
 
@@ -83,6 +84,8 @@ app.use('/api/announcement', announcementRoutes);
 app.use('/api/quiz', quizRoutes);
 app.use('/api/question', questionRoutes);
 app.use('/api/option', optionRoutes);
+
+app.use('/api/review', reviewRoutes);
 
 app.use('/api/enrolment', enrolmentRoutes);
 

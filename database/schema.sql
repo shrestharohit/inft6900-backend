@@ -205,6 +205,21 @@ CREATE TABLE "Certificate" (
 );
 
 -- ==================
+-- COURSE REVIEW
+-- ==================
+CREATE TABLE "CourseReview" (
+    "reviewID" SERIAL PRIMARY KEY,
+    "userID" INT NOT NULL,
+    "courseID" INT NOT NULL,
+    "comment" TEXT,
+    "rating" INT NOT NULL,
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY ("userID") REFERENCES "User"("userID"),
+    FOREIGN KEY ("courseID") REFERENCES "Course"("courseID")
+);
+
+-- ==================
 -- DISCUSSION BOARD
 -- ==================
 CREATE TABLE "DiscussionBoard" (
