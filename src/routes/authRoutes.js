@@ -9,7 +9,8 @@ const {
   resetPassword,
   getCurrentUser,
   updateCurrentUser,
-  getNonStudentUsers
+  getNonStudentUsers,
+  updateUser
 } = require("../controllers/authController");
 
 const router = express.Router();
@@ -29,12 +30,13 @@ router.post("/verify-resetotp", verifyResetOTP);
 
 router.post("/reset-password", resetPassword);
 
-
-router.get("/users", getNonStudentUsers);
-
 // Profile routes
 router.get("/user", getCurrentUser);   // ✅ fetch user profile
 router.put("/user", updateCurrentUser); // ✅ update user profile
 
+
+// for admin page
+router.get("/users", getNonStudentUsers);
+router.put("/update", updateUser);
 
 module.exports = router;
