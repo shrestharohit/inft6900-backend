@@ -15,11 +15,11 @@ router.post("/register/:moduleid", register);
 // Update content by moduleID and contentID
 router.put("/:moduleid/:contentid", update);
 
-// Get all content
-router.post("/getAll", getAll);
+// Get all content in a module
+router.get('/module/:moduleid', getAll);
 
 // Get metadata
-router.post("/getMeta", getMeta);
+router.get("/getMeta", getMeta);
 
 // Get a single content by contentID
 router.get("/:contentid", getContent);

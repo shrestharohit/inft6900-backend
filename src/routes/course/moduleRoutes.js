@@ -6,7 +6,6 @@ const {
   getAll,
   getMeta,
 } = require("../../controllers/moduleController");
-const quizRoutes = require('./quiz/quizRoutes');
 
 const router = express.Router();
 

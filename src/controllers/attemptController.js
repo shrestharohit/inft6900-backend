@@ -226,7 +226,7 @@ const getQuizResult = async (req, res) => {
         // Get options under the attemp
         const answers = await AttemptAnswer.findByAttemptID(attempt.attemptID);
 
-        processedAnswers = [];
+        const processedAnswers = [];
         let processedAnswer = null;
         let correctOption = null;
 
@@ -255,8 +255,49 @@ const getQuizResult = async (req, res) => {
 
 }
 
+
+const getUserAttempts = async (req, res) => {
+    try{
+        const { userID, quizID } = req.params;
+
+        // Validate if attemptID and enrolmentID are provided
+        if (!userID || !quizID) {
+            return res.status(400).json({
+                error: 'User ID and Quiz ID are required.'
+            });
+        }
+
+        // Validate if user ID exists
+        const user = await User.findById(userID);
+        if (!user) {
+            return res.status(400).json({
+                error: 'User ID not found.'
+            });
+        }
+
+        // Validate if quizID exists
+        const quiz = await Quiz.findById(quizID);
+        if (!quiz) {
+            return res.status(400).json({
+                error: 'Quiz ID not found.'
+            });
+        }
+
+        // Get attempts
+        const attempts = await QuizAttempt.findByUserModule(userID, quiz.moduleID);
+
+        res.json(attempts);
+
+    } catch(error) {
+        console.error('Get quiz result error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+
+}
+
 module.exports = {
     startAttempt,
     submitAttemp,
-    getQuizResult
+    getQuizResult,
+    getUserAttempts
 };

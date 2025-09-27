@@ -8,16 +8,14 @@ const {
   getPopular,
   getUserEnrolment,
   getAll,
-  getMeta,
-  testFunction
+  getEnrolment,
+  getMeta
 } = require("../controllers/enrolmentController");
 
 const router = express.Router();
 
 // Return valid status and level options
 router.get("/_meta", getMeta);
-
-router.get("/", getAll);
 
 router.get("/course/:courseID/", getCourseEnrolment);
 
@@ -32,6 +30,11 @@ router.put("/pathway/:pathwayID/disenrol", disenrolPathway);
 router.get("/popular", getPopular);
 
 router.get("/user/:userID", getUserEnrolment);
+
+router.get("/:enrolmentID", getEnrolment);
+
+router.get("/", getAll);
+
 
 
 module.exports = router;

@@ -14,6 +14,8 @@ const VALID_PATHWAY_STATUS = ['draft', 'wait_for_approval', 'active', 'inactive'
 
 const VALID_ENROLMENT_STATUS = ['enrolled', 'in progress', 'completed', 'disenrolled'];
 
+const VALID_REVIEW_STATUS = ['active', 'inactive'];
+
 module.exports = {
   VALID_USER_ROLES,
   VALID_COURSE_STATUS,
@@ -25,4 +27,5 @@ module.exports = {
   VALID_OPTION_STATUS,
   VALID_PATHWAY_STATUS,
   VALID_ENROLMENT_STATUS,
+  VALID_REVIEW_STATUS
 };

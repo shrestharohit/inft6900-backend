@@ -11,7 +11,8 @@ const {
 const {
   startAttempt,
   submitAttemp,
-  getQuizResult
+  getQuizResult,
+  getUserAttempts
 } = require("../../../controllers/attemptController");
 
 
@@ -45,6 +46,8 @@ router.post("/:quizID/start", startAttempt);
 router.put("/:quizID/submit", submitAttemp);
 
 router.get("/:quizID/result/:attemptID", getQuizResult);
+
+router.get("/:quizID/user/:userID", getUserAttempts);
 
 
 module.exports = router;

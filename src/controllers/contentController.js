@@ -146,10 +146,19 @@ const getContent = async (req, res) => {
     }
 };
 
-// Get all content
+// Get all content for a specific module
 const getAll = async (req, res) => {
-    const contents = await Content.getAll();
-    res.json({ contents });
+    try {
+        const moduleID = parseInt(req.params.moduleid);
+        if (!moduleID) return res.status(400).json({ error: 'Module ID is required' });
+
+        const moduleContents = await Content.findByModuleId(moduleID);
+
+        res.json({ contents: moduleContents });
+    } catch (error) {
+        console.error('Get module content error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 };
 
 // Get metadata
