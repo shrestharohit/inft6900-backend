@@ -6,7 +6,6 @@ require('dotenv').config();
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
-
 const contentRoutes = require('./routes/course/contentRoutes');
 const pathwayRoutes = require('./routes/pathwayRoutes');
 const moduleAccessRoutes = require('./routes/moduleAccessRoutes'); 
