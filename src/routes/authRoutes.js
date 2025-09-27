@@ -10,7 +10,8 @@ const {
   getCurrentUser,
   updateCurrentUser,
   getNonStudentUsers,
-  updateUser
+  updateUser,
+  deleteUser
 } = require("../controllers/authController");
 
 const router = express.Router();
@@ -38,5 +39,6 @@ router.put("/user", updateCurrentUser); // ✅ update user profile
 // for admin page
 router.get("/users", getNonStudentUsers);
 router.put("/update", updateUser);
+router.delete("/delete", deleteUser);
 
 module.exports = router;

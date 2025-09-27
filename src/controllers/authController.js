@@ -302,6 +302,39 @@ const updateCurrentUser = async (req, res) => {
   }
 };
 
+const deleteUser = async (req, res) => {
+  try {
+    const { userID } = req.body;
+
+    // Validate userId is provided
+    if (!userID) {
+      return res.status(400).json({ 
+        error: 'User ID is required'
+      });
+    }
+
+    // Check if user exists
+    const existingUser = await User.findById(userID);
+    if (!existingUser) {
+      return res.status(404).json({ 
+        error: 'User not found' 
+      });
+    }
+
+    // Update user
+    const deletedUser = await User.deleteById(userID);
+
+    res.json({
+      message: 'User deleted successfully',
+      deletedUser: deletedUser
+    });
+
+  } catch (error) {
+    console.error('Delete error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 
 const updateUser = async (req, res) => {
   try {
@@ -614,5 +647,6 @@ module.exports = {
   verifyResetOTP,
   resetPassword,
   getNonStudentUsers,
-  updateUser
+  updateUser,
+  deleteUser
 };

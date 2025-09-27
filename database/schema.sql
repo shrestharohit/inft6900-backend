@@ -18,7 +18,6 @@ CREATE TABLE "User" (
     "otpCode" VARCHAR(6),
     "otpExpiresAt" TIMESTAMP,
     "isEmailVerified" BOOLEAN DEFAULT FALSE,
-    "status" VARCHAR(50) NOT NULL,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -91,7 +90,7 @@ CREATE TABLE "Enrolment" (
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("pathwayID") REFERENCES "Pathway"("pathwayID"),
     FOREIGN KEY ("courseID") REFERENCES "Course"("courseID"),
-    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE -- alter FK constraint required
+    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE
 );
 
 CREATE TABLE "ModuleAccess" (

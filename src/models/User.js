@@ -3,21 +3,21 @@ const { pool } = require('../config/database');
 class User {
   static async create({ firstName, lastName, email, passwordHash, role }) {
     const query = `
-      INSERT INTO "User" ("firstName", "lastName", "email", "passwordHash", "role", "status", "created_at")
-      VALUES ($1, $2, $3, $4, $5, 'active', NOW())
-      RETURNING "userID", "firstName", "lastName", "email", "passwordHash", "role", "status", "created_at"
+      INSERT INTO "User" ("firstName", "lastName", "email", "passwordHash", "role", "created_at")
+      VALUES ($1, $2, $3, $4, $5, NOW())
+      RETURNING "userID", "firstName", "lastName", "email", "passwordHash", "role", "created_at"
     `;
     const result = await pool.query(query, [firstName, lastName, email, passwordHash, role]);
     return result.rows[0];
   }
 
-  static async findByEmail(email, status = 'active') {
+  static async findByEmail(email) {
     const query = 'SELECT * FROM "User" WHERE "email" = $1';
     const result = await pool.query(query, [email]);
     return result.rows[0];
   }
 
-  static async findById(id, status = 'active') {
+  static async findById(id) {
     const query = `
       SELECT "userID", "firstName", "lastName", "email", "role", "created_at"
       FROM "User" WHERE "userID" = $1
@@ -27,7 +27,7 @@ class User {
   }
 
   static async update(id, updateData) {
-    const allowedFields = ['firstName', 'lastName', 'email', 'role', 'status'];
+    const allowedFields = ['firstName', 'lastName', 'email', 'role'];
     const updates = [];
     const values = [];
     let paramCount = 1;
@@ -51,14 +51,14 @@ class User {
       UPDATE "User"
       SET ${updates.join(', ')}
       WHERE "userID" = $${paramCount}
-      RETURNING "userID", "firstName", "lastName", "email", "role", "status", "updated_at"
+      RETURNING "userID", "firstName", "lastName", "email", "role", "updated_at"
     `;
 
     const result = await pool.query(query, values);
     return result.rows[0];
   }
 
-  static async getAll(status = 'active') {
+  static async getAll() {
     const query = `
       SELECT "userID", "firstName", "lastName", "email", "role", "isEmailVerified", "created_at"
       FROM "User" ORDER BY "created_at" DESC
@@ -67,7 +67,16 @@ class User {
     return result.rows;
   }
 
-  static async getAllNonStudents(status = 'active') {
+  static async deleteById(id) {
+    const query = `
+      DELETE FROM "User" 
+      WHERE "userID" = $1
+    `;
+    const result = await pool.query(query, [id]);
+    return result.rows[0];
+  }
+  
+  static async getAllNonStudents() {
     const query = `
       SELECT "userID", "firstName", "lastName", "email", "role", "isEmailVerified", "created_at"
       FROM "User" WHERE NOT "role" = 'student'
