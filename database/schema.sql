@@ -18,6 +18,7 @@ CREATE TABLE "User" (
     "otpCode" VARCHAR(6),
     "otpExpiresAt" TIMESTAMP,
     "isEmailVerified" BOOLEAN DEFAULT FALSE,
+    "status" VARCHAR(50) NOT NULL,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
