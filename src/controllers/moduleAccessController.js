@@ -39,6 +39,38 @@ const getByUser = async (req, res) => {
     }
 };
 
+// Get last access date for a user in a module
+const getLastAccess = async (req, res) => {
+    try {
+        const moduleID = parseInt(req.params.moduleid);
+        const userID = parseInt(req.params.userid);
+
+        const lastAccess = await ModuleAccess.findLastAccess(moduleID, userID);
+        if (!lastAccess) {
+            return res.status(404).json({ error: 'No access record found' });
+        }
+
+        res.json({ moduleID, userID, lastAccessDate: lastAccess.accessDate });
+    } catch (error) {
+        console.error('Get last access error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+// Get all accesses for a user in a module
+const getAllAccesses = async (req, res) => {
+    try {
+        const moduleID = parseInt(req.params.moduleid);
+        const userID = parseInt(req.params.userid);
+
+        const accesses = await ModuleAccess.findAllAccesses(moduleID, userID);
+        res.json({ moduleID, userID, accesses });
+    } catch (error) {
+        console.error('Get all accesses error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
 // Get all accesses for a module
 const getByModule = async (req, res) => {
     try {
@@ -49,6 +81,7 @@ const getByModule = async (req, res) => {
         console.error('Get module access error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
-};
+}
 
-module.exports = { register, getByUser, getByModule };
+module.exports = { register, getByUser, getByModule, getLastAccess, getAllAccesses };
+
