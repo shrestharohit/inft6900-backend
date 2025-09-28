@@ -80,4 +80,24 @@ const update = async (req, res) => {
     }
 };
 
-module.exports = { issue, update, getByUser, getByCourse };
+// Get certificate by ID
+const getById = async (req, res) => {
+    try {
+        const certificateID = parseInt(req.params.certificateid);
+        if (!certificateID) {
+            return res.status(400).json({ error: 'certificateID is required in params' });
+        }
+
+        const certificate = await Certificate.findById(certificateID);
+        if (!certificate) {
+            return res.status(404).json({ error: 'Certificate not found' });
+        }
+
+        res.json({ certificate });
+    } catch (error) {
+        console.error('Get certificate error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+module.exports = { issue, update, getByUser, getByCourse, getById };
