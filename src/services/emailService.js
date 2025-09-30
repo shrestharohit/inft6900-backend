@@ -6,7 +6,8 @@ const createTransporter = () => {
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT,
     secure: false,
-    requireTLS: process.env.SMPT_FROM_EMAIL ? true : false, 
+    // control TLS requirement via SMTP_REQUIRE_TLS env var (true/false)
+    requireTLS: process.env.SMTP_FROM_EMAIL ? true : false, 
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
@@ -28,7 +29,7 @@ const sendOTPEmail = async (email, otp, firstName) => {
     console.log(`📩 OTP for ${email} (${firstName}): ${otp}`);
 
     const mailOptions = {
-      from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,
+      from: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER,
       to: email,
       subject: "Brainwave - Email Verification Code",
       html: `
