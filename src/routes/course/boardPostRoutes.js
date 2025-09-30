@@ -4,7 +4,7 @@ const {
   updatePost,
   getPosts,
   getPost,
-} = require('../../../../controllers/boardPostController');
+} = require('../../controllers/boardPostController');
 
 const router = express.Router({ mergeParams: true });
 

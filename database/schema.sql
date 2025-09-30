@@ -42,7 +42,7 @@ CREATE TABLE "Pathway" (
     "pathwayID" SERIAL PRIMARY KEY,
     "name" VARCHAR(150) NOT NULL,
     "outline" TEXT,
-    "status" VARCHAR(20),
+    "status" VARCHAR(20) DEFAULT 'draft',
     "createdDate" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

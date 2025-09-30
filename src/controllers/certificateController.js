@@ -1,14 +1,14 @@
 const Certificate = require('../models/Certificate');
 const Course = require('../models/Course');
-const { pool } = require('../config/database'); // Validate userID
+const { pool } = require('../config/database');
 
 // Issue certificate
 const issue = async (req, res) => {
     try {
-        const { userID, courseID, certificateURL } = req.body;
+        const { userID, courseID, certificateURL, content } = req.body;
 
-        if (!userID || !courseID || !certificateURL) {
-            return res.status(400).json({ error: 'userID, courseID and certificateURL are required' });
+        if (!userID || !courseID || !certificateURL || !content) {
+            return res.status(400).json({ error: 'userID, courseID, certificateURL, and content are required' });
         }
 
         // Validate user exists
@@ -19,7 +19,8 @@ const issue = async (req, res) => {
         const course = await Course.findById(courseID);
         if (!course) return res.status(404).json({ error: 'Course not found' });
 
-        const newCert = await Certificate.create({ userID, courseID, certificateURL });
+        // Create certificate with content
+        const newCert = await Certificate.create({ userID, courseID, certificateURL, content });
         res.json({ message: 'Certificate issued successfully', certificate: newCert });
     } catch (error) {
         console.error('Issue certificate error:', error);
@@ -51,4 +52,52 @@ const getByCourse = async (req, res) => {
     }
 };
 
-module.exports = { issue, getByUser, getByCourse };
+// Update certificate
+const update = async (req, res) => {
+    try {
+        const certificateID = parseInt(req.params.certificateid);
+        const { content, certificateURL } = req.body;
+
+        if (!certificateID) {
+            return res.status(400).json({ error: 'certificateID is required' });
+        }
+
+        if (!content && !certificateURL) {
+            return res.status(400).json({ error: 'At least one of content or certificateURL must be provided' });
+        }
+
+        // Update certificate
+        const updatedCert = await Certificate.update(certificateID, { content, certificateURL });
+
+        if (!updatedCert) {
+            return res.status(404).json({ error: 'Certificate not found' });
+        }
+
+        res.json({ message: 'Certificate updated successfully', certificate: updatedCert });
+    } catch (error) {
+        console.error('Update certificate error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+// Get certificate by ID
+const getById = async (req, res) => {
+    try {
+        const certificateID = parseInt(req.params.certificateid);
+        if (!certificateID) {
+            return res.status(400).json({ error: 'certificateID is required in params' });
+        }
+
+        const certificate = await Certificate.findById(certificateID);
+        if (!certificate) {
+            return res.status(404).json({ error: 'Certificate not found' });
+        }
+
+        res.json({ certificate });
+    } catch (error) {
+        console.error('Get certificate error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+module.exports = { issue, update, getByUser, getByCourse, getById };

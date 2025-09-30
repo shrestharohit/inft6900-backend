@@ -32,6 +32,21 @@ class Certificate {
         const result = await pool.query(query, [certificateID]);
         return result.rows[0];
     }
+
+    // Update certificate
+    static async update(certificateID, { content, certificateURL }) {
+        const query = `
+            UPDATE "Certificate"
+            SET
+                "content" = COALESCE($1, "content"),
+                "certificateURL" = COALESCE($2, "certificateURL"),
+                "issueDate" = CURRENT_DATE
+            WHERE "certificateID" = $3
+            RETURNING "certificateID", "userID", "courseID", "content", "certificateURL", "issueDate"
+        `;
+        const result = await pool.query(query, [content, certificateURL, certificateID]);
+    return result.rows[0];
+    }
 }
 
 module.exports = Certificate;

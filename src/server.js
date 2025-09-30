@@ -10,8 +10,8 @@ const contentRoutes = require('./routes/course/contentRoutes');
 const pathwayRoutes = require('./routes/pathwayRoutes');
 const moduleAccessRoutes = require('./routes/moduleAccessRoutes'); 
 const certificateRoutes = require('./routes/course/certificateRoutes');
-const discussionBoardRoutes = require('./routes/course/discussion/discussionBoardRoutes');
-const boardPostRoutes = require('./routes/course/discussion/post/boardPostRoutes');
+const discussionBoardRoutes = require('./routes/course/discussionBoardRoutes');
+const boardPostRoutes = require('./routes/course/boardPostRoutes');
 const scheduleRoutes = require('./routes/course/scheduleRoutes');
 const announcementRoutes = require('./routes/course/announcementRoutes');
 
