@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Enrolment = require('../models/Enrolment');
 const Course = require('../models/Course');
 const { VALID_REVIEW_STATUS } = require('../config/constants');
+const e = require('express');
 
 const register = async (req, res) => {
     try {
@@ -235,6 +236,32 @@ const getReview = async (req, res) => {
     }
 }
 
+const getTopReviews = async (req, res) => {
+    try {
+        const reviews = await CourseReview.getTopReviews();
+        let topReviews = []
+        if (reviews.length > 3) {
+            for (reviews, i=reviews.length; i--;) {
+                var rand = reviews.splice(Math.floor(Math.random() * (i+1)), 1)[0];
+                topReviews.push(rand);
+                if (topReviews.length >= 3) {
+                    break;
+                }
+            }
+        } else {
+            topReviews = reviews;
+        }
+
+        res.json({
+            reviews: topReviews
+        });
+
+    } catch (error) {
+        console.error('Get review error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
 const getMeta = (req, res) => {
     res.json({
         status: VALID_REVIEW_STATUS,
@@ -248,5 +275,6 @@ module.exports = {
   getCourseReviews,
   getUserReviews,
   getReview,
+  getTopReviews,
   getMeta
 };
