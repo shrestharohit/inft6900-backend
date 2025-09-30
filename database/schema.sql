@@ -90,7 +90,7 @@ CREATE TABLE "Enrolment" (
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("pathwayID") REFERENCES "Pathway"("pathwayID"),
     FOREIGN KEY ("courseID") REFERENCES "Course"("courseID"),
-    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE -- alter FK constraint required
+    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE
 );
 
 CREATE TABLE "ModuleAccess" (
@@ -200,6 +200,21 @@ CREATE TABLE "Certificate" (
     "issueDate" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "content" TEXT,
     "certificateURL" TEXT,
+    FOREIGN KEY ("userID") REFERENCES "User"("userID"),
+    FOREIGN KEY ("courseID") REFERENCES "Course"("courseID")
+);
+
+-- ==================
+-- COURSE REVIEW
+-- ==================
+CREATE TABLE "CourseReview" (
+    "reviewID" SERIAL PRIMARY KEY,
+    "userID" INT NOT NULL,
+    "courseID" INT NOT NULL,
+    "comment" TEXT,
+    "rating" INT NOT NULL,
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("userID") REFERENCES "User"("userID"),
     FOREIGN KEY ("courseID") REFERENCES "Course"("courseID")
 );
