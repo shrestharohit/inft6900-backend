@@ -22,24 +22,6 @@ CREATE TABLE "User" (
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE "Student" (
-    "studentID" INT PRIMARY KEY,
-    FOREIGN KEY ("studentID") REFERENCES "User"("userID") ON DELETE CASCADE
-);
-
-CREATE TABLE "Admin" (
-    "adminID" INT PRIMARY KEY,
-    FOREIGN KEY ("adminID") REFERENCES "User"("userID") ON DELETE CASCADE
-);
-
-CREATE TABLE "CourseOwner" (
-    "ownerID" INT PRIMARY KEY,
-    "department" VARCHAR(100),
-    FOREIGN KEY ("ownerID") REFERENCES "User"("userID") ON DELETE CASCADE,
-    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- is this necessary?
-    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- is this necessary? To manage changes in department, it's required...
-);
-
 -- ==================
 -- NOTIFICATIONS 
 -- ==================
@@ -60,12 +42,13 @@ CREATE TABLE "Pathway" (
     "pathwayID" SERIAL PRIMARY KEY,
     "name" VARCHAR(150) NOT NULL,
     "outline" TEXT,
-    "createdDate" DATE DEFAULT CURRENT_DATE
+    "status" VARCHAR(20) DEFAULT 'draft',
+    "createdDate" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE "Course" (
     "courseID" SERIAL PRIMARY KEY,
-    "ownerID" INT NOT NULL,
+    "userID" INT NOT NULL,
     "title" VARCHAR(150) NOT NULL,
     "category" VARCHAR(150) NOT NULL, -- added by Hide
     "level" VARCHAR(50),
@@ -74,7 +57,7 @@ CREATE TABLE "Course" (
     "pathwayID" INT,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("ownerID") REFERENCES "CourseOwner"("ownerID") ON DELETE CASCADE,
+    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE,
     FOREIGN KEY ("pathwayID") REFERENCES "Pathway"("pathwayID") ON DELETE SET NULL
 );
 
@@ -98,28 +81,26 @@ CREATE TABLE "Module" (
 CREATE TABLE "Enrolment" (
     "enrolmentID" SERIAL PRIMARY KEY,
     "enrolDate" DATE DEFAULT CURRENT_DATE,
-    "enrolmentType" VARCHAR(50),
-    "enrolmentStatus" VARCHAR(20),
     "pathwayID" INT,
     "courseID" INT,
-    "studentID" INT NOT NULL,
-    "completionStatus" VARCHAR(50),
-    "lastAccessDate" DATE,
+    "userID" INT NOT NULL,
+    "status" VARCHAR(50),
     "completionDate" DATE,
     "disenrolledDate" DATE,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("pathwayID") REFERENCES "Pathway"("pathwayID"),
     FOREIGN KEY ("courseID") REFERENCES "Course"("courseID"),
-    FOREIGN KEY ("studentID") REFERENCES "Student"("studentID") ON DELETE CASCADE
+    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE
 );
 
 CREATE TABLE "ModuleAccess" (
     "accessID" SERIAL PRIMARY KEY,
     "moduleID" INT NOT NULL,
-    "studentID" INT NOT NULL,
+    "userID" INT NOT NULL,
     "accessDate" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "duration" INTERVAL,
     FOREIGN KEY ("moduleID") REFERENCES "Module"("moduleID") ON DELETE CASCADE,
-    FOREIGN KEY ("studentID") REFERENCES "Student"("studentID") ON DELETE CASCADE
+    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE
 );
 
 -- ==================
@@ -183,8 +164,9 @@ CREATE TABLE "QuizAttempt" (
     "enrolmentID" INT NOT NULL,
     "startTime" TIMESTAMP,
     "endTime" TIMESTAMP,
-    "score" INT,
+    "score" DOUBLE PRECISION,
     "passed" BOOLEAN,
+    "count" INT, -- required to manage multiple attempts
     FOREIGN KEY ("quizID") REFERENCES "Quiz"("quizID") ON DELETE CASCADE,
     FOREIGN KEY ("enrolmentID") REFERENCES "Enrolment"("enrolmentID") ON DELETE CASCADE
 );
@@ -193,9 +175,8 @@ CREATE TABLE "AttemptAnswer" (
     "attemptAnswerID" SERIAL PRIMARY KEY,
     "attemptID" INT NOT NULL,
     "questionID" INT NOT NULL,
-    "optionID" INT NOT NULL,
-    "answerText" TEXT,
-    -- isCorrect BOOLEAN,  -- <- this may not be necessary since it is already defined in answeroption
+    "optionID" INT,
+    "isCorrect" BOOLEAN,
     FOREIGN KEY ("attemptID") REFERENCES "QuizAttempt"("attemptID") ON DELETE CASCADE,
     FOREIGN KEY ("questionID") REFERENCES "Question"("questionID") ON DELETE CASCADE,
     FOREIGN KEY ("optionID") REFERENCES "AnswerOption"("optionID") ON DELETE CASCADE
@@ -214,12 +195,95 @@ CREATE TABLE "AttemptAnswer" (
 -- ==================
 CREATE TABLE "Certificate" (
     "certificateID" SERIAL PRIMARY KEY,
-    "studentID" INT NOT NULL,
+    "userID" INT NOT NULL,
     "courseID" INT,
-    "issueDate" DATE DEFAULT CURRENT_DATE,
+    "issueDate" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "content" TEXT,
     "certificateURL" TEXT,
-    FOREIGN KEY ("studentID") REFERENCES "Student"("studentID"),
+    FOREIGN KEY ("userID") REFERENCES "User"("userID"),
     FOREIGN KEY ("courseID") REFERENCES "Course"("courseID")
+);
+
+-- ==================
+-- COURSE REVIEW
+-- ==================
+CREATE TABLE "CourseReview" (
+    "reviewID" SERIAL PRIMARY KEY,
+    "userID" INT NOT NULL,
+    "courseID" INT NOT NULL,
+    "comment" TEXT,
+    "rating" INT NOT NULL,
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY ("userID") REFERENCES "User"("userID"),
+    FOREIGN KEY ("courseID") REFERENCES "Course"("courseID")
+);
+
+-- ==================
+-- DISCUSSION BOARD
+-- ==================
+CREATE TABLE "DiscussionBoard" (
+    "boardID" SERIAL PRIMARY KEY,
+    "courseID" INT NOT NULL,
+    "title" VARCHAR(200) NOT NULL,
+    "status" VARCHAR(50) DEFAULT 'active',
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY ("courseID") REFERENCES "Course"("courseID") ON DELETE CASCADE
+);
+
+CREATE TABLE "BoardPost" (
+    "postID" SERIAL PRIMARY KEY,
+    "boardID" INT NOT NULL,
+    "userID" INT NOT NULL,
+    "postText" TEXT NOT NULL,
+    "status" VARCHAR(50) DEFAULT 'active',
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY ("boardID") REFERENCES "DiscussionBoard"("boardID") ON DELETE CASCADE,
+    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE
+);
+
+-- ==================
+-- DIRECT MESSAGE FOR QUESTIONS
+-- ==================
+CREATE TABLE "DirectMessage" (
+    "msgID" SERIAL PRIMARY KEY,
+    "userID" INT NOT NULL,
+    "courseID" INT NOT NULL,
+    "message" VARCHAR(200) NOT NULL,
+    "reply" VARCHAR(50),
+    "status" VARCHAR(50),
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE,
+    FOREIGN KEY ("courseID") REFERENCES "Course"("courseID") ON DELETE CASCADE
+);
+
+-- ==================
+-- SCHEDULE
+-- ==================
+CREATE TABLE "Schedule" (
+    "scheduleID" SERIAL PRIMARY KEY,
+    "userID" INT NOT NULL,
+    "moduleID" INT NOT NULL,
+    "scheduledDateTime" TIMESTAMP NOT NULL,
+    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE,
+    FOREIGN KEY ("moduleID") REFERENCES "Module"("moduleID") ON DELETE CASCADE
+);
+
+-- ==================
+-- ANNOUNCEMENT
+-- ==================
+CREATE TABLE "Announcement" (
+    "announcementID" SERIAL PRIMARY KEY,
+    "courseID" INT NOT NULL,
+    "title" VARCHAR(200) NOT NULL,
+    "message" TEXT NOT NULL,
+    "status" VARCHAR(50) DEFAULT 'active',
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY ("courseID") REFERENCES "Course"("courseID") ON DELETE CASCADE
 );
 
 -- ==================

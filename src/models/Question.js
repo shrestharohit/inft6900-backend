@@ -11,25 +11,40 @@ class Question {
         return result.rows[0];
     }
 
-    static async findById(questionID) {
-        const query = `SELECT * FROM "Question" WHERE "questionID" = $1`;
-        const result = await pool.query(query, [questionID]);
+    static async findById(questionID, client = null) {
+        const db = client || pool;
+        const query = `SELECT * FROM "Question" WHERE "questionID" = $1 AND "status" = 'active'`;
+        const result = await db.query(query, [questionID]);
         return result.rows[0];
     }
 
-    static async findByQuizId(quizID) {
-        const query = `SELECT * FROM "Question" WHERE "quizID" = $1 ORDER BY "questionNumber" DESC`;
-        const result = await pool.query(query, [quizID]);
+    static async findByQuizId(quizID, client = null) {
+        const db = client || pool;
+        const query = `SELECT * FROM "Question" WHERE "quizID" = $1 AND "status" = 'active' ORDER BY "questionNumber" DESC`;
+        const result = await db.query(query, [quizID]);
         return result.rows;
     }
 
-    static async findByQuizIdQuestionNumber(quizId, questionNumber) {
-        const query = `SELECT * FROM "Question" WHERE "quizID" = $1 AND "questionNumber" = $2`;
-        const result = await pool.query(query, [quizId, questionNumber]);
+    static async findByQuizIdQuestionNumber(quizId, questionNumber, client = null) {
+        const db = client || pool;
+        const query = `SELECT * FROM "Question" WHERE "quizID" = $1 AND "questionNumber" = $2 AND "status" = 'active'`;
+        const result = await db.query(query, [quizId, questionNumber]);
         return result.rows[0];
     }
 
-    static async update(questionID, updateData) {
+    static async findAnswer(questionID, client = null) {
+        const db = client || pool;
+        const query = `
+        SELECT ao.* FROM "Question" q
+        LEFT JOIN "AnswerOption" ao ON q."questionID" = ao."questionID"
+        WHERE q."questionID" = $1 AND ao."isCorrect" = TRUE AND ao."status" = 'active' AND q."status" = 'active'
+        `;
+        const result = await db.query(query, [questionID]);
+        return result.rows[0];
+    }
+
+    static async update(questionID, updateData, client = null) {
+        const db = client || pool;
         const allowedFields = ['questionNumber', 'questionText', 'status'];
         const updates = [];
         const values = [];
@@ -52,9 +67,9 @@ class Question {
         UPDATE "Question"
         SET ${updates.join(', ')}
         WHERE "questionID" = $${paramCount}
-        RETURNING "questionID", "quizID", "questionNumber", "questionText", "status", "updated_at"
+        RETURNING *
         `;
-        const result = await pool.query(query, values);
+        const result = await db.query(query, values);
         return result.rows[0];
     }
 }

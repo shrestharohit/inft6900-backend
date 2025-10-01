@@ -6,9 +6,10 @@ const {
   getAll,
   getMeta,
   getCourse,
+  getUserCourses,
+  getApprovalList,
+  getDetail
 } = require("../../controllers/courseController");
-const moduleRoutes = require('./module');
-
 
 const router = express.Router();
 
@@ -23,10 +24,10 @@ router.put("/:courseID", update);
 
 router.get("/categories", getAllCategories);
 
-router.get("/:courseID", getCourse);
+router.get("/owner/:userID", getUserCourses);
 
-// module routes
-router.use('/:courseID/module', moduleRoutes);
+router.get("/approval-list", getApprovalList);
 
+router.get("/:courseID/detail", getDetail)
 
 module.exports = router;

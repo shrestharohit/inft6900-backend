@@ -4,193 +4,91 @@ const Quiz = require('../models/Quiz');
 const Module = require('../models/Module');
 const { VALID_OPTION_STATUS } = require('../config/constants');
 
-const register = async (req, res) => {
-    try {
-        const questionNumber = req.params.questionNumber;
-        const moduleNumber = req.params.moduleNumber;
-        const courseID = req.params.courseID;
-
-        const { optionText, isCorrect, optionOrder, feedbackText, status } = req.body;
-
-        // Validate course ID and module Number
-        const module = await Module.findByCourseIdModuleNumber(courseID, moduleNumber);
-        if (!module) {
-            return res.status(400).json({
-                error: 'Invalid course ID and module number. Module not found.'
-            });
-        };
-
-        // Check if quiz is already created for the module
-        const quiz = await Quiz.findByModule(module.moduleID);
-        if (!quiz) {
-            return res.status(400).json({
-                error: 'Invalid quiz number. Quiz not found.'
-            });
-        }
-
-        // Check if question is already created for the module
-        const question = await Question.findByQuizIdQuestionNumber(quiz.quizID, questionNumber);
-        if (!question) {
-            return res.status(400).json({
-                error: 'Invalid question number. Question not found.'
-            });
-        }
-
-        // Basic validataion
-        if (!optionText || isCorrect===undefined || !optionOrder || !feedbackText || !status) {
-            return res.status(400).json({
-                error: 'Option text, isCorrect, option order, feedback text and status are required'
-            });
-        }
-
-        // Validate if question number is already used in the same quiz
-        const existingoptionOrder = await AnswerOption.findByQuestionIdOptionOrder(question.questionID, optionOrder);
-        if (existingoptionOrder) {
-            return res.status(400).json({
-                error: 'Selected option order already used in the selected question'
-            });
-        };
-
-        // Validate if there are no multiple correct answers in question
-        const existingCorrectOption = await AnswerOption.findAnswerForQuestion(question.questionID);
-        if (existingCorrectOption && isCorrect == true) {
-            return res.status(400).json({
-                error: 'Selected question already has correct answer'
-            });
-        };
-
-        // Validate status
-        const optionStatus = status || 'active';
-
-        if (!VALID_OPTION_STATUS.includes(optionStatus)) {
-            return res.status(400).json({
-                error: `Invalid status. Must be:${VALID_OPTION_STATUS.join(', ')} `
-            });
-        }
-
-        // Create course
-        const newOption = await AnswerOption.create({
-            questionID: question.questionID, 
-            optionText,
-            isCorrect, 
-            optionOrder, 
-            feedbackText, 
-            status: optionStatus
-        });
-
-        res.json({
-            message: 'Answer option registered successfully',
-            option: {
-                optionID: newOption.optionID,
-                optiontext: newOption.optiontext,
-                isCorrect: newOption.isCorrect,
-                optionOrder: newOption.optionOrder,
-                feedbackText: newOption.feedbackText,
-                status: newOption.status,
-                created_at: newOption.created_at
-            }
-        });
+const { pool } = require('../config/database');
 
 
-    } catch(error) {
-        console.error('Registration error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+
+const registerOption = async (question, option, client) => {
+    const { optionText, isCorrect, optionOrder, feedbackText, status } = option;
+
+    // Basic validataion
+    if (!optionText || isCorrect===undefined || !optionOrder || !feedbackText) {
+        throw new Error('Option registration error: Option text, isCorrect, option order, feedback text and status are required')
     };
+
+    // Validate if question number is already used in the same quiz
+    const existingoptionOrder = await AnswerOption.findByQuestionIdOptionOrder(question.questionID, optionOrder);
+    if (existingoptionOrder) {
+        throw new Error('Option registration error: Selected option order already used in the selected question');
+    };
+
+    // Validate if there are no multiple correct answers in question
+    const existingCorrectOption = await AnswerOption.findAnswerForQuestion(question.questionID);
+    if (existingCorrectOption && isCorrect == true) {
+        throw new Error('Option registration error: Selected question already has correct answer');
+    };
+
+    // Validate status
+    const optionStatus = status || 'active';
+
+    if (!VALID_OPTION_STATUS.includes(optionStatus)) {
+        throw new Error(`Option registration error: Invalid status. Must be:${VALID_OPTION_STATUS.join(', ')} `);
+    }
+
+    // Create course
+    return await AnswerOption.create({
+        questionID: question.questionID, 
+        optionText,
+        isCorrect, 
+        optionOrder, 
+        feedbackText, 
+        status: optionStatus
+    });
 };
 
 
-const update = async (req, res) => {
+const updateOption = async (question, option, client) => {
     try {
-        const currentOptionOrder = req.params.optionOrder;
-        const questionNumber = req.params.questionNumber;
-        const moduleNumber = req.params.moduleNumber;
-        const courseID = req.params.courseID;
-        
-        const { optionOrder, optionText, isCorrect, feedbackText, status } = req.body;
-
-        // Validate course ID and module Number
-        const module = await Module.findByCourseIdModuleNumber(courseID, moduleNumber);
-        if (!module) {
-            return res.status(400).json({
-                error: 'Invalid course ID and module number. Module not found.'
-            });
-        };
-
-        // Check if quiz is already created for the module
-        const quiz = await Quiz.findByModule(module.moduleID);
-        if (!quiz) {
-            return res.status(400).json({
-                error: 'Invalid quiz number. Quiz not found.'
-            });
-        }
-
-        // Check if question is already created for the module
-        const question = await Question.findByQuizIdQuestionNumber(quiz.quizID, questionNumber);
-        if (!question) {
-            return res.status(400).json({
-                error: 'Invalid question number. Question not found.'
-            });
-        }
+        const { optionID, optionText, isCorrect, optionOrder, feedbackText, status } = option;
 
         // Validate if option exists in the quiz
-        const existingOption = await AnswerOption.findByQuestionIdOptionOrder(question.questionID, currentOptionOrder);
+        const existingOption = await AnswerOption.findById(optionID);
         if (!existingOption) {
-            return res.status(400).json({
-                error: 'Invalid option order. Answer option not found.'
-            });
-        };
-
-        // Validate if question number is already used in the same quiz
-        const isUsedOptionOrder = !!(await AnswerOption.findByQuestionIdOptionOrder(question.questionID, currentOptionOrder));
-        if (optionOrder && optionOrder !== parseInt(currentOptionOrder) && isUsedOptionOrder) {
-            return res.status(400).json({
-                error: 'Selected option order already used in the selected question'
-            });
+            throw new Error('Option update error: Selected option does not exist.')
         };
 
         // Validate if there are no multiple correct answers in question
         const existingCorrectOption = await AnswerOption.findAnswerForQuestion(question.questionID);
         if (existingCorrectOption && existingOption.isCorrect == false && isCorrect == true) {
-            return res.status(400).json({
-                error: 'Selected question already has correct answer'
-            });
+            throw new Error('Option update error: Selected question already has correct answer');
         };
 
+        // Validate if the option order is already takne
+        if (optionOrder !== existingOption.optionOrder) {
+            const existingOptionOrder = await AnswerOption.findByQuestionIdOptionOrder(question.questionID, optionOrder);
+            if (existingOptionOrder) {
+                throw new Error('Option update error: Selected option order already used');
+            }
+        }
+
         // Validate status
-        optionStatus = status;
+        const optionStatus = status;
         if (optionStatus !== undefined && !VALID_OPTION_STATUS.includes(optionStatus)) {
-            return res.status(400).json({
-                error: `Invalid status. Must be:${VALID_OPTION_STATUS.join(', ')} `
-            });
+            throw new Error(`Option update error: Invalid status. Must be:${VALID_OPTION_STATUS.join(', ')} `);
         };
         
         // Prepare update data
         const updateData = {};
-        if (optionText !== undefined) updateData.optiontext = optionText;
+        if (optionText !== undefined) updateData.optionText = optionText;
         if (isCorrect !== undefined) updateData.isCorrect = isCorrect;
         if (optionOrder !== undefined) updateData.optionOrder = optionOrder;
         if (feedbackText !== undefined) updateData.feedbackText = feedbackText;
         if (status !== undefined) updateData.status = optionStatus;
 
         // Update module
-        const updateOption = await AnswerOption.update(existingOption.optionID, updateData);
-
-        res.json({
-            message: 'Answer option updated successfully',
-            option: {
-                optionID: updateOption.optionID,
-                optiontext: updateOption.optiontext,
-                isCorrect: updateOption.isCorrect,
-                optionOrder: updateOption.optionOrder,
-                feedbackText: updateOption.feedbackText,
-                status: updateOption.status,
-                udpated_at: updateOption.udpated_at
-            }
-        });
-
+        return await AnswerOption.update(existingOption.optionID, updateData, client);
     } catch(error) {
-        console.error('Update option error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        throw error;
     }
 };
 
@@ -319,6 +217,12 @@ const getAnswerInQuestion = async (req, res) => {
     }
 };
 
+
+const inactivateOption = async(option, client) => {
+    await AnswerOption.update(option.optionID, {status: 'inactive'}, client);
+}
+
+
 const getMeta = (req, res) => {
     res.json({
         status: VALID_OPTION_STATUS,
@@ -327,10 +231,11 @@ const getMeta = (req, res) => {
 
 
 module.exports = {
-  register,
-  update,
+  registerOption,
+  updateOption,
   getOption,
   getAllInQuestion,
   getAnswerInQuestion,
+  inactivateOption,
   getMeta,
 };

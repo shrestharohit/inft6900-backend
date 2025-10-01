@@ -1,23 +1,25 @@
 const Course = require('../models/Course');
-const CourseOwner = require('../models/CourseOwner');
+const Module = require('../models/Module');
+const User = require('../models/User');
+const Pathway = require('../models/Pathway');
 const { VALID_COURSE_STATUS, VALID_COURSE_LEVEL } = require('../config/constants');
 
 const register = async (req, res) => {
     try {
-        const { title, ownerID, category, level, outline, status } = req.body;
+        const { title, userID, pathwayID, category, level, outline, status } = req.body;
 
         // Basic validataion
-        if (!title || !category || !level || !outline || !status) {
+        if (!title || !level || !status) {
             return res.status(400).json({
-                error: 'Title, ownerID, level, outline and status are required'
+                error: 'Title, userID, level and status are required'
             });
         }
 
         // Validate owner id
-        const existingOwner = await CourseOwner.findById(ownerID)
-        if (!existingOwner) {
+        const existingUser = await User.findById(userID)
+        if (!existingUser || existingUser.role !== 'course_owner') {
             return res.status(400).json({
-                error: 'Invalid owner ID. Course Owner does not exist.'
+                error: 'Invalid user ID. Course Owner does not exist.'
             });
         }
 
@@ -39,10 +41,27 @@ const register = async (req, res) => {
             });
         }
 
+        // Validate pathway
+        const pathway = await Pathway.findById(pathwayID)
+        if (pathwayID !== undefined & !pathway) {
+            return res.status(400).json({
+                error: 'Invalid pathway ID. Pathway not found.'
+            });
+        }
+
+        // Check if there is already a course with the same level in the pathway
+        const hasSameLevel = !!(await Course.findByPathwayIDCourseLevel(pathwayID, level));
+        if (pathwayID !== undefined & hasSameLevel) {
+            return res.status(400).json({
+                error: 'Pathway can have only 1 course in each level. Course with selected level already exists in pathway.'
+            });
+        }
+
         // Create course
         const newCourse = await Course.create({
-            ownerID,
+            userID,
             title, 
+            pathwayID,
             category,
             level: courseLevel, 
             outline, 
@@ -51,17 +70,7 @@ const register = async (req, res) => {
 
         res.json({
             message: 'Course registered successfully',
-            course: {
-                courseID: newCourse.courseID,
-                ownerID: newCourse.ownerID,
-                pathwayID: newCourse.pathwayID,
-                title: newCourse.title,
-                category: newCourse.category,
-                level: newCourse.level,
-                outline: newCourse.outline,
-                status: newCourse.status,
-                created_at: newCourse.created_at
-            }
+            course: newCourse
         })
 
     } catch(error) {
@@ -74,7 +83,7 @@ const register = async (req, res) => {
 const update = async (req, res) => {
     try {
         const courseID = req.params.courseID;
-        const { ownerID, title, category, level, outline, status } = req.body;
+        const { userID, title, pathwayID, category, level, outline, status } = req.body;
 
         // Validate courseId
         if (!courseID) {
@@ -92,9 +101,11 @@ const update = async (req, res) => {
         }
 
         // Validate owner id
-        if (ownerID && !(await CourseOwner.findById(ownerID))) {
+        const checkingUserID = userID || existingCourse.userID;
+        const existingUser = await User.findById(checkingUserID);
+        if (existingUser.role !== 'course_owner') {
             return res.status(400).json({
-                error: 'Invalid owner ID. Course Owner does not exist.'
+                error: 'Invalid user ID. Course Owner does not exist.'
             });
         }
 
@@ -114,9 +125,29 @@ const update = async (req, res) => {
             });
         }
 
+        // Validate pathway
+        const pathway = await Pathway.findById(pathwayID)
+        if (pathwayID !== undefined & !pathway) {
+            return res.status(400).json({
+                error: 'Invalid pathway ID. Pathway not found.'
+            });
+        }
+
+        // Check if there is already a course with the same level in the pathway
+        const checkingPathwayID = pathwayID || existingCourse.pathwayID;
+        const checkingLevel = level || existingCourse.level;
+
+        const hasSameLevel = !!(await Course.findByPathwayIDCourseLevel(checkingPathwayID, checkingLevel));
+        if (checkingPathwayID !== undefined & hasSameLevel) {
+            return res.status(400).json({
+                error: 'Pathway can have only 1 course in each level. Course with selected level already exists in pathway.'
+            });
+        }
+
+
         // Prepare update data
         const updateData = {};
-        if (ownerID !== undefined) updateData.ownerID = ownerID;
+        if (userID !== undefined) updateData.userID = userID;
         if (title !== undefined) updateData.title = title;
         if (category !== undefined) updateData.category = category;
         if (level !== undefined) updateData.level = courseLevel;
@@ -130,7 +161,7 @@ const update = async (req, res) => {
             message: 'Course updated successfully',
             course: {
                 courseID: updateCourse.courseID,
-                ownerID: updateCourse.ownerID,
+                userID: updateCourse.userID,
                 pathwayID: updateCourse.pathwayID,
                 title: updateCourse.title,
                 category: updateCourse.category,
@@ -178,7 +209,7 @@ const getCourse = async (req, res) => {
       });
     }
 
-    // Find user by ID
+    // Find course by ID
     const course = await Course.findById(courseId);
     if (!course) {
       return res.status(404).json({ 
@@ -194,6 +225,85 @@ const getCourse = async (req, res) => {
   }
 };
 
+const getUserCourses = async (req, res) => {
+  try {
+    const userID = req.params.userID;
+
+    // Validate course id is provided
+    if (!userID) {
+      return res.status(400).json({ 
+        error: 'User ID is required' 
+      });
+    }
+
+    // Find course by ID
+    const courses = await Course.findByOwner(userID);
+    res.json(courses);
+
+  } catch (error) {
+    console.error('Get course by owner error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const getApprovalList = async (req, res) => {
+  try {
+    // Find course by ID
+    const course = await Course.findByStatus("wait_for_approval");
+    res.json(course);
+  } catch (error) {
+    console.error('Get wait for approval courses error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const getDetail = async (req, res) => {
+  try {
+    const courseID = req.params.courseID;
+
+    if (!courseID){
+      return res.status(400).json({ 
+        error: 'Course ID is required' 
+      });
+    }
+
+    // Find course by ID
+    const course = await Course.findById(courseID);
+    
+    // find modules in the quiz
+    const modules = await Module.findByCourseId(course.courseID);
+
+    // get course owner data
+    const user = await User.findById(course.userID);
+
+    // get pathway data
+    let pathway = null;
+    if (course.pathway !== null) {
+        pathway = await Pathway.findById(course.pathwayID);
+    }
+
+    const result = {
+        courseID: course.courseID,
+        userID: course.userID,
+        pathwayID: course.pathwayID,
+        title: course.title,
+        category: course.category,
+        level: course.level,
+        outline: course.outline,
+        status: course.status,
+        created_at: course.updated_at,
+        updated_at: course.updated_at,
+        userDetail: user,
+        modules: modules,
+        pathwayDetail: pathway
+    }
+    res.json(result);
+  } catch (error) {
+    console.error('Get wait for approval courses error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 
 module.exports = {
   register,
@@ -201,5 +311,8 @@ module.exports = {
   getAllCategories,
   getAll,
   getMeta,
-  getCourse
+  getCourse,
+  getUserCourses,
+  getApprovalList,
+  getDetail
 };

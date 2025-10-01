@@ -14,7 +14,7 @@ class Content {
     }
 
     static async findByModuleId(moduleID) {
-        const query = `SELECT * FROM "Content" WHERE "moduleID" = $1`;
+        const query = `SELECT * FROM "Content" WHERE "moduleID" = $1 ORDER BY "created_at" DESC`;
         const result = await pool.query(query, [moduleID]);
         return result.rows;
     }
