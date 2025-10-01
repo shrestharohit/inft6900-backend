@@ -21,11 +21,13 @@ const quizRoutes = require('./routes/course/quiz/quizRoutes');
 const questionRoutes = require('./routes/course/quiz/questionRoutes');
 const optionRoutes = require('./routes/course/quiz/optionRoutes');
 const reviewRoutes = require('./routes/course/reviewRoutes');
+const directMessageRoutes = require('./routes/course/directMessageRoutes');
 
 const enrolmentRoutes = require('./routes/enrolmentRoutes');
 
 // Import database connection
 const { connectDB } = require('./config/database');
+const DirectMessage = require('./models/DirectMessage');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -86,6 +88,7 @@ app.use('/api/question', questionRoutes);
 app.use('/api/option', optionRoutes);
 
 app.use('/api/review', reviewRoutes);
+app.use('/api/dm', directMessageRoutes);
 
 app.use('/api/enrolment', enrolmentRoutes);
 

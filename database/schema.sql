@@ -245,6 +245,22 @@ CREATE TABLE "BoardPost" (
 );
 
 -- ==================
+-- DIRECT MESSAGE FOR QUESTIONS
+-- ==================
+CREATE TABLE "DirectMessage" (
+    "msgID" SERIAL PRIMARY KEY,
+    "userID" INT NOT NULL,
+    "courseID" INT NOT NULL,
+    "message" VARCHAR(200) NOT NULL,
+    "reply" VARCHAR(50),
+    "status" VARCHAR(50),
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE,
+    FOREIGN KEY ("courseID") REFERENCES "Course"("courseID") ON DELETE CASCADE
+);
+
+-- ==================
 -- SCHEDULE
 -- ==================
 CREATE TABLE "Schedule" (
