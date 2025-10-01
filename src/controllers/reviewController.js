@@ -89,7 +89,7 @@ const update = async (req, res) => {
         };
 
         // Validate review ID
-        const review = await CourseReview.findById(reviewID);
+        const review = await CourseReview.findById(reviewID, ['active', 'inactive']);
         if (!review) {
             return res.status(400).json({
                 error: 'Invalid review ID. Review does not exist.'
