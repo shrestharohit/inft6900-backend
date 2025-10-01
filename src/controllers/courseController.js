@@ -3,6 +3,7 @@ const Module = require('../models/Module');
 const User = require('../models/User');
 const Pathway = require('../models/Pathway');
 const { VALID_COURSE_STATUS, VALID_COURSE_LEVEL } = require('../config/constants');
+const { sendApprovalRequestNotification, sendApprovalNotification, sendDeclineNotification } = require('../services/emailService');
 
 const register = async (req, res) => {
     try {
@@ -100,6 +101,8 @@ const update = async (req, res) => {
             });
         }
 
+        const originalStatus = existingCourse.status;
+
         // Validate owner id
         const checkingUserID = userID || existingCourse.userID;
         const existingUser = await User.findById(checkingUserID);
@@ -143,7 +146,7 @@ const update = async (req, res) => {
                 error: 'Pathway can have only 1 course in each level. Course with selected level already exists in pathway.'
             });
         }
-
+       
 
         // Prepare update data
         const updateData = {};
@@ -156,6 +159,11 @@ const update = async (req, res) => {
 
         // Create course
         const updateCourse = await Course.update(courseID, updateData)
+
+        // Send notification in case of status change
+        if (originalStatus !== updateData.status & originalStatus !== 'active') {
+          sendNotification(updateCourse.courseID);
+        }
 
         res.json({
             message: 'Course updated successfully',
@@ -304,6 +312,29 @@ const getDetail = async (req, res) => {
   }
 };
 
+
+const sendNotification = async (courseID) => {
+    const course = await Course.findById(courseID);
+    const user = await User.findById(course.userID);
+
+    const requestingItem = {
+      'type': 'Course',
+      'name': course.title
+    }
+
+    if (course.status === 'wait_for_approval') {
+      sendApprovalRequestNotification(user, requestingItem)
+    }
+
+    if (course.status === 'active') {
+      sendApprovalNotification(user, requestingItem)
+    }
+
+    if (course.status === 'draft') {
+      sendDeclineNotification(user, requestingItem)
+    }
+
+}
 
 module.exports = {
   register,
