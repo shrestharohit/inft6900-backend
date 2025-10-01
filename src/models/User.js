@@ -27,7 +27,7 @@ class User {
   }
 
   static async update(id, updateData) {
-    const allowedFields = ['firstName', 'lastName', 'email', 'role'];
+    const allowedFields = ['firstName', 'lastName', 'email', 'role', 'passwordHash'];
     const updates = [];
     const values = [];
     let paramCount = 1;
