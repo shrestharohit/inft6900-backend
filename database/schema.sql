@@ -30,8 +30,8 @@ CREATE TABLE "NotificationSetting" (
     "userID" INT NOT NULL,
     "notificationType" VARCHAR(50),
     "enabled" BOOLEAN DEFAULT TRUE,
-    "channel" VARCHAR(50),
-    "createdDate" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE
 );
 

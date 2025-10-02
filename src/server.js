@@ -25,6 +25,8 @@ const directMessageRoutes = require('./routes/course/directMessageRoutes');
 
 const enrolmentRoutes = require('./routes/enrolmentRoutes');
 
+const notificationSettingRoutes = require('./routes/notificationSettingRoutes');
+
 // Import database connection
 const { connectDB } = require('./config/database');
 const DirectMessage = require('./models/DirectMessage');
@@ -91,6 +93,8 @@ app.use('/api/review', reviewRoutes);
 app.use('/api/dm', directMessageRoutes);
 
 app.use('/api/enrolment', enrolmentRoutes);
+
+app.use('/api/notification', notificationSettingRoutes);
 
 // ✅ Health check
 app.get('/health', (req, res) => {

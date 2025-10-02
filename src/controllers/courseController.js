@@ -3,6 +3,7 @@ const Module = require('../models/Module');
 const User = require('../models/User');
 const Pathway = require('../models/Pathway');
 const { VALID_COURSE_STATUS, VALID_COURSE_LEVEL } = require('../config/constants');
+const { sendApprovalRequestNotification, sendApprovalNotification, sendDeclineNotification } = require('../services/emailService');
 
 const register = async (req, res) => {
     try {
@@ -43,7 +44,7 @@ const register = async (req, res) => {
 
         // Validate pathway
         const pathway = await Pathway.findById(pathwayID)
-        if (pathwayID !== undefined & !pathway) {
+        if (pathwayID !== undefined && !pathway) {
             return res.status(400).json({
                 error: 'Invalid pathway ID. Pathway not found.'
             });
@@ -51,7 +52,7 @@ const register = async (req, res) => {
 
         // Check if there is already a course with the same level in the pathway
         const hasSameLevel = !!(await Course.findByPathwayIDCourseLevel(pathwayID, level));
-        if (pathwayID !== undefined & hasSameLevel) {
+        if (pathwayID !== undefined && hasSameLevel) {
             return res.status(400).json({
                 error: 'Pathway can have only 1 course in each level. Course with selected level already exists in pathway.'
             });
@@ -100,6 +101,8 @@ const update = async (req, res) => {
             });
         }
 
+        const originalStatus = existingCourse.status;
+
         // Validate owner id
         const checkingUserID = userID || existingCourse.userID;
         const existingUser = await User.findById(checkingUserID);
@@ -127,7 +130,7 @@ const update = async (req, res) => {
 
         // Validate pathway
         const pathway = await Pathway.findById(pathwayID)
-        if (pathwayID !== undefined & !pathway) {
+        if (pathwayID !== undefined && !pathway) {
             return res.status(400).json({
                 error: 'Invalid pathway ID. Pathway not found.'
             });
@@ -138,12 +141,12 @@ const update = async (req, res) => {
         const checkingLevel = level || existingCourse.level;
 
         const hasSameLevel = !!(await Course.findByPathwayIDCourseLevel(checkingPathwayID, checkingLevel));
-        if (checkingPathwayID !== undefined & hasSameLevel) {
+        if (checkingPathwayID !== undefined && hasSameLevel) {
             return res.status(400).json({
                 error: 'Pathway can have only 1 course in each level. Course with selected level already exists in pathway.'
             });
         }
-
+       
 
         // Prepare update data
         const updateData = {};
@@ -156,6 +159,11 @@ const update = async (req, res) => {
 
         // Create course
         const updateCourse = await Course.update(courseID, updateData)
+
+        // Send notification in case of status change
+        if (originalStatus !== updateData.status && originalStatus !== 'active') {
+          sendNotification(updateCourse.courseID);
+        }
 
         res.json({
             message: 'Course updated successfully',
@@ -304,6 +312,29 @@ const getDetail = async (req, res) => {
   }
 };
 
+
+const sendNotification = async (courseID) => {
+    const course = await Course.findById(courseID);
+    const user = await User.findById(course.userID);
+
+    const requestingItem = {
+      'type': 'Course',
+      'name': course.title
+    }
+
+    if (course.status === 'wait_for_approval') {
+      sendApprovalRequestNotification(user, requestingItem)
+    }
+
+    if (course.status === 'active') {
+      sendApprovalNotification(user, requestingItem)
+    }
+
+    if (course.status === 'draft') {
+      sendDeclineNotification(user, requestingItem)
+    }
+
+}
 
 module.exports = {
   register,

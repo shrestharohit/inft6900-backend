@@ -23,7 +23,7 @@ class Course {
         const query = `
             SELECT * FROM "Course" WHERE "category" = $1
         `;
-        const result = await pool.query(query, [userID]);
+        const result = await pool.query(query, [category]);
         return result.rows;
     }
 

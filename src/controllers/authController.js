@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const { VALID_USER_ROLES } = require('../config/constants');
 const { generateOTP, sendOTPEmail, sendOTPEmailForpasswordReset, sendInitialPassword } = require('../services/emailService');
+const { setInitialSettings } = require('./notificationSettingController');
 
 const register = async (req, res) => {
   try {
@@ -77,6 +78,15 @@ const register = async (req, res) => {
       passwordHash: hashedPassword,
       role: userRole,
     });
+
+    try {
+      setInitialSettings(newUser.userID);
+    } catch(err) {
+      console.log('User creaetd but error occured while initialising notification setting: '&err)
+      return res.status(400).json({
+        error: "User creaetd but error occured while initialising notification setting",
+      });
+    }
 
     // Check if user needs email verification (only students need verification)
     if (userRole === "student") {
