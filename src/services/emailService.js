@@ -1,5 +1,6 @@
 const nodemailer = require("nodemailer");
 const User = require('../models/User');
+const { getNotificationReceivers } = require('../controllers/notificationSettingController');
 
 // Email configuration for MailerSend
 const createTransporter = () => {
@@ -157,7 +158,16 @@ const sendApprovalRequestNotification = async (requestor, requestingItem) => {
   try {
     const transporter = createTransporter();
     const admins = await User.findByRole('admin');
-    const emails = admins.map(row => row.email)
+    const receivers = await getNotificationReceivers('1', admins);
+    
+    if (receivers.length === 0) {
+      console.log("✅ No error occured, but notification setting turned off for user");
+      return { success: true };
+    }
+
+    console.log(receivers)
+
+    const emails = receivers.map(row => row.email)
     console.log("sending emails to followigs... " + emails);
 
     const mailOptions = {
@@ -197,6 +207,13 @@ const sendApprovalNotification = async (requestor, requestingItem) => {
   try {
     const transporter = createTransporter();
 
+    const receivers = await getNotificationReceivers('2', [requestor]);
+    console.log(receivers)
+    if (receivers.length === 0) {
+      console.log("✅ No error occured, but notification setting turned off for user");
+      return { success: true };
+    }
+
     const mailOptions = {
       from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,
       to: requestor.email,
@@ -233,6 +250,13 @@ const sendApprovalNotification = async (requestor, requestingItem) => {
 const sendDeclineNotification = async (requestor, requestingItem) => {
   try {
     const transporter = createTransporter();
+
+    const receivers = await getNotificationReceivers('3', [requestor]);
+
+    if (receivers.length === 0) {
+      console.log("✅ No error occured, but notification setting turned off for user");
+      return { success: true };
+    }
 
     const mailOptions = {
       from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,

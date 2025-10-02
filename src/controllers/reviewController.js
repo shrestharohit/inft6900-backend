@@ -3,7 +3,6 @@ const User = require('../models/User');
 const Enrolment = require('../models/Enrolment');
 const Course = require('../models/Course');
 const { VALID_REVIEW_STATUS } = require('../config/constants');
-const e = require('express');
 
 const register = async (req, res) => {
     try {
