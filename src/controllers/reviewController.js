@@ -88,7 +88,7 @@ const update = async (req, res) => {
         };
 
         // Validate review ID
-        const review = await CourseReview.findById(reviewID);
+        const review = await CourseReview.findById(reviewID, ['active', 'inactive']);
         if (!review) {
             return res.status(400).json({
                 error: 'Invalid review ID. Review does not exist.'
@@ -235,6 +235,32 @@ const getReview = async (req, res) => {
     }
 }
 
+const getTopReviews = async (req, res) => {
+    try {
+        const reviews = await CourseReview.getTopReviews();
+        let topReviews = []
+        if (reviews.length > 3) {
+            for (reviews, i=reviews.length; i--;) {
+                var rand = reviews.splice(Math.floor(Math.random() * (i+1)), 1)[0];
+                topReviews.push(rand);
+                if (topReviews.length >= 3) {
+                    break;
+                }
+            }
+        } else {
+            topReviews = reviews;
+        }
+
+        res.json({
+            reviews: topReviews
+        });
+
+    } catch (error) {
+        console.error('Get review error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
 const getMeta = (req, res) => {
     res.json({
         status: VALID_REVIEW_STATUS,
@@ -248,5 +274,6 @@ module.exports = {
   getCourseReviews,
   getUserReviews,
   getReview,
+  getTopReviews,
   getMeta
 };

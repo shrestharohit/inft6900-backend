@@ -16,6 +16,12 @@ const VALID_ENROLMENT_STATUS = ['enrolled', 'in progress', 'completed', 'disenro
 
 const VALID_REVIEW_STATUS = ['active', 'inactive'];
 
+const VALID_NOTIFICATIONSETTING_TYPE = {
+  1: 'request for approval notification',
+  2: 'approved notification',
+  3: 'decline notification'
+}
+
 module.exports = {
   VALID_USER_ROLES,
   VALID_COURSE_STATUS,
@@ -27,5 +33,6 @@ module.exports = {
   VALID_OPTION_STATUS,
   VALID_PATHWAY_STATUS,
   VALID_ENROLMENT_STATUS,
-  VALID_REVIEW_STATUS
+  VALID_REVIEW_STATUS,
+  VALID_NOTIFICATIONSETTING_TYPE
 };

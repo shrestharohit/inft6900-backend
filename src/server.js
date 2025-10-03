@@ -10,8 +10,8 @@ const contentRoutes = require('./routes/course/contentRoutes');
 const pathwayRoutes = require('./routes/pathwayRoutes');
 const moduleAccessRoutes = require('./routes/moduleAccessRoutes'); 
 const certificateRoutes = require('./routes/course/certificateRoutes');
-const discussionBoardRoutes = require('./routes/course/discussion/discussionBoardRoutes');
-const boardPostRoutes = require('./routes/course/discussion/post/boardPostRoutes');
+const discussionBoardRoutes = require('./routes/course/discussionBoardRoutes');
+const boardPostRoutes = require('./routes/course/boardPostRoutes');
 const scheduleRoutes = require('./routes/course/scheduleRoutes');
 const announcementRoutes = require('./routes/course/announcementRoutes');
 
@@ -21,11 +21,15 @@ const quizRoutes = require('./routes/course/quiz/quizRoutes');
 const questionRoutes = require('./routes/course/quiz/questionRoutes');
 const optionRoutes = require('./routes/course/quiz/optionRoutes');
 const reviewRoutes = require('./routes/course/reviewRoutes');
+const directMessageRoutes = require('./routes/course/directMessageRoutes');
 
 const enrolmentRoutes = require('./routes/enrolmentRoutes');
 
+const notificationSettingRoutes = require('./routes/notificationSettingRoutes');
+
 // Import database connection
 const { connectDB } = require('./config/database');
+const DirectMessage = require('./models/DirectMessage');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -41,7 +45,7 @@ app.use(
       'http://localhost:5174', // sometimes Vite uses another port
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Id', 'X-Requested-With'],
   })
 );
 
@@ -86,8 +90,11 @@ app.use('/api/question', questionRoutes);
 app.use('/api/option', optionRoutes);
 
 app.use('/api/review', reviewRoutes);
+app.use('/api/dm', directMessageRoutes);
 
 app.use('/api/enrolment', enrolmentRoutes);
+
+app.use('/api/notification', notificationSettingRoutes);
 
 // ✅ Health check
 app.get('/health', (req, res) => {

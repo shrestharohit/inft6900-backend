@@ -26,8 +26,17 @@ class User {
     return result.rows[0];
   }
 
+  static async findByRole(role) {
+    const query = `
+      SELECT "userID", "firstName", "lastName", "email", "role", "created_at"
+      FROM "User" WHERE "role" = $1
+    `;
+    const result = await pool.query(query, [role]);
+    return result.rows;
+  }
+
   static async update(id, updateData) {
-    const allowedFields = ['firstName', 'lastName', 'email', 'role'];
+    const allowedFields = ['firstName', 'lastName', 'email', 'role', 'passwordHash'];
     const updates = [];
     const values = [];
     let paramCount = 1;

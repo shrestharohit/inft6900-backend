@@ -30,8 +30,8 @@ CREATE TABLE "NotificationSetting" (
     "userID" INT NOT NULL,
     "notificationType" VARCHAR(50),
     "enabled" BOOLEAN DEFAULT TRUE,
-    "channel" VARCHAR(50),
-    "createdDate" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE
 );
 
@@ -42,7 +42,7 @@ CREATE TABLE "Pathway" (
     "pathwayID" SERIAL PRIMARY KEY,
     "name" VARCHAR(150) NOT NULL,
     "outline" TEXT,
-    "status" VARCHAR(20),
+    "status" VARCHAR(20) DEFAULT 'draft',
     "createdDate" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -242,6 +242,22 @@ CREATE TABLE "BoardPost" (
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("boardID") REFERENCES "DiscussionBoard"("boardID") ON DELETE CASCADE,
     FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE
+);
+
+-- ==================
+-- DIRECT MESSAGE FOR QUESTIONS
+-- ==================
+CREATE TABLE "DirectMessage" (
+    "msgID" SERIAL PRIMARY KEY,
+    "userID" INT NOT NULL,
+    "courseID" INT NOT NULL,
+    "message" VARCHAR(200) NOT NULL,
+    "reply" VARCHAR(50),
+    "status" VARCHAR(50),
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE,
+    FOREIGN KEY ("courseID") REFERENCES "Course"("courseID") ON DELETE CASCADE
 );
 
 -- ==================

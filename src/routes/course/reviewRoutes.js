@@ -5,6 +5,7 @@ const {
   getCourseReviews,
   getUserReviews,
   getReview,
+  getTopReviews,
   getMeta
 } = require("../../controllers/reviewController");
 
@@ -20,6 +21,9 @@ router.put("/update/:reviewID", update);
 router.get("/course/:courseID", getCourseReviews);
 
 router.get("/user/:userID", getUserReviews);
+
+router.get("/topReviews", getTopReviews);
+
 
 router.get("/:reviewID", getReview);
 

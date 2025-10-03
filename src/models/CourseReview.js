@@ -88,6 +88,18 @@ class CourseReview {
         return result.rows;
     }
 
+    static async getTopReviews(client = null) {
+        const db = client || pool;
+        const query = `
+            SELECT r.*, c."courseID", c."title", u."userID", u."firstName", u."lastName"
+            FROM "CourseReview" r
+            LEFT JOIN "Course" c ON r."courseID" = c."courseID"
+            LEFT JOIN "User" u ON r."userID" = u."userID"
+            WHERE r."rating" = 5 AND r."status" = 'active'
+        `;
+        const result = await db.query(query);
+        return result.rows;
+    }
 }
 
 module.exports = CourseReview;
