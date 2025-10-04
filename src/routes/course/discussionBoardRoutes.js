@@ -4,6 +4,7 @@ const {
   updateBoard,
   getBoards,
   getBoard,
+  deleteBoard
 } = require('../../controllers/discussionBoardController');
 
 const router = express.Router();
@@ -19,5 +20,8 @@ router.get('/:courseid/getAll', getBoards);
 
 // Get single board
 router.get('/:boardid', getBoard);
+
+// Delete a board
+router.delete('/delete/:boardid', deleteBoard);
 
 module.exports = router;

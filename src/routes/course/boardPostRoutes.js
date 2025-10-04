@@ -4,6 +4,7 @@ const {
   updatePost,
   getPosts,
   getPost,
+  deletePost,
 } = require('../../controllers/boardPostController');
 
 const router = express.Router({ mergeParams: true });
@@ -19,5 +20,8 @@ router.get('/:boardid/getAll', getPosts);
 
 // Get a single post
 router.get('/:postid', getPost);
+
+// Delete a post
+router.delete('/delete/:postid', deletePost);
 
 module.exports = router;

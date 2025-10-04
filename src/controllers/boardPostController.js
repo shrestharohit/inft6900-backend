@@ -86,4 +86,19 @@ const getPost = async (req, res) => {
   }
 };
 
-module.exports = { registerPost, updatePost, getPosts, getPost };
+// Delete a post
+const deletePost = async (req, res) => {
+  try {
+    const postID = parseInt(req.params.postid);
+    const existingPost = await BoardPost.findById(postID);
+    if (!existingPost) return res.status(404).json({ error: 'Post not found' });
+
+    await BoardPost.delete(postID);
+    res.json({ message: 'Post deleted successfully' });
+  } catch (error) {
+    console.error('Delete post error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+module.exports = { registerPost, updatePost, getPosts, getPost, deletePost };
