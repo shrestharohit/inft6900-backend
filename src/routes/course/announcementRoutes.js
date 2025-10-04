@@ -9,13 +9,13 @@ const {
 const router = express.Router({ mergeParams: true });
 
 // Create announcement for a course
-router.post('/', createAnnouncement);
+router.post('/:courseid/register', createAnnouncement);
 
 // Update announcement
-router.put('/:announcementid', updateAnnouncement);
+router.put('/update/:announcementid', updateAnnouncement);
 
 // Get all announcements in a course
-router.get('/', getAnnouncements);
+router.get('/:courseid/getAll', getAnnouncements);
 
 // Get single announcement
 router.get('/:announcementid', getAnnouncement);

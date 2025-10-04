@@ -10,8 +10,8 @@ const contentRoutes = require('./routes/course/contentRoutes');
 const pathwayRoutes = require('./routes/pathwayRoutes');
 const moduleAccessRoutes = require('./routes/moduleAccessRoutes'); 
 const certificateRoutes = require('./routes/course/certificateRoutes');
-const discussionBoardRoutes = require('./routes/course/discussion/discussionBoardRoutes');
-const boardPostRoutes = require('./routes/course/discussion/post/boardPostRoutes');
+const discussionBoardRoutes = require('./routes/course/discussionBoardRoutes');
+const boardPostRoutes = require('./routes/course/boardPostRoutes');
 const scheduleRoutes = require('./routes/course/scheduleRoutes');
 const announcementRoutes = require('./routes/course/announcementRoutes');
 
@@ -75,8 +75,8 @@ app.use('/api/content', contentRoutes);
 app.use('/api/pathway', pathwayRoutes);
 app.use('/api/moduleAccess', moduleAccessRoutes); 
 app.use('/api/certificate', certificateRoutes);
-app.use('/api/discussion-board', discussionBoardRoutes);
-app.use('/api/board-post', boardPostRoutes);
+app.use('/api/discussion', discussionBoardRoutes);
+app.use('/api/post', boardPostRoutes);
 app.use('/api/course/:courseid/schedules', scheduleRoutes);
 app.use('/api/announcement', announcementRoutes);
 

@@ -4,20 +4,20 @@ const {
   updatePost,
   getPosts,
   getPost,
-} = require('../../../../controllers/boardPostController');
+} = require('../../controllers/boardPostController');
 
 const router = express.Router({ mergeParams: true });
 
 // Create a post in a board inside a course
-router.post('/:boardid/posts', registerPost);
+router.post('/:boardid/register', registerPost);
 
 // Update a post
-router.put('/:boardid/posts/:postid', updatePost);
+router.put('/update/:postid', updatePost);
 
 // Get all posts in a board
-router.get('/:boardid/posts', getPosts);
+router.get('/:boardid/getAll', getPosts);
 
 // Get a single post
-router.get('/:boardid/posts/:postid', getPost);
+router.get('/:postid', getPost);
 
 module.exports = router;
