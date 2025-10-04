@@ -67,6 +67,15 @@ class User {
     return result.rows;
   }
 
+  static async deleteById(id) {
+    const query = `
+      DELETE FROM "User" 
+      WHERE "userID" = $1
+    `;
+    const result = await pool.query(query, [id]);
+    return result.rows[0];
+  }
+  
   static async getAllNonStudents() {
     const query = `
       SELECT "userID", "firstName", "lastName", "email", "role", "isEmailVerified", "created_at"

@@ -250,7 +250,7 @@ const getDetail = async (req, res) => {
 
     // get pathway data
     let pathway = null;
-    if (course.Pathway) {
+    if (course.pathway !== null) {
         pathway = await Pathway.findById(course.pathwayID);
     }
 

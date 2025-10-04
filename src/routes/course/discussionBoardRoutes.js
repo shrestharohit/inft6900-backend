@@ -9,15 +9,15 @@ const {
 const router = express.Router();
 
 // Create board in a course
-router.post('/:courseid/boards', registerBoard);
+router.post('/:courseid/register', registerBoard);
 
 // Update board
-router.put('/:courseid/boards/:boardid', updateBoard);
+router.put('/update/:boardid', updateBoard);
 
 // Get all boards in a course
-router.get('/:courseid/boards', getBoards);
+router.get('/:courseid/getAll', getBoards);
 
 // Get single board
-router.get('/:courseid/boards/:boardid', getBoard);
+router.get('/:boardid', getBoard);
 
 module.exports = router;

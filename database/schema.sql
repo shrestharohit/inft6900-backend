@@ -90,7 +90,7 @@ CREATE TABLE "Enrolment" (
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("pathwayID") REFERENCES "Pathway"("pathwayID"),
     FOREIGN KEY ("courseID") REFERENCES "Course"("courseID"),
-    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE -- alter FK constraint required
+    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE
 );
 
 CREATE TABLE "ModuleAccess" (
@@ -221,6 +221,7 @@ CREATE TABLE "BoardPost" (
     "postID" SERIAL PRIMARY KEY,
     "boardID" INT NOT NULL,
     "userID" INT NOT NULL,
+    "title" TEXT NOT NULL,
     "postText" TEXT NOT NULL,
     "status" VARCHAR(50) DEFAULT 'active',
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -248,7 +249,7 @@ CREATE TABLE "Announcement" (
     "announcementID" SERIAL PRIMARY KEY,
     "courseID" INT NOT NULL,
     "title" VARCHAR(200) NOT NULL,
-    "message" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
     "status" VARCHAR(50) DEFAULT 'active',
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

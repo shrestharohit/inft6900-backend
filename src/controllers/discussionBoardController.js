@@ -1,5 +1,6 @@
 const DiscussionBoard = require('../models/DiscussionBoard');
-const Course = require('../models/Course'); // to validate course exists
+const Course = require('../models/Course');
+const VALID_BOARD_STATUS = ['draft', 'wait_for_approval', 'active', 'inactive'];
 
 // Register a discussion board for a course
 const registerBoard = async (req, res) => {
@@ -20,6 +21,11 @@ const registerBoard = async (req, res) => {
       return res.status(404).json({ error: 'Course not found' });
     }
 
+    // Validate status
+    if (status && !VALID_BOARD_STATUS.includes(status)) {
+      return res.status(400).json({ error: `Invalid status. Valid values: ${VALID_BOARD_STATUS.join(', ')}` });
+    }
+
     const newBoard = await DiscussionBoard.create({ courseID, title, status });
     res.json({ message: 'Discussion board created successfully', board: newBoard });
   } catch (error) {
@@ -36,6 +42,10 @@ const updateBoard = async (req, res) => {
 
     const board = await DiscussionBoard.findById(boardID);
     if (!board) return res.status(404).json({ error: 'Board not found' });
+
+    if (status && !VALID_BOARD_STATUS.includes(status)) {
+      return res.status(400).json({ error: `Invalid status. Valid values: ${VALID_BOARD_STATUS.join(', ')}` });
+    }
 
     const updatedBoard = await DiscussionBoard.update(boardID, { title, status });
     res.json({ message: 'Discussion board updated successfully', board: updatedBoard });

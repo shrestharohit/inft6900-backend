@@ -2,16 +2,15 @@ const { pool } = require('../config/database');
 
 class BoardPost {
   // Create new post
-  static async create({ boardID, userID, postText, status = 'active' }) {
+  static async create({ boardID, userID, title, postText, status = 'draft' }) {
     const query = `
-      INSERT INTO "BoardPost" ("boardID", "userID", "postText", "status", "created_at")
-      VALUES ($1, $2, $3, $4, NOW())
+      INSERT INTO "BoardPost" ("boardID", "userID", "title", "postText", "status", "created_at")
+      VALUES ($1, $2, $3, $4, $5, NOW())
       RETURNING *;
     `;
-    const result = await pool.query(query, [boardID, userID, postText, status]);
-    return result.rows[0];
-  }
-
+  const result = await pool.query(query, [boardID, userID, title, postText, status]);
+}
+  
   // Get all posts in a board
   static async findByBoard(boardID) {
     const query = `SELECT * FROM "BoardPost" WHERE "boardID" = $1 ORDER BY "created_at" DESC;`;
@@ -28,7 +27,7 @@ class BoardPost {
 
   // Update post
   static async update(postID, updateData) {
-    const allowedFields = ['postText', 'status'];
+    const allowedFields = ['title', 'postText', 'status'];
     const updates = [];
     const values = [];
     let paramCount = 1;
