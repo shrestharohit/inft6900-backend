@@ -2,6 +2,7 @@ const Module = require('../models/Module');
 const Quiz = require('../models/Quiz');
 const Question = require('../models/Question');
 const AnswerOption = require('../models/AnswerOption');
+const User = require('../models/User');
 const { VALID_QUIZ_STATUS } = require('../config/constants');
 const {
     registerQuestion,
@@ -214,6 +215,32 @@ const getQuiz = async (req, res) => {
     }
 }
 
+const getAllFromCourseOwner = async(req, res) => {
+    try {
+        const userID = req.params.userID;
+
+        // Validate user ID
+        if (!userID) {
+            return res.status(400).json({
+                error: 'User ID required.'
+            });
+        }
+
+        // Check if user exists
+        const user = await User.findById(userID);
+        if (!user || user.role !== 'course_owner') {
+            return res.status(404).json({
+                error: 'Course owner not found.'
+            });
+        }
+
+        const quizzes = await Quiz.findByCourseOwner(userID);
+        res.json(quizzes);
+    } catch(error) {
+        console.error('Get quiz error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
 
 const getDetail = async (req, res) => {
     try {
@@ -256,6 +283,7 @@ module.exports = {
   register,
   update,
   getQuiz,
+  getAllFromCourseOwner,
   getDetail,
   getMeta,
 };

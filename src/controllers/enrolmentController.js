@@ -66,7 +66,8 @@ const enrolCourse = async (req, res) => {
         // Re-enrol the course if status is disenrolled
         let newEnrolment = null;
         if (existingEnrolment && existingEnrolment.status == 'disenrolled') {
-            newEnrolment = await Enrolment.update(existingEnrolment.enrolmentID, {status: 'enrolled'})
+            newEnrolment = await Enrolment.update(existingEnrolment.enrolmentID, {status: 'enrolled'});
+            refreshStatus(newEnrolment.enrolmenID)
         } 
         // otherwise, create new enrolment data
         else {
@@ -213,12 +214,13 @@ const getUserEnrolment = async (req, res) => {
                 error: 'Invalid user ID. Student user does not exist.'
             });
         };
-
+        
         // Get all enrolment made by users
         const enrolments = await Enrolment.findByUserID(userID);
+        const processedData = await processData(enrolments)
 
         res.json({
-            enrolments
+            enrolments: processedData
         })
 
     } catch(error) {
@@ -435,9 +437,31 @@ const getPopular = async (req, res) => {
     res.json(result);
 }
 
+
+const getEnrolment = async (req, res) => {
+    try {
+        const enrolmentID = req.params.enrolmentID;
+        if (!enrolmentID) {
+            return res.status(400).json({
+                error: 'Enrolment ID is required'
+            });
+        }
+
+        const enrolment = await Enrolment.findById(enrolmentID);
+        res.json(enrolment);
+    } catch(error) {
+        console.error('Get enrolment error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
 const getAll = async (req, res) => {
     const enrolments = await Enrolment.getAll();
-    res.json(enrolments);
+    const processedData = await processData(enrolments);
+    
+    res.json({
+        enrolments: processedData
+    });
 }
 
 
@@ -512,6 +536,29 @@ const valdiatePrerequisite = async (userID, pathwayID, courseID) => {
 }
 
 
+// process enrolment data to include nested pathway and course details
+const processData = async(enrolments) => {
+    const processedData = [];
+
+    for (const enrolment of enrolments) {
+        let processedEnrolment = enrolment;
+        let course = await Course.findById(enrolment.courseID);
+        
+        let pathway = null;
+        if (enrolment.pathwayID) {
+            pathway = await Pathway.findById(enrolment.pathwayID);
+        }
+
+        processedEnrolment.courseDetail = course;
+        processedEnrolment.pathwayDetail = pathway;
+
+        processedData.push(processedEnrolment)
+    }
+    
+    return processedData;
+}
+
+
 module.exports = {
     enrolCourse,
     disenrolCourse,
@@ -522,5 +569,6 @@ module.exports = {
     getPopular,
     getUserEnrolment,
     getAll,
+    getEnrolment,
     getMeta
 };

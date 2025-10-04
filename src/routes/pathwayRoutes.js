@@ -5,6 +5,8 @@ const {
   getAll,
   getPathway,
   getMeta,
+  getApprovalList,
+  getDetail
 } = require('../controllers/pathwayController');
 
 const router = express.Router();
@@ -16,12 +18,18 @@ router.post("/register", register);
 router.put("/:pathwayid", update);
 
 // Get all pathways
-router.post("/getAll", getAll);
+router.get("/getAll", getAll);
 
-// Get metadata (status options)
-router.post("/getMeta", getMeta);
+// Get metadata
+router.get("/getMeta", getMeta);
 
 // Get a single pathway by pathwayID
 router.get("/:pathwayid", getPathway);
+
+// Get approval list
+router.get("/approval/list", getApprovalList);     
+
+// Get detailed pathway info
+router.get("/:pathwayid/detail", getDetail);
 
 module.exports = router;
