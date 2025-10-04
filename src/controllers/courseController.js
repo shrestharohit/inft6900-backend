@@ -1,5 +1,6 @@
 const Course = require('../models/Course');
 const Module = require('../models/Module');
+const Content = require('../models/Content');
 const User = require('../models/User');
 const Pathway = require('../models/Pathway');
 const { VALID_COURSE_STATUS, VALID_COURSE_LEVEL } = require('../config/constants');
@@ -197,10 +198,22 @@ const getAll = async (req, res) => {
     const courses = await Course.getAll();
 
     const processedData = [];
+
+    // get modules and contents nested
     for (const course of courses) {
       let modules = await Module.findByCourseId(course.courseID);
       let processedCourse = course;
-      processedCourse.modules = modules;
+
+      const processedModules = [];
+      for (const module of modules) {
+        let contents = await Content.findByModuleId(module.moduleID);
+        let processedModule = module;
+        processedModule.contents = contents;
+        processedModules.push(processedModule)
+      }
+
+      processedCourse.modules = processedModules;
+
       processedData.push(processedCourse);
     }
 

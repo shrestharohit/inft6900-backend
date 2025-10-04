@@ -2,30 +2,34 @@ const { pool } = require('../config/database');
 
 class Content {
     // Create new content
-    static async create({ moduleID, title, description, pageNumber, status = 'draft' }) {
+    static async create({ moduleID, title, description, pageNumber, status = 'draft'}, client = null) {
+        const db = client || pool;
         const query = `
             INSERT INTO "Content" 
             ("moduleID", "title", "description", "pageNumber", "status", "created_at")
             VALUES ($1, $2, $3, $4, $5, NOW())
             RETURNING "contentID", "moduleID", "title", "description", "pageNumber", "status", "created_at"
         `;
-        const result = await pool.query(query, [moduleID, title, description, pageNumber, status]);
+        const result = await db.query(query, [moduleID, title, description, pageNumber, status]);
         return result.rows[0];
     }
 
-    static async findByModuleId(moduleID) {
+    static async findByModuleId(moduleID, client = null) {
+        const db = client || pool;
         const query = `SELECT * FROM "Content" WHERE "moduleID" = $1 ORDER BY "created_at" DESC`;
-        const result = await pool.query(query, [moduleID]);
+        const result = await db.query(query, [moduleID]);
         return result.rows;
     }
 
-    static async findById(contentID) {
+    static async findById(contentID, client = null) {
+        const db = client || pool;
         const query = `SELECT * FROM "Content" WHERE "contentID" = $1`;
-        const result = await pool.query(query, [contentID]);
+        const result = await db.query(query, [contentID]);
         return result.rows[0];
     }
 
-    static async update(contentID, updateData) {
+    static async update(contentID, updateData, client = null) {
+        const db = client || pool;
         const allowedFields = ['title', 'description', 'pageNumber', 'status'];
         const updates = [];
         const values = [];
@@ -53,13 +57,14 @@ class Content {
             RETURNING "contentID", "moduleID", "title", "description", "pageNumber", "status", "updated_at"
         `;
 
-        const result = await pool.query(query, values);
+        const result = await db.query(query, values);
         return result.rows[0];
     }
 
-    static async getAll() {
+    static async getAll(client = null) {
+        const db = client || pool;
         const query = `SELECT * FROM "Content" ORDER BY "created_at" DESC`;
-        const result = await pool.query(query);
+        const result = await db.query(query);
         return result.rows;
     }
 }

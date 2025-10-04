@@ -363,7 +363,7 @@ const deleteUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
-    const { userID, firstName, lastName, role } = req.body;
+    const { userID, firstName, lastName, currentPassword, newPassword, role } = req.body;
 
     // Validate userId is provided
     if (!userID) {
@@ -371,7 +371,7 @@ const updateUser = async (req, res) => {
         error: 'User ID is required'
       });
     }
-
+    
     // Check if user exists
     const existingUser = await User.findById(userID);
     if (!existingUser) {
@@ -380,17 +380,48 @@ const updateUser = async (req, res) => {
       });
     }
 
-    if (!VALID_USER_ROLES.includes(role)) {
+    if (role && !VALID_USER_ROLES.includes(role)) {
       return res.status(400).json({ 
         error: `Invalid role. Must be: ${VALID_USER_ROLES.join(', ')}` 
       });
     }
+
+    let hashedPassword = null;
+    if (newPassword) {
+      // check if current password is valid
+      if (!currentPassword) {
+        return res.status(401).json({
+          error: "To change password, current password required",
+        });
+      }
+
+      const currentPasswordHash = (await User.findByEmail(existingUser.email)).passwordHash;
+      
+      const isPasswordValid = await bcrypt.compare(currentPassword, currentPasswordHash);
+      if (!isPasswordValid) {
+        return res.status(401).json({
+          error: "Invalid email or password",
+        });
+      }
+
+      // check if new apsswrod has more than 6 chars
+      if (newPassword.length < 6) {
+        return res.status(400).json({ 
+          error: 'Password must be at least 6 characters long' 
+        });
+      }
+
+      hashedPassword = await bcrypt.hash(newPassword, 10);
+    }
+
+
 
     // Prepare update data
     const updateData = {};
     if (firstName !== undefined) updateData.firstName = firstName;
     if (lastName !== undefined) updateData.lastName = lastName;
     if (role !== undefined) updateData.role = role;
+    if (hashedPassword !== undefined) updateData.passwordHash = hashedPassword;
 
     // Update user
     const updatedUser = await User.update(userID, updateData);

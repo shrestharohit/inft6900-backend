@@ -7,56 +7,18 @@ const register = async (req, res) => {
     try {
         const moduleID = parseInt(req.params.moduleid);
         const { title, description, pageNumber, status } = req.body;
-        
-        // Validate module id is provided
-        if (!moduleID) {
-            return res.status(400).json({ 
-                error: 'Module ID is required' 
-            });
-        }
 
-        // Basic validation
-        if (!title || pageNumber == null || !Number.isInteger(pageNumber) || pageNumber <= 0) {
-            return res.status(400).json({ 
-                error: 'Title and a positive pageNumber are required' 
-            });
-        }
+        const newContent = await registerContent({
+            moduleID: moduleID,
+            title: title,
+            description: description,
+            pageNumber: pageNumber,
+            status: status
+        })
 
-        // Validate status
-        const contentStatus = status || 'draft';
-
-        if (!VALID_CONTENT_STATUS.includes(contentStatus)) {
-            return res.status(400).json({ 
-                error: `Invalid status. Must be: ${VALID_CONTENT_STATUS.join(', ')}` 
-            });
-        }
-
-        // Validate module ID
-        const module = await Module.findById(moduleID);
-        if (!module) return res.status(400).json({ error: 'Invalid module ID. Module does not exist.' });
-
-        // Check if page number is already used in another content that is "active"
-        const existingContents = await Content.findByModuleId(moduleID);
-        const duplicate = existingContents.some(
-            c => c.pageNumber === pageNumber && c.status === 'active'
-        );
-
-        if (duplicate) {
-            return res.status(400).json({ error: 'Selected page number already used in the module' });
-        }
-
-        // Create content
-        const newContent = await Content.create({ moduleID, title, description, pageNumber, status: contentStatus });
         res.json({ 
             message: 'Content registered successfully', 
-            content: {
-                contentID: newContent.contentID,
-                moduleID: newContent.moduleID,
-                title: newContent.title,
-                description: newContent.description,
-                pageNumber: newContent.pageNumber,
-                status: newContent.status,
-            } 
+            content: newContent
         });
 
     } catch (error) {
@@ -166,10 +128,145 @@ const getMeta = (req, res) => {
     res.json({ status: VALID_CONTENT_STATUS });
 };
 
+
+// Registering function
+const registerContent = async ({
+    moduleID, 
+    title,
+    description,
+    pageNumber,
+    status
+}, client=null) => {
+    try {
+        // Validate module id is provided
+        if (!moduleID) {
+            throw new Error('Module ID is required');
+        }
+
+        // Basic validation
+        if (!title || pageNumber == null || !Number.isInteger(pageNumber) || pageNumber <= 0) {
+            throw new Error('Title and a positive pageNumber are required');
+        }
+
+        // Validate status
+        const contentStatus = status || 'draft';
+
+        if (!VALID_CONTENT_STATUS.includes(contentStatus)) {
+            throw new Error(`Invalid status. Must be: ${VALID_CONTENT_STATUS.join(', ')}`);
+        }
+
+        // Validate module ID
+        const module = await Module.findById(moduleID, client);
+        if (!module) {
+            throw new Error('Invalid module ID. Module does not exist.');
+        }
+
+        // Check if page number is already used in another content that is "active"
+        const existingContents = await Content.findByModuleId(moduleID, client);
+        const duplicate = existingContents.some(
+            c => c.pageNumber === pageNumber && c.status === 'active'
+        );
+
+        if (duplicate) {
+            throw new Error('Selected page number already used in the module');
+        }
+
+        // Create content
+        const newContent = await Content.create({ moduleID, title, description, pageNumber, status: contentStatus }, client);
+        return { 
+            contentID: newContent.contentID,
+            moduleID: newContent.moduleID,
+            title: newContent.title,
+            description: newContent.description,
+            pageNumber: newContent.pageNumber,
+            status: newContent.status,
+        };
+
+    } catch (error) {
+        console.error('Register content error:', error);
+        throw new Error('Internal server error');
+    }
+};
+
+const updateContent = async ({
+    moduleID,
+    contentID,
+    title, 
+    description, 
+    pageNumber, 
+    status
+}, client=null) => {
+    try {
+        // Check if contentID exists
+        if (!contentID) {
+            throw new Error('Content ID is required' );
+        }
+
+        const existingContent = await Content.findById(contentID);
+        if (!existingContent) {
+            throw new Error('Content not found')
+        }
+
+        // Check if moduleID exists
+        const module = await Module.findById(moduleID);
+        if (!module) {
+            throw new Error('Module not found')
+        }
+
+        // Check if page number is already used in the module
+        if (pageNumber !== undefined) {
+            // Validate positive integer
+            if (!Number.isInteger(pageNumber) || pageNumber <= 0) {
+                throw new Error('pageNumber must be a positive integer');
+            }
+
+            // Check duplicates for active content
+            const moduleContents = await Content.findByModuleId(moduleID);
+            const duplicate = moduleContents.some(
+                c => c.pageNumber === pageNumber && c.status === 'active' && c.contentID !== contentID
+            );
+
+            if (duplicate) {
+                throw new Errorr('Selected page number already used in the module' );
+            }
+        }
+
+        // Validate status
+        if (status !== undefined && !VALID_CONTENT_STATUS.includes(status)) {
+            throw new Error(`Invalid status. Must be: ${VALID_CONTENT_STATUS.join(', ')}`);
+        }
+
+        // Prepare update data
+        const updateData = {};
+        if (title !== undefined) updateData.title = title;
+        if (description !== undefined) updateData.description = description;
+        if (pageNumber !== undefined) updateData.pageNumber = pageNumber;
+        if (status !== undefined) updateData.status = status;
+
+        // Update content
+        const updatedContent = await Content.update(contentID, updateData, client);
+        return {
+            contentID: updatedContent.contentID,
+            moduleID: updatedContent.moduleID,
+            title: updatedContent.title,
+            description: updatedContent.description,
+            pageNumber: updatedContent.pageNumber,
+            status: updatedContent.status,
+        };
+
+    } catch (error) {
+        console.error('Update content error:', error);
+        throw new Error('Internal server error');
+    }
+};
+
+
 module.exports = {
     register,
     update,
     getContent,
     getAll,
-    getMeta
+    getMeta,
+    registerContent,
+    updateContent
 };
