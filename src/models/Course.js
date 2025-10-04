@@ -1,14 +1,13 @@
 const { pool } = require('../config/database');
 
 class Course {
-    // Pathway to be added in Sprint 2
-    static async create({ userID, title, category, level, outline, status='draft' }) {
+    static async create({ userID, title, pathwayID, category, level, outline, status='draft' }) {
         const query = `
-            INSERT INTO "Course" ("userID", "title", "category", "level", "outline", "status", "created_at")
-            VALUES ($1, $2, $3, $4, $5, $6, NOW())
+            INSERT INTO "Course" ("userID", "title", "pathwayID", "category", "level", "outline", "status", "created_at")
+            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
             RETURNING *
         `;
-        const result = await pool.query(query, [userID, title, category, level, outline, status]);
+        const result = await pool.query(query, [userID, title, pathwayID, category, level, outline, status]);
         return result.rows[0];
     }
 
@@ -24,7 +23,7 @@ class Course {
         const query = `
             SELECT * FROM "Course" WHERE "category" = $1
         `;
-        const result = await pool.query(query, [userID]);
+        const result = await pool.query(query, [category]);
         return result.rows;
     }
 
@@ -59,9 +58,21 @@ class Course {
         const result = await pool.query(query, [pathwayID]);
         return result.rows;
     }
+
+    // Get a course with a specific level in a pathway
+    static async findByPathwayIDCourseLevel(pathwayID, level) {
+        const query = `
+            SELECT c.*, p."name"
+            FROM "Course" c
+            LEFT JOIN "Pathway" p ON c."pathwayID" = p."pathwayID"
+            WHERE c."pathwayID" = $1 AND c."level" = $2
+        `;
+        const result = await pool.query(query, [pathwayID, level]);
+        return result.rows[0];
+    }
     
     static async update(id, updateData) {
-        const allowedFields = ['userID', 'title', 'category', 'level', 'outline', 'status'];
+        const allowedFields = ['userID', 'title', 'pathwayID', 'category', 'level', 'outline', 'status'];
         const updates = [];
         const values = [];
         let paramCount = 1;

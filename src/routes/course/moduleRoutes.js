@@ -4,6 +4,7 @@ const {
   update,
   getModule,
   getAll,
+  getAllFromCourseOwner,
   getMeta,
 } = require("../../controllers/moduleController");
 
@@ -13,6 +14,8 @@ const router = express.Router();
 router.get("/_meta", getMeta);
 
 router.get("/course/:courseID", getAll);
+
+router.get("/owner/:userID", getAllFromCourseOwner);
 
 router.post("/register", register);
 

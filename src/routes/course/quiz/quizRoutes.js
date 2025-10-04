@@ -4,6 +4,7 @@ const {
   register,
   update,
   getQuiz,
+  getAllFromCourseOwner,
   getDetail,
   getMeta
 } = require("../../../controllers/quizController");
@@ -11,7 +12,8 @@ const {
 const {
   startAttempt,
   submitAttemp,
-  getQuizResult
+  getQuizResult,
+  getUserAttempts
 } = require("../../../controllers/attemptController");
 
 
@@ -31,6 +33,8 @@ router.post("/register", register);
 
 router.put("/update/:quizID", update);
 
+router.get("/owner/:userID", getAllFromCourseOwner);
+
 router.get("/:quizID", getQuiz);
 
 router.get("/:quizID/detail", getDetail);
@@ -45,6 +49,8 @@ router.post("/:quizID/start", startAttempt);
 router.put("/:quizID/submit", submitAttemp);
 
 router.get("/:quizID/result/:attemptID", getQuizResult);
+
+router.get("/:quizID/user/:userID", getUserAttempts);
 
 
 module.exports = router;
