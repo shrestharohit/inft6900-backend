@@ -45,6 +45,12 @@ class Announcement {
     const result = await pool.query(query);
     return result.rows;
   }
+
+  static async delete(announcementID) {
+    const query = `DELETE FROM "Announcement" WHERE "announcementID" = $1 RETURNING *`;
+    const result = await pool.query(query, [announcementID]);
+    return result.rows[0];
+  }
 }
 
 module.exports = Announcement;
