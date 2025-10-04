@@ -195,7 +195,16 @@ const getAllCategories = async (req, res) => {
 
 const getAll = async (req, res) => {
     const courses = await Course.getAll();
-    res.json(courses);
+
+    const processedData = [];
+    for (const course of courses) {
+      let modules = await Module.findByCourseId(course.courseID);
+      let processedCourse = course;
+      processedCourse.modules = modules;
+      processedData.push(processedCourse);
+    }
+
+    res.json(processedData);
 }
 
 

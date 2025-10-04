@@ -34,6 +34,18 @@ class Module {
         return result.rows[0];
     }
 
+
+    static async findByCourseOwner(userID) {
+        const query = `
+            SELECT m.*, c.title AS "courseTitle" , c.status AS "courseStatus" FROM "Module" m
+            LEFT JOIN "Course" c ON m."courseID" = c."courseID"
+            WHERE c."userID" = $1
+        `;
+        const result = await pool.query(query, [userID]);
+        return result.rows;
+    }
+
+
     static async update(id, updateData) {
         const allowedFields = ['courseID', 'title', 'description', 'moduleNumber', 'expectedHours', 'status'];
         const updates = [];
