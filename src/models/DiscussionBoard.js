@@ -55,6 +55,12 @@ class DiscussionBoard {
     const result = await pool.query(query, values);
     return result.rows[0];
   }
+
+  static async delete(boardID) {
+    const query = `DELETE FROM "DiscussionBoard" WHERE "boardID" = $1 RETURNING *`;  // ✅ correct table name
+    const result = await pool.query(query, [boardID]);
+    return result.rows[0];
+  } 
 }
 
 module.exports = DiscussionBoard;
