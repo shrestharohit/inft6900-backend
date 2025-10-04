@@ -30,8 +30,8 @@ CREATE TABLE "NotificationSetting" (
     "userID" INT NOT NULL,
     "notificationType" VARCHAR(50),
     "enabled" BOOLEAN DEFAULT TRUE,
-    "channel" VARCHAR(50),
-    "createdDate" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE
 );
 
@@ -205,6 +205,21 @@ CREATE TABLE "Certificate" (
 );
 
 -- ==================
+-- COURSE REVIEW
+-- ==================
+CREATE TABLE "CourseReview" (
+    "reviewID" SERIAL PRIMARY KEY,
+    "userID" INT NOT NULL,
+    "courseID" INT NOT NULL,
+    "comment" TEXT,
+    "rating" INT NOT NULL,
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY ("userID") REFERENCES "User"("userID"),
+    FOREIGN KEY ("courseID") REFERENCES "Course"("courseID")
+);
+
+-- ==================
 -- DISCUSSION BOARD
 -- ==================
 CREATE TABLE "DiscussionBoard" (
@@ -228,6 +243,22 @@ CREATE TABLE "BoardPost" (
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("boardID") REFERENCES "DiscussionBoard"("boardID") ON DELETE CASCADE,
     FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE
+);
+
+-- ==================
+-- DIRECT MESSAGE FOR QUESTIONS
+-- ==================
+CREATE TABLE "DirectMessage" (
+    "msgID" SERIAL PRIMARY KEY,
+    "userID" INT NOT NULL,
+    "courseID" INT NOT NULL,
+    "message" VARCHAR(200) NOT NULL,
+    "reply" VARCHAR(50),
+    "status" VARCHAR(50),
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE,
+    FOREIGN KEY ("courseID") REFERENCES "Course"("courseID") ON DELETE CASCADE
 );
 
 -- ==================

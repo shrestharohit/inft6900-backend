@@ -1,12 +1,14 @@
 const Course = require('../models/Course');
 const Module = require('../models/Module');
+const Content = require('../models/Content');
 const User = require('../models/User');
 const Pathway = require('../models/Pathway');
 const { VALID_COURSE_STATUS, VALID_COURSE_LEVEL } = require('../config/constants');
+const { sendApprovalRequestNotification, sendApprovalNotification, sendDeclineNotification } = require('../services/emailService');
 
 const register = async (req, res) => {
     try {
-        const { title, userID, category, level, outline, status } = req.body;
+        const { title, userID, pathwayID, category, level, outline, status } = req.body;
 
         // Basic validataion
         if (!title || !level || !status) {
@@ -41,10 +43,27 @@ const register = async (req, res) => {
             });
         }
 
+        // Validate pathway
+        const pathway = await Pathway.findById(pathwayID)
+        if (pathwayID !== undefined && !pathway) {
+            return res.status(400).json({
+                error: 'Invalid pathway ID. Pathway not found.'
+            });
+        }
+
+        // Check if there is already a course with the same level in the pathway
+        const hasSameLevel = !!(await Course.findByPathwayIDCourseLevel(pathwayID, level));
+        if (pathwayID !== undefined && hasSameLevel) {
+            return res.status(400).json({
+                error: 'Pathway can have only 1 course in each level. Course with selected level already exists in pathway.'
+            });
+        }
+
         // Create course
         const newCourse = await Course.create({
             userID,
             title, 
+            pathwayID,
             category,
             level: courseLevel, 
             outline, 
@@ -53,17 +72,7 @@ const register = async (req, res) => {
 
         res.json({
             message: 'Course registered successfully',
-            course: {
-                courseID: newCourse.courseID,
-                userID: newCourse.userID,
-                pathwayID: newCourse.pathwayID,
-                title: newCourse.title,
-                category: newCourse.category,
-                level: newCourse.level,
-                outline: newCourse.outline,
-                status: newCourse.status,
-                created_at: newCourse.created_at
-            }
+            course: newCourse
         })
 
     } catch(error) {
@@ -76,7 +85,7 @@ const register = async (req, res) => {
 const update = async (req, res) => {
     try {
         const courseID = req.params.courseID;
-        const { userID, title, category, level, outline, status } = req.body;
+        const { userID, title, pathwayID, category, level, outline, status } = req.body;
 
         // Validate courseId
         if (!courseID) {
@@ -93,9 +102,12 @@ const update = async (req, res) => {
             });
         }
 
+        const originalStatus = existingCourse.status;
+
         // Validate owner id
-        const existingUser = await User.findById(userID);
-        if (!userID || existingUser.role !== 'course_owner') {
+        const checkingUserID = userID || existingCourse.userID;
+        const existingUser = await User.findById(checkingUserID);
+        if (existingUser.role !== 'course_owner') {
             return res.status(400).json({
                 error: 'Invalid user ID. Course Owner does not exist.'
             });
@@ -117,6 +129,26 @@ const update = async (req, res) => {
             });
         }
 
+        // Validate pathway
+        const pathway = await Pathway.findById(pathwayID)
+        if (pathwayID !== undefined && !pathway) {
+            return res.status(400).json({
+                error: 'Invalid pathway ID. Pathway not found.'
+            });
+        }
+
+        // Check if there is already a course with the same level in the pathway
+        const checkingPathwayID = pathwayID || existingCourse.pathwayID;
+        const checkingLevel = level || existingCourse.level;
+
+        const hasSameLevel = !!(await Course.findByPathwayIDCourseLevel(checkingPathwayID, checkingLevel));
+        if (checkingPathwayID !== undefined && hasSameLevel) {
+            return res.status(400).json({
+                error: 'Pathway can have only 1 course in each level. Course with selected level already exists in pathway.'
+            });
+        }
+       
+
         // Prepare update data
         const updateData = {};
         if (userID !== undefined) updateData.userID = userID;
@@ -128,6 +160,11 @@ const update = async (req, res) => {
 
         // Create course
         const updateCourse = await Course.update(courseID, updateData)
+
+        // Send notification in case of status change
+        if (originalStatus !== updateData.status && originalStatus !== 'active') {
+          sendNotification(updateCourse.courseID);
+        }
 
         res.json({
             message: 'Course updated successfully',
@@ -159,7 +196,28 @@ const getAllCategories = async (req, res) => {
 
 const getAll = async (req, res) => {
     const courses = await Course.getAll();
-    res.json(courses);
+
+    const processedData = [];
+
+    // get modules and contents nested
+    for (const course of courses) {
+      let modules = await Module.findByCourseId(course.courseID);
+      let processedCourse = course;
+
+      const processedModules = [];
+      for (const module of modules) {
+        let contents = await Content.findByModuleId(module.moduleID);
+        let processedModule = module;
+        processedModule.contents = contents;
+        processedModules.push(processedModule)
+      }
+
+      processedCourse.modules = processedModules;
+
+      processedData.push(processedCourse);
+    }
+
+    res.json(processedData);
 }
 
 
@@ -276,6 +334,29 @@ const getDetail = async (req, res) => {
   }
 };
 
+
+const sendNotification = async (courseID) => {
+    const course = await Course.findById(courseID);
+    const user = await User.findById(course.userID);
+
+    const requestingItem = {
+      'type': 'Course',
+      'name': course.title
+    }
+
+    if (course.status === 'wait_for_approval') {
+      sendApprovalRequestNotification(user, requestingItem)
+    }
+
+    if (course.status === 'active') {
+      sendApprovalNotification(user, requestingItem)
+    }
+
+    if (course.status === 'draft') {
+      sendDeclineNotification(user, requestingItem)
+    }
+
+}
 
 module.exports = {
   register,
