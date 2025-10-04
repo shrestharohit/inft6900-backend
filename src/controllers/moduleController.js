@@ -1,4 +1,5 @@
 const Module = require('../models/Module');
+const User = require('../models/User');
 const Course = require('../models/Course');
 const { VALID_MODULE_STATUS } = require('../config/constants');
 
@@ -195,6 +196,32 @@ const getAll = async (req, res) => {
     }
 }
 
+const getAllFromCourseOwner = async (req, res) => {
+    try {
+        const userID = req.params.userID;
+
+        // Validate user ID
+        if (!userID) {
+            return res.status(400).json({
+                error: 'User ID required.'
+            });
+        }
+
+        // Check if user exists
+        const user = await User.findById(userID);
+        if (!user || user.role !== 'course_owner') {
+            return res.status(404).json({
+                error: 'Course owner not found.'
+            });
+        }
+
+        const modules = await Module.findByCourseOwner(userID);
+        res.json(modules);
+    } catch (error) {
+        console.error('Get module error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
 
 const getMeta = (req, res) => {
     res.json({
@@ -208,5 +235,6 @@ module.exports = {
   update,
   getModule,
   getAll,
+  getAllFromCourseOwner,
   getMeta,
 };

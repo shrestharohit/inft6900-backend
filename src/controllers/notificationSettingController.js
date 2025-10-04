@@ -106,7 +106,7 @@ const getUserSettings = async (req, res) => {
 
 const getMeta = (req, res) => {
     res.json({
-        status: VALID_NOTIFICATIONSETTING_TYPE,
+        notificationType: VALID_NOTIFICATIONSETTING_TYPE,
     })
 }
 
