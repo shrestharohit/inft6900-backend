@@ -208,6 +208,14 @@ const getQuiz = async (req, res) => {
             });
         }
 
+        // Get all questions and options
+        const questions = await Question.findByQuizId(quiz.quizID);
+        for (const question of questions) {
+            const options = await AnswerOption.findByQuestionID(question.questionID);
+            question.options = options;
+        }
+        quiz.questions = questions;
+
         res.json(quiz);
     } catch (error) {
         console.error('Get quiz error:', error);
@@ -235,6 +243,17 @@ const getAllFromCourseOwner = async(req, res) => {
         }
 
         const quizzes = await Quiz.findByCourseOwner(userID);
+        
+        // Get all questions and options
+        for (const quiz of quizzes) {
+            const questions = await Question.findByQuizId(quiz.quizID);
+            for (const question of questions) {
+                const options = await AnswerOption.findByQuestionID(question.questionID);
+                question.options = options;
+            }
+            quiz.questions = questions;
+        }
+
         res.json(quizzes);
     } catch(error) {
         console.error('Get quiz error:', error);
@@ -257,7 +276,7 @@ const getDetail = async (req, res) => {
         // Get all questions and options
         const questions = await Question.findByQuizId(quizID);
         const questionList = []
-        for (question of questions) {
+        for (const question of questions) {
             const options = await AnswerOption.findByQuestionID(question.questionID);
             question['options'] = options;
             questionList.push(question);

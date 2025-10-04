@@ -236,6 +236,9 @@ const getModule = async (req, res) => {
             });
         }
 
+        const contents = await Content.findByModuleId(moduleID);
+        module.contents = contents;
+
         res.json(module);
     } catch (error) {
         console.error('Get module error:', error);
@@ -264,6 +267,12 @@ const getAll = async (req, res) => {
         }
 
         const modules = await Module.findByCourseId(courseID);
+
+        for (const module of modules) {
+            let contents = await Content.findByModuleId(module.moduleID);
+            module.contents = contents;
+        }
+
         res.json(modules);
     } catch (error) {
         console.error('Get module error:', error);
@@ -291,6 +300,12 @@ const getAllFromCourseOwner = async (req, res) => {
         }
 
         const modules = await Module.findByCourseOwner(userID);
+        
+        for (const module of modules) {
+            let contents = await Content.findByModuleId(module.moduleID);
+            module.contents = contents;
+        }
+
         res.json(modules);
     } catch (error) {
         console.error('Get module error:', error);
