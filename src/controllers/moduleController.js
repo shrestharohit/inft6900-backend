@@ -1,11 +1,17 @@
 const Module = require('../models/Module');
 const User = require('../models/User');
 const Course = require('../models/Course');
+const Content = require('../models/Content');
 const { VALID_MODULE_STATUS } = require('../config/constants');
+const { pool } = require('../config/database');
+const { registerContent, updateContent } = require('../controllers/contentController')
 
 const register = async (req, res) => {
+    const client = await pool.connect();
+    await client.query('BEGIN')
+
     try {
-        const { courseID, title, description, moduleNumber, expectedHours, status } = req.body;
+        const { courseID, title, description, moduleNumber, expectedHours, status, contents } = req.body;
 
         // Validate course id is provided
         if (!courseID) {
@@ -15,9 +21,9 @@ const register = async (req, res) => {
         };
 
         // Basic validataion
-        if (!title || !moduleNumber || !status) {
+        if (!title || !moduleNumber || !status ||!contents || contents.length === 0) {
             return res.status(400).json({
-                error: 'Title, module number, and status are required'
+                error: 'Title, module number, status and contents are required'
             });
         };
 
@@ -61,7 +67,30 @@ const register = async (req, res) => {
             moduleNumber,
             expectedHours,
             status: moduleStatus
-        });
+        }, client);
+
+        // Create contents after creating module
+        const newContents = [];
+        for (const content of contents) {
+            try {
+                let newContent = await registerContent({
+                    moduleID: newModule.moduleID,
+                    title: content.title,
+                    description: content.description,
+                    pageNumber: content.pageNumber,
+                    status: content.status
+                }, client)
+
+                newContents.push(newContent);
+            } catch(err) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({
+                    error: 'Error occured while registering content. ' + err
+                });
+            }
+        }
+
+        await client.query('COMMIT');
 
         res.json({
             message: 'Module registered successfully',
@@ -73,21 +102,28 @@ const register = async (req, res) => {
                 moduleNumber: newModule.moduleNumber,
                 expectedHours: newModule.expectedHours,
                 status: newModule.status,
+                contents: newContents
             }
         })
 
 
     } catch(error) {
+        await client.query('ROLLBACK');
         console.error('Registration error:', error);
         res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        client.release();
     }
 };
 
 
 const update = async (req, res) => {
+    const client = await pool.connect();
+    await client.query('BEGIN')
+
     try {
         const moduleID = req.params.moduleID; 
-        const { title, description, moduleNumber, expectedHours, status } = req.body;
+        const { title, description, moduleNumber, expectedHours, status, contents } = req.body;
 
         // Validate module ID
         if (!moduleID) {
@@ -107,7 +143,7 @@ const update = async (req, res) => {
         // Check if module number is already used in the course
         const isUsedModuleNumber = !!(await Module.findByCourseIdModuleNumber(existingModule.courseID, moduleNumber));
 
-        if (isUsedModuleNumber) {
+        if (existingModule.moduleNumber !== moduleNumber && isUsedModuleNumber) {
             return res.status(400).json({
                 error: 'Selected module number already used in the selected course'
             });
@@ -121,6 +157,39 @@ const update = async (req, res) => {
             });
         }
         
+        // any missing content will be treated as deleted (inactive) 
+        const contentIDs = (await Content.findByModuleId(moduleID, client)).map(c => c.contentID);
+        for (const id of contentIDs) {
+            if (!contents.map(c => c.contentID).includes(id)) {
+                await updateContent({
+                    moduleID: existingModule.moduleID,
+                    contentID: id,
+                    status: 'inactive'
+                })
+            };
+        };
+
+        // Try updating questions
+        const updatedContents = [];
+        try {
+            for (const content of contents) {
+                content.moduleID = moduleID;
+                console.log(content);
+                if (content.contentID) {
+                    const updatedContent = await updateContent(content, client);
+                    updatedContents.push(updatedContent);
+                } else {
+                    const newContent = await registerContent(content, client);
+                    updatedContents.push(newContent);
+                }
+            }
+        } catch(error) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({
+                error: 'Error occured while updating content. ' + err
+            });
+        };
+
         // Prepare update data
         const updateData = {};
         if (title !== undefined) updateData.title = title;
@@ -132,6 +201,8 @@ const update = async (req, res) => {
         // Update module
         const updateModule = await Module.update(moduleID, updateData);
 
+        await client.query('COMMIT');
+        
         res.json({
             message: 'Module updated successfully',
             module: {
@@ -142,12 +213,16 @@ const update = async (req, res) => {
                 moduleNumber: updateModule.moduleNumber,
                 expectedHours: updateModule.expectedHours,
                 status: updateModule.status,
+                contents: updatedContents
             }
         });
 
     } catch(error) {
+        await client.query('ROLLBACK');
         console.error('Update module error:', error);
         res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        client.release();
     }
 };
 
