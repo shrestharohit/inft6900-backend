@@ -222,6 +222,29 @@ CREATE TABLE "CourseReview" (
 -- ==================
 -- DISCUSSION BOARD
 -- ==================
+-- CREATE TABLE "DiscussionBoard" (
+--    "boardID" SERIAL PRIMARY KEY,
+--    "courseID" INT NOT NULL,
+--    "title" VARCHAR(200) NOT NULL,
+--    "status" VARCHAR(50) DEFAULT 'active',
+--    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--    FOREIGN KEY ("courseID") REFERENCES "Course"("courseID") ON DELETE CASCADE
+--);
+
+--CREATE TABLE "BoardPost" (
+--    "postID" SERIAL PRIMARY KEY,
+--    "boardID" INT NOT NULL,
+--    "userID" INT NOT NULL,
+--    "title" TEXT NOT NULL,
+--    "postText" TEXT NOT NULL,
+--    "status" VARCHAR(50) DEFAULT 'active',
+--    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--    FOREIGN KEY ("boardID") REFERENCES "DiscussionBoard"("boardID") ON DELETE CASCADE,
+--    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE
+--);
+
 CREATE TABLE "Discussion" (
     "postID" SERIAL PRIMARY KEY,
     "courseID" INT NOT NULL,
