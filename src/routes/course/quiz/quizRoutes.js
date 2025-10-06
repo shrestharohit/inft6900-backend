@@ -4,6 +4,7 @@ const {
   register,
   update,
   getQuiz,
+  getAllFromCourseOwner,
   getDetail,
   getMeta
 } = require("../../../controllers/quizController");
@@ -31,6 +32,8 @@ router.get("/_meta", getMeta);
 router.post("/register", register);
 
 router.put("/update/:quizID", update);
+
+router.get("/owner/:userID", getAllFromCourseOwner);
 
 router.get("/:quizID", getQuiz);
 

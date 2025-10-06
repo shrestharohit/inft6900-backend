@@ -74,6 +74,19 @@ class CourseReview {
         return result.rows[0];
     }
 
+    static async getAvgCourseOwnerRatings(userID, client = null) {
+        const db = client || pool;
+        const query = `
+            SELECT c."userID", ROUND(AVG(r."rating"),1) as "AvgRating"
+            FROM "CourseReview"  r
+            LEFT JOIN "Course" c ON r."courseID" = c."courseID"
+            WHERE c."userID" = $1 AND r."status" = 'active'
+            GROUP BY c."userID"
+        `;
+        const result = await db.query(query, [userID]);
+        return result.rows[0];
+    }
+
     static async findByUserID(userID, status = ["active"], client = null) {
         const db = client || pool;
         const query = `SELECT * FROM "CourseReview" WHERE "userID" = $1 AND "status" = ANY($2)`;

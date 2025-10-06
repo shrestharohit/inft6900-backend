@@ -27,6 +27,8 @@ const enrolmentRoutes = require('./routes/enrolmentRoutes');
 
 const notificationSettingRoutes = require('./routes/notificationSettingRoutes');
 
+const dashboardRoutes = require('./routes/dashboardRoutes');
+
 // Import database connection
 const { connectDB } = require('./config/database');
 const DirectMessage = require('./models/DirectMessage');
@@ -80,8 +82,8 @@ app.use('/api/content', contentRoutes);
 app.use('/api/pathway', pathwayRoutes);
 app.use('/api/moduleAccess', moduleAccessRoutes); 
 app.use('/api/certificate', certificateRoutes);
-app.use('/api/discussion-board', discussionBoardRoutes);
-app.use('/api/board-post', boardPostRoutes);
+app.use('/api/discussion', discussionBoardRoutes);
+app.use('/api/post', boardPostRoutes);
 app.use('/api/course/:courseid/schedules', scheduleRoutes);
 app.use('/api/announcement', announcementRoutes);
 
@@ -95,6 +97,8 @@ app.use('/api/dm', directMessageRoutes);
 app.use('/api/enrolment', enrolmentRoutes);
 
 app.use('/api/notification', notificationSettingRoutes);
+
+app.use('/api/dashboard', dashboardRoutes);
 
 // ✅ Health check
 app.get('/health', (req, res) => {
