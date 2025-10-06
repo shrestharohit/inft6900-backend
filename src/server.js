@@ -1,6 +1,8 @@
 const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
+const path = require('path')
+
 require('dotenv').config();
 
 // Import routes
@@ -28,6 +30,8 @@ const enrolmentRoutes = require('./routes/enrolmentRoutes');
 const notificationSettingRoutes = require('./routes/notificationSettingRoutes');
 
 const dashboardRoutes = require('./routes/dashboardRoutes');
+
+const uploadRoutes = require('./routes/uploadRoutes');
 
 // Import database connection
 const { connectDB } = require('./config/database');
@@ -101,6 +105,11 @@ app.use('/api/enrolment', enrolmentRoutes);
 app.use('/api/notification', notificationSettingRoutes);
 
 app.use('/api/dashboard', dashboardRoutes);
+
+app.use('/api/upload', uploadRoutes);
+
+// Static folder
+app.use('/uploads/', express.static(path.join(__dirname, '../uploads')));
 
 // ✅ Health check
 app.get('/health', (req, res) => {
