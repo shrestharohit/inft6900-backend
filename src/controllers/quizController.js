@@ -261,6 +261,25 @@ const getAllFromCourseOwner = async(req, res) => {
     }
 }
 
+const getWaitForApproval = async (req, res) => {
+    try {
+        const quizzes = await Quiz.getApprovalList();
+        for (const quiz of quizzes) {
+            const questions = await Question.findByQuizId(quiz.quizID);
+            for (const question of questions) {
+                const options = await AnswerOption.findByQuestionID(question.questionID);
+                question.options = options;
+            }
+            quiz.questions = questions;
+        }
+
+        res.json(quizzes);
+    } catch(error) {
+        console.error('Get quiz approval list error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
 const getDetail = async (req, res) => {
     try {
         const quizID = req.params.quizID;
@@ -303,6 +322,7 @@ module.exports = {
   update,
   getQuiz,
   getAllFromCourseOwner,
+  getWaitForApproval,
   getDetail,
   getMeta,
 };

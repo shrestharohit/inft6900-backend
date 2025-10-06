@@ -5,6 +5,7 @@ const {
   update,
   getQuiz,
   getAllFromCourseOwner,
+  getWaitForApproval,
   getDetail,
   getMeta
 } = require("../../../controllers/quizController");
@@ -30,6 +31,8 @@ const router = express.Router();
 router.get("/_meta", getMeta);
 
 router.post("/register", register);
+
+router.get("/approval-list", getWaitForApproval);
 
 router.put("/update/:quizID", update);
 
