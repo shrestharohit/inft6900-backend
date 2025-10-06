@@ -46,6 +46,7 @@ app.use(
       'http://localhost:5173', // Vite default
       'http://localhost:5174', // sometimes Vite uses another port
     ],
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Id', 'X-Requested-With'],
   })
@@ -62,7 +63,8 @@ app.use(session({
   cookie: {
     maxAge: 15 * 60 * 1000, // 15 minutes
     httpOnly: true,
-    secure: false // set true if HTTPS
+    secure: false, // set true if HTTPS
+    sameSite: 'lax'
   }
 }));
 
