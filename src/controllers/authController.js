@@ -421,7 +421,7 @@ const updateUser = async (req, res) => {
     if (firstName !== undefined) updateData.firstName = firstName;
     if (lastName !== undefined) updateData.lastName = lastName;
     if (role !== undefined) updateData.role = role;
-    if (hashedPassword !== undefined) updateData.passwordHash = hashedPassword;
+    if (hashedPassword !== null) updateData.passwordHash = hashedPassword;
 
     // Update user
     const updatedUser = await User.update(userID, updateData);
