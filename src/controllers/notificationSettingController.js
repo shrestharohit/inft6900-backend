@@ -100,24 +100,11 @@ const getUserSettings = async (req, res) => {
             });
         };
 
-        let setting = await NotificationSetting.findByUserID(userID);
-        const existingTypes = setting.map(item => item.notificationType);
-
-        for (const type in VALID_NOTIFICATIONSETTING_TYPE) {
-            if (!existingTypes.includes(type)) {
-                await NotificationSetting.create({
-                    userID: userID, 
-                    notificationType: type, 
-                    enabled: true
-                })
-            }
-        }
-
-        setting = await NotificationSetting.findByUserID(userID);
-
+        const setting = await NotificationSetting.findByUserID(userID);
         const processedData = setting.map(
             item => ({
                 ...item,
+                notificationTypeRole: VALID_NOTIFICATIONSETTING_TYPE[item.notificationType].role,
                 notificationTypeName: VALID_NOTIFICATIONSETTING_TYPE[item.notificationType].event
             })
         )
