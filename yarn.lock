@@ -540,9 +540,9 @@ negotiator@0.6.3:
   integrity sha512-+EUsqGPLsM+j/zdChZjsnX51g4XrHFOIXwfnCVPGlQk/k5giakcKsuxCObBRu6DSm9opw/O6slWbJdghQM4bBg==
 
 nodemailer@^7.0.6:
-  version "7.0.6"
-  resolved "https://registry.npmjs.org/nodemailer/-/nodemailer-7.0.6.tgz"
-  integrity sha512-F44uVzgwo49xboqbFgBGkRaiMgtoBrBEWCVincJPK9+S9Adkzt/wXCLKbf7dxucmxfTI5gHGB+bEmdyzN6QKjw==
+  version "7.0.9"
+  resolved "https://registry.npmjs.org/nodemailer/-/nodemailer-7.0.9.tgz"
+  integrity sha512-9/Qm0qXIByEP8lEV2qOqcAW7bRpL8CR9jcTwk3NBnHJNmP9fIJ86g2fgmIXqHY+nj55ZEMwWqYAT2QTDpRUYiQ==
 
 nodemon@^3.1.10:
   version "3.1.10"

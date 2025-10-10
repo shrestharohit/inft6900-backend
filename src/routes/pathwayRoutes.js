@@ -6,7 +6,8 @@ const {
   getPathway,
   getMeta,
   getApprovalList,
-  getDetail
+  getDetail,
+  getCoursesInPathway
 } = require('../controllers/pathwayController');
 
 const router = express.Router();
@@ -31,5 +32,8 @@ router.get("/approval/list", getApprovalList);
 
 // Get detailed pathway info
 router.get("/:pathwayid/detail", getDetail);
+
+// Get all courses in a pathway
+router.get("/:pathwayid/courses", getCoursesInPathway);
 
 module.exports = router;

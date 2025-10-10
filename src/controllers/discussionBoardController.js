@@ -1,4 +1,4 @@
-const Discussion = require('../models/Discussion');
+const DiscussionBoard = require('../models/DiscussionBoard');
 const User = require('../models/User');
 const Course = require('../models/Course');
 
@@ -17,7 +17,7 @@ const createPost = async (req, res) => {
     const user = await User.findById(userID);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    const newPost = await Discussion.create({ courseID, userID, title, postText });
+    const newPost = await DiscussionBoard.create({ courseID, userID, title, postText });
     res.json({ message: 'Post created', post: newPost });
   } catch (error) {
     console.error('Create post error:', error);
@@ -31,16 +31,19 @@ const replyPost = async (req, res) => {
     const parentPostID = parseInt(req.params.postid);
     const { userID, title, postText } = req.body;
 
-    const parentPost = await Discussion.findById(parentPostID);
+    const parentPost = await DiscussionBoard.findById(parentPostID);
     if (!parentPost) return res.status(404).json({ error: 'Parent post not found' });
 
     const user = await User.findById(userID);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    const newReply = await Discussion.create({
+    // Auto-generate title if missing
+    const replyTitle = title || `Re: ${parentPost.title}`;
+
+    const newReply = await DiscussionBoard.create({
       courseID: parentPost.courseID,
       userID,
-      title,
+      title: replyTitle,
       postText,
       parentPostID
     });
@@ -55,7 +58,7 @@ const replyPost = async (req, res) => {
 const getPosts = async (req, res) => {
   try {
     const courseID = parseInt(req.params.courseid);
-    const posts = await Discussion.findByCourse(courseID);
+    const posts = await DiscussionBoard.findByCourse(courseID);
 
     const topLevelPosts = posts.filter(p => !p.parentPostID);
     topLevelPosts.forEach(post => {
@@ -69,43 +72,11 @@ const getPosts = async (req, res) => {
   }
 };
 
-// Update post or reply
-const updatePost = async (req, res) => {
-  try {
-    const postID = parseInt(req.params.postid);
-    const { title, postText } = req.body;
-
-    const post = await Discussion.findById(postID);
-    if (!post) return res.status(404).json({ error: 'Post not found' });
-
-    const updated = await Discussion.update(postID, { title, postText });
-    res.json({ message: 'Post updated', post: updated });
-  } catch (error) {
-    console.error('Update post error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-// Delete post or reply
-const deletePost = async (req, res) => {
-  try {
-    const postID = parseInt(req.params.postid);
-    const post = await Discussion.findById(postID);
-    if (!post) return res.status(404).json({ error: 'Post not found' });
-
-    await Discussion.delete(postID);
-    res.json({ message: 'Post deleted' });
-  } catch (error) {
-    console.error('Delete post error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-// Get all posts by a specific user
+// Get posts by user
 const getPostsByUser = async (req, res) => {
   try {
     const userID = parseInt(req.params.userid);
-    const posts = await Discussion.findByUser(userID);
+    const posts = await DiscussionBoard.findByUser(userID);
     res.json({ posts });
   } catch (error) {
     console.error('Get posts by user error:', error);
@@ -113,4 +84,36 @@ const getPostsByUser = async (req, res) => {
   }
 };
 
-module.exports = { createPost, replyPost, getPosts, updatePost, deletePost, getPostsByUser };
+// Update post
+const updatePost = async (req, res) => {
+  try {
+    const postID = parseInt(req.params.postid);
+    const { title, postText } = req.body;
+
+    const post = await DiscussionBoard.findById(postID);
+    if (!post) return res.status(404).json({ error: 'Post not found' });
+
+    const updated = await DiscussionBoard.update(postID, { title, postText });
+    res.json({ message: 'Post updated', post: updated });
+  } catch (error) {
+    console.error('Update post error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Delete post
+const deletePost = async (req, res) => {
+  try {
+    const postID = parseInt(req.params.postid);
+    const post = await DiscussionBoard.findById(postID);
+    if (!post) return res.status(404).json({ error: 'Post not found' });
+
+    await DiscussionBoard.delete(postID);
+    res.json({ message: 'Post deleted' });
+  } catch (error) {
+    console.error('Delete post error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+module.exports = { createPost, replyPost, getPosts, getPostsByUser, updatePost, deletePost };
