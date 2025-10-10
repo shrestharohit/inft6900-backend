@@ -141,9 +141,11 @@ const getCourseReviews = async (req, res) => {
             });
         };
 
-        const review = processCourseReviews(courseID);        
+        const review = await processCourseReviews(courseID);        
         res.json({
-            reviews: review
+            reviews: review.reviewws,
+            avgRating: review.avgRating,
+            course: review.course
         });
 
     } catch (error) {
