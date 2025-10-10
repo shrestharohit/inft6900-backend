@@ -6,6 +6,7 @@ const {
   getQuiz,
   getAllFromCourseOwner,
   getWaitForApproval,
+  getAllFromCourse,
   getDetail,
   getMeta
 } = require("../../../controllers/quizController");
@@ -50,6 +51,8 @@ router.get("/:quizID/detail", getDetail);
 router.post("/:quizID/start", startAttempt);
 
 router.put("/:quizID/submit", submitAttemp);
+
+router.get("/course/:courseID", getAllFromCourse);
 
 router.get("/:quizID/result/:attemptID", getQuizResult);
 

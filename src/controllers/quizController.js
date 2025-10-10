@@ -3,6 +3,7 @@ const Quiz = require('../models/Quiz');
 const Question = require('../models/Question');
 const AnswerOption = require('../models/AnswerOption');
 const User = require('../models/User');
+const Course = require('../models/Course');
 const { VALID_QUIZ_STATUS } = require('../config/constants');
 const {
     registerQuestion,
@@ -223,6 +224,45 @@ const getQuiz = async (req, res) => {
     }
 }
 
+const getAllFromCourse = async(req, res) => {
+    try {
+        const courseID = req.params.courseID;
+
+        // Validate user ID
+        if (!courseID) {
+            return res.status(400).json({
+                error: 'Course ID required.'
+            });
+        }
+
+        // Check if user exists
+        const course = await Course.findById(courseID);
+        if (!course) {
+            return res.status(404).json({
+                error: 'Course not found.'
+            });
+        }
+
+        const quizzes = await Quiz.findByCourseID(courseID);
+        
+        // Get all questions and options
+        for (const quiz of quizzes) {
+            const questions = await Question.findByQuizId(quiz.quizID);
+            for (const question of questions) {
+                const options = await AnswerOption.findByQuestionID(question.questionID);
+                question.options = options;
+            }
+            quiz.questions = questions;
+        }
+
+        res.json(quizzes);
+    } catch(error) {
+        console.error('Get course quiz error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+
 const getAllFromCourseOwner = async(req, res) => {
     try {
         const userID = req.params.userID;
@@ -322,6 +362,7 @@ module.exports = {
   update,
   getQuiz,
   getAllFromCourseOwner,
+  getAllFromCourse,
   getWaitForApproval,
   getDetail,
   getMeta,

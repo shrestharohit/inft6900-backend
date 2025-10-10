@@ -60,7 +60,6 @@ const register = async (req, res) => {
                 error: 'Selected module number already used in the selected course'
             });
         };
-        console.log(moduleNumber);
 
         // Create module
         const newModule = await Module.create({
