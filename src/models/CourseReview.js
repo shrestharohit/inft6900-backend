@@ -59,9 +59,19 @@ class CourseReview {
     static async findByCourseID(courseID, status = ["active"], client = null) {
         const db = client || pool;
         const query = `
-            SELECT r.*, u."firstName", u."lastName" FROM "CourseReview" r
-            LEFT JOIN "User" u ON u."userID" = r."userID"
+            SELECT r.*, c."title" FROM "CourseReview" r
+            LEFT JOIN "Course" c ON c."courseID" = r."courseID"
             WHERE r."courseID" = $1 AND r."status" = ANY($2)`;
+        const result = await db.query(query, [courseID, status]);
+        return result.rows;
+    }
+
+    static async findByPathwayID(courseID, status = ["active"], client = null) {
+        const db = client || pool;
+        const query = `
+            SELECT r.*, c."title" FROM "CourseReview" r
+            LEFT JOIN "Course" c ON c."courseID" = r."courseID"
+            WHERE c."pathwayID" = $1 AND r."status" = ANY($2)`;
         const result = await db.query(query, [courseID, status]);
         return result.rows;
     }

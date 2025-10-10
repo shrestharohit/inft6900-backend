@@ -2,6 +2,7 @@ const CourseReview = require('../models/CourseReview');
 const User = require('../models/User');
 const Enrolment = require('../models/Enrolment');
 const Course = require('../models/Course');
+const Pathway = require('../models/Pathway');
 const { VALID_REVIEW_STATUS } = require('../config/constants');
 
 const register = async (req, res) => {
@@ -140,23 +141,50 @@ const getCourseReviews = async (req, res) => {
             });
         };
 
+        const review = processCourseReviews(courseID);        
+        res.json({
+            reviews: review
+        });
+
+    } catch (error) {
+        console.error('Get course review error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+
+    }
+}
+
+const getPathwayReviews = async (req, res) => {
+    try {
+        const pathwayID = req.params.pathwayID;
+
+        // Basic validataion
+        if (!pathwayID) {
+            return res.status(400).json({ 
+                error: 'Pathway ID is required' 
+            });
+        };
+
         // Validate course ID
-        const course = await Course.findById(courseID);
-        if (!course) {
+        const pathway = await Pathway.findById(pathwayID);
+        if (!pathway) {
             return res.status(400).json({
-                error: 'Invalid course ID. Course does not exist.'
+                error: 'Invalid pathway ID. Pathway does not exist.'
             });
         };
         
-        // Get reviews
-        const reviewws = await CourseReview.findByCourseID(courseID);
-        const avgRating = await CourseReview.getAvgRatings(courseID);
-        
-        res.json({
-            reviews: reviewws,
-            avgRating: avgRating.AvgRating,
-            course: course
-        });
+        // Get courses under pathway
+        const courses = await Course.findByPathwayId(pathway.pathwayID);
+        const reviews = [];
+        for (const course of courses) {
+            let review = await processCourseReviews(course.courseID);
+            reviews.push({
+                course: course,
+                reviews: review.reviews,
+                avgRating: review.avgRating
+            });
+        }
+
+        res.json(reviews);
 
     } catch (error) {
         console.error('Get course review error:', error);
@@ -268,10 +296,31 @@ const getMeta = (req, res) => {
 }
 
 
+
+const processCourseReviews = async(courseID) => {
+    // Validate course ID
+    const course = await Course.findById(courseID);
+    if (!course) {
+        throw new Error('Invalid course ID. Course does not exist.');
+    };
+    
+    // Get reviews
+    const reviewws = await CourseReview.findByCourseID(courseID);
+    const avgRating = await CourseReview.getAvgRatings(courseID);
+    
+    return {
+        reviews: reviewws,
+        avgRating: avgRating? avgRating.AvgRating : 0.0,
+        course: course
+    };
+}
+
+
 module.exports = {
   register,
   update,
   getCourseReviews,
+  getPathwayReviews,
   getUserReviews,
   getReview,
   getTopReviews,
