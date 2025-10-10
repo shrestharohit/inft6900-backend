@@ -12,7 +12,9 @@ const register = async (req, res) => {
 
     try {
         const { courseID, title, description, moduleNumber, expectedHours, status, contents } = req.body;
-
+        for (const c of contents) {
+            console.log(c.description)
+        }
         // Validate course id is provided
         if (!courseID) {
             return res.status(400).json({ 
@@ -59,7 +61,7 @@ const register = async (req, res) => {
             });
         };
 
-        // Create course
+        // Create module
         const newModule = await Module.create({
             courseID, 
             title, 

@@ -41,9 +41,10 @@ const getCourseOwnerData = async (req, res) => {
             totalEnrolments += courseData.enrolments;
 
             // push avg ratings
+            courseData.avgRating = 0.0;
             let avgRating = await CourseReview.getAvgRatings(course.courseID);
             if (avgRating) {
-                courseData.avgRating = avgRating.AvgRating;
+                courseData.avgRating = parseFloat(avgRating.AvgRating);
             }
 
             // push released date (created_at is fine...?)
@@ -63,9 +64,10 @@ const getCourseOwnerData = async (req, res) => {
         const announcements = await Announcement.findByCourseOwner(userID, ['active']);
         overallData.totalPublishedAnnouncement = announcements.length;
 
+        overallData.avgRating = 0.0;
         const courseOwnerRating = await CourseReview.getAvgCourseOwnerRatings(userID);
         if (courseOwnerRating) {
-            overallData.avgRating = courseOwnerRating.AvgRating;
+            overallData.avgRating = parseFloat(courseOwnerRating.AvgRating);
         }
 
         res.json({

@@ -2,6 +2,20 @@ const NotificationSetting = require('../models/NotificationSetting');
 const User = require('../models/User');
 const { VALID_NOTIFICATIONSETTING_TYPE } = require('../config/constants');
 
+const initializeSettings = async (req, res) => {
+    try {
+        const { userID } = req.body;
+        await setInitialSettings(userID);
+
+        res.json({
+            message: 'Notification settings initialised successfully'
+        })
+    } catch(error) {
+        console.error('Notification settings initialisation error:', error);
+        res.status(500).json({ error: 'Error occured while initialising notification settings. ' + error});
+    }
+};
+
 const saveSettings = async (req, res) => {
     try {
         const { userID, settings } = req.body;
@@ -59,7 +73,7 @@ const saveSettings = async (req, res) => {
         const updatedSettings = (await NotificationSetting.findByUserID(userID)).map(
             item => ({
                 ...item,
-                notificationTypeName: VALID_NOTIFICATIONSETTING_TYPE[item.notificationType]
+                notificationTypeName: VALID_NOTIFICATIONSETTING_TYPE[item.notificationType].event
             })
         )
 
@@ -87,11 +101,11 @@ const getUserSettings = async (req, res) => {
         };
 
         const setting = await NotificationSetting.findByUserID(userID);
-
         const processedData = setting.map(
             item => ({
                 ...item,
-                notificationTypeName: VALID_NOTIFICATIONSETTING_TYPE[item.notificationType]
+                notificationTypeRole: VALID_NOTIFICATIONSETTING_TYPE[item.notificationType].role,
+                notificationTypeName: VALID_NOTIFICATIONSETTING_TYPE[item.notificationType].event
             })
         )
         
@@ -122,17 +136,15 @@ const setInitialSettings = async (userID) => {
     }
 
     // Get existing settings
-    const existingSettings = await NotificationSetting.findByUserID(userID)
+    const existingSettings = (await NotificationSetting.findByUserID(userID)).map(item => item.notificationType);
 
     for (const type of Object.keys(VALID_NOTIFICATIONSETTING_TYPE)) {
-        if (existingSettings[type] === undefined) {
+        if (!existingSettings.includes(type)) {
             await NotificationSetting.create({
                 userID: userID, 
                 notificationType: type, 
                 enabled: true
             })
-        } else {
-            await NotificationSetting.update(userID, type, true)
         }
     }
 }
@@ -160,9 +172,10 @@ const getNotificationReceivers = async (notificationType, users = null) => {
 }
 
 module.exports = {
-  saveSettings,
-  getUserSettings,
-  getMeta,
-  getNotificationReceivers,
-  setInitialSettings
+    initializeSettings,
+    saveSettings,
+    getUserSettings,
+    getMeta,
+    getNotificationReceivers,
+    setInitialSettings
 };
