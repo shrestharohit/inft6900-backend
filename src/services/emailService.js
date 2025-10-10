@@ -42,7 +42,7 @@ const sendOTPEmail = async (email, otp, firstName) => {
       from: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER,
       to: email,
       subject: "Brainwave - Email Verification Code",
-      html: OTPMsg,
+      html: OTPMsg({ firstName, otp }),
     };
 
     const result = await transporter.sendMail(mailOptions);
@@ -67,7 +67,7 @@ const sendOTPEmailForpasswordReset = async (email, otp, firstName) => {
       from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,
       to: email,
       subject: "Brainwave - Email Verification Code",
-      html: OTPEmailForpasswordResetMsg,
+      html: OTPEmailForpasswordResetMsg({ firstName, otp }),
     };
 
     const result = await transporter.sendMail(mailOptions);
@@ -92,7 +92,7 @@ const sendInitialPassword = async (email, password, firstName) => {
       from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,
       to: email,
       subject: "Brainwave - Your account has been created",
-      html: initialPasswordMsg,
+      html: initialPasswordMsg({ firstName, password }),
     };
 
     const result = await transporter.sendMail(mailOptions);
@@ -128,7 +128,7 @@ const sendApprovalRequestNotification = async (requestor, requestingItem) => {
       from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,
       to: emails,
       subject: "Brainwave - Request for approval",
-      html: approvalRequestNotificationMsg,
+      html: approvalRequestNotificationMsg({ requestor, requestingItem }) ,
     };
 
     const result = await transporter.sendMail(mailOptions);
@@ -157,7 +157,7 @@ const sendApprovalNotification = async (requestor, requestingItem) => {
       from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,
       to: requestor.email,
       subject: `Brainwave - ${requestingItem.type} Approved`,
-      html: approvalNotificationMsg,
+      html: approvalNotificationMsg({ requestor, requestingItem }),
     };
 
     const result = await transporter.sendMail(mailOptions);
@@ -185,7 +185,7 @@ const sendDeclineNotification = async (requestor, requestingItem) => {
       from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,
       to: requestor.email,
       subject: `Brainwave - ${requestingItem.type} Delined`,
-      html: declineNotificationMsg,
+      html: declineNotificationMsg({ requestor, requestingItem }),
     };
 
     const result = await transporter.sendMail(mailOptions);
