@@ -54,6 +54,13 @@ class BoardPost {
     const result = await pool.query(query, values);
     return result.rows[0];
   }
+
+  // Delete post
+  static async delete(postID) {
+    const query = `DELETE FROM "BoardPost" WHERE "postID" = $1 RETURNING *`;
+    const result = await pool.query(query, [postID]);
+    return result.rows[0];
+  }
 }
 
 module.exports = BoardPost;

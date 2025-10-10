@@ -3,7 +3,8 @@ const {
   createAnnouncement,
   updateAnnouncement,
   getAnnouncements,
-  getAnnouncement
+  getAnnouncement,
+  deleteAnnouncement
 } = require('../../controllers/announcementController');
 
 const router = express.Router({ mergeParams: true });
@@ -19,5 +20,8 @@ router.get('/:courseid/getAll', getAnnouncements);
 
 // Get single announcement
 router.get('/:announcementid', getAnnouncement);
+
+// Delete an announcement
+router.delete('/delete/:announcementid', deleteAnnouncement);
 
 module.exports = router;

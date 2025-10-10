@@ -69,4 +69,19 @@ const getAnnouncement = async (req, res) => {
   }
 };
 
-module.exports = { createAnnouncement, updateAnnouncement, getAnnouncements, getAnnouncement };
+const deleteAnnouncement = async (req, res) => {
+  try {
+    const announcementID = parseInt(req.params.announcementid);
+
+    const existing = await Announcement.findById(announcementID);
+    if (!existing) return res.status(404).json({ error: 'Announcement not found' });
+
+    await Announcement.delete(announcementID);
+    res.json({ message: 'Announcement deleted successfully' });
+  } catch (error) {
+    console.error('Delete announcement error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+module.exports = { createAnnouncement, updateAnnouncement, getAnnouncements, getAnnouncement, deleteAnnouncement };

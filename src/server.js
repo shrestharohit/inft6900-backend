@@ -1,6 +1,8 @@
 const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
+const path = require('path')
+
 require('dotenv').config();
 
 // Import routes
@@ -27,6 +29,10 @@ const enrolmentRoutes = require('./routes/enrolmentRoutes');
 
 const notificationSettingRoutes = require('./routes/notificationSettingRoutes');
 
+const dashboardRoutes = require('./routes/dashboardRoutes');
+
+const uploadRoutes = require('./routes/uploadRoutes');
+
 // Import database connection
 const { connectDB } = require('./config/database');
 const DirectMessage = require('./models/DirectMessage');
@@ -44,6 +50,7 @@ app.use(
       'http://localhost:5173', // Vite default
       'http://localhost:5174', // sometimes Vite uses another port
     ],
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Id', 'X-Requested-With'],
   })
@@ -60,7 +67,8 @@ app.use(session({
   cookie: {
     maxAge: 15 * 60 * 1000, // 15 minutes
     httpOnly: true,
-    secure: false // set true if HTTPS
+    secure: false, // set true if HTTPS
+    sameSite: 'lax'
   }
 }));
 
@@ -95,6 +103,13 @@ app.use('/api/dm', directMessageRoutes);
 app.use('/api/enrolment', enrolmentRoutes);
 
 app.use('/api/notification', notificationSettingRoutes);
+
+app.use('/api/dashboard', dashboardRoutes);
+
+app.use('/api/upload', uploadRoutes);
+
+// Static folder
+app.use('/uploads/', express.static(path.join(__dirname, '../uploads')));
 
 // ✅ Health check
 app.get('/health', (req, res) => {

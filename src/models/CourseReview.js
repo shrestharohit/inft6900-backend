@@ -48,7 +48,9 @@ class CourseReview {
     static async findById(id, status = ["active"], client = null) {
         const db = client || pool;
         const query = `
-            SELECT * FROM "CourseReview" WHERE "reviewID" = $1 AND "status" = ANY($2)
+            SELECT r.*, u."firstName", u."lastName" FROM "CourseReview" r
+            LEFT JOIN "User" u ON u."userID" = r."userID"
+            WHERE r."reviewID" = $1 AND r."status" = ANY($2)
         `;
         const result = await db.query(query, [id, status]);
         return result.rows[0];
@@ -56,7 +58,10 @@ class CourseReview {
 
     static async findByCourseID(courseID, status = ["active"], client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "CourseReview" WHERE "courseID" = $1 AND "status" = ANY($2)`;
+        const query = `
+            SELECT r.*, u."firstName", u."lastName" FROM "CourseReview" r
+            LEFT JOIN "User" u ON u."userID" = r."userID"
+            WHERE r."courseID" = $1 AND r."status" = ANY($2)`;
         const result = await db.query(query, [courseID, status]);
         return result.rows;
     }
@@ -74,16 +79,35 @@ class CourseReview {
         return result.rows[0];
     }
 
+    static async getAvgCourseOwnerRatings(userID, client = null) {
+        const db = client || pool;
+        const query = `
+            SELECT c."userID", ROUND(AVG(r."rating"),1) as "AvgRating"
+            FROM "CourseReview"  r
+            LEFT JOIN "Course" c ON r."courseID" = c."courseID"
+            WHERE c."userID" = $1 AND r."status" = 'active'
+            GROUP BY c."userID"
+        `;
+        const result = await db.query(query, [userID]);
+        return result.rows[0];
+    }
+
     static async findByUserID(userID, status = ["active"], client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "CourseReview" WHERE "userID" = $1 AND "status" = ANY($2)`;
+        const query = `
+            SELECT r.*, u."firstName", u."lastName" FROM "CourseReview" r
+            LEFT JOIN "User" u ON u."userID" = r."userID"
+            WHERE r."userID" = $1 AND r."status" = ANY($2)`;
         const result = await db.query(query, [userID, status]);
         return result.rows;
     }
 
     static async findByUserIDCourseID(userID, courseID, status = ["active"], client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "CourseReview" WHERE "userID" = $1 AND "courseID" = $2 AND "status" = ANY($3)`;
+        const query = `
+            SELECT * FROM "CourseReview" r
+            LEFT JOIN "User" u ON u."userID" = r."userID"
+            WHERE r."userID" = $1 AND r."courseID" = $2 AND r."status" = ANY($3)`;
         const result = await db.query(query, [userID, courseID, status]);
         return result.rows;
     }

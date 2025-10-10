@@ -84,4 +84,20 @@ const getBoard = async (req, res) => {
   }
 };
 
-module.exports = { registerBoard, updateBoard, getBoards, getBoard };
+// Delete a discussion board
+const deleteBoard = async (req, res) => {
+  try {
+    const boardID = parseInt(req.params.boardid);
+
+    const existing = await DiscussionBoard.findById(boardID);
+    if (!existing) return res.status(404).json({ error: 'Board not found' });
+
+    await DiscussionBoard.delete(boardID);
+    res.json({ message: 'Board deleted successfully' });
+  } catch (error) {
+    console.error('Delete board error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+module.exports = { registerBoard, updateBoard, getBoards, getBoard, deleteBoard};
