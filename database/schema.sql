@@ -32,7 +32,8 @@ CREATE TABLE "NotificationSetting" (
     "enabled" BOOLEAN DEFAULT TRUE,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE
+    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE,
+    UNIQUE ("userID", "notificationType")
 );
 
 -- ==================
@@ -213,6 +214,7 @@ CREATE TABLE "CourseReview" (
     "courseID" INT NOT NULL,
     "comment" TEXT,
     "rating" INT NOT NULL,
+    "status" VARCHAR(50) DEFAULT 'active',
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("userID") REFERENCES "User"("userID"),

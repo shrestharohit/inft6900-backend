@@ -111,11 +111,13 @@ class Course {
         return result.rows;
     }
 
-    static async getAll() {
+    static async getAll(status = ['draft', 'wait_for_approval', 'active', 'inactive']) {
         const query = `
-            SELECT * FROM "Course" ORDER BY "created_at" DESC
+            SELECT * FROM "Course"
+            WHERE "status" = ANY($1)
+            ORDER BY "created_at" DESC
         `;
-        const result = await pool.query(query);
+        const result = await pool.query(query, [status]);
         return result.rows;
     }
 

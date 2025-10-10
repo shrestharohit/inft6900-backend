@@ -16,7 +16,7 @@ class Module {
     static async findByCourseId(courseID, client = null) {
         const db = client || pool;
         const query = 'SELECT * FROM "Module" WHERE "courseID" = $1';
-        const result = await dvb.query(query, [courseID]);
+        const result = await db.query(query, [courseID]);
         return result.rows;
     }
 

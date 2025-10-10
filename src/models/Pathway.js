@@ -77,9 +77,11 @@ class Pathway {
     }
 
     // Get all pathways
-    static async getAll() {
-        const query = `SELECT * FROM "Pathway" ORDER BY "createdDate" DESC`;
-        const result = await pool.query(query);
+    static async getAll(status = ['draft', 'wait_for_approval', 'active', 'inactive']) {
+        const query = `SELECT * FROM "Pathway" 
+        WHERE "status" = ANY($1)
+        ORDER BY "createdDate" DESC`;
+        const result = await pool.query(query, [status]);
         return result.rows;
     }
 }

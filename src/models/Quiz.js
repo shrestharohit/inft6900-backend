@@ -49,6 +49,16 @@ class Quiz {
         return result.rows;
     }
 
+    static async getApprovalList(client = null) {
+        const db = client || pool;
+        const query = `
+        SELECT * FROM "Quiz"
+        WHERE "status" = 'wait_for_approval'
+        `;
+        const result = await db.query(query);
+        return result.rows;
+    }
+
     static async update(quizID, updateData, client = null) {
         const db = client || pool;
         const allowedFields = ['title', 'timeLimit', 'status'];

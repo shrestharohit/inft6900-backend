@@ -17,6 +17,17 @@ class Announcement {
     return result.rows;
   }
 
+  static async findByCourseOwner(userID, status = ['draft', 'wait_for_approval', 'active', 'inactive']) {
+    const query = `
+        SELECT a.*, c.title FROM "Announcement" a
+        LEFT JOIN "Course" c ON a."courseID" = c."courseID"
+        WHERE c."userID" = $1 AND a."status" = ANY($2)
+        ORDER BY "created_at" DESC
+    `;
+    const result = await pool.query(query, [userID, status]);
+    return result.rows;
+  }
+
   static async findById(announcementID) {
     const query = `SELECT * FROM "Announcement" WHERE "announcementID" = $1`;
     const result = await pool.query(query, [announcementID]);
