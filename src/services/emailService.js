@@ -8,7 +8,7 @@ const {
     approvalRequestNotificationMsg,
     approvalNotificationMsg,
     declineNotificationMsg
-} = require('../config/constants')
+} = require('../config/emailTemplates')
 
 // Email configuration for MailerSend
 const createTransporter = () => {

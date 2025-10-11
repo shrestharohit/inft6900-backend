@@ -189,7 +189,7 @@ const getPathwayReviews = async (req, res) => {
         res.json(reviews);
 
     } catch (error) {
-        console.error('Get course review error:', error);
+        console.error('Get pathway review error:', error);
         res.status(500).json({ error: 'Internal server error' });
 
     }
