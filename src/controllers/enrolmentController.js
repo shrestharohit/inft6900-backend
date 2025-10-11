@@ -442,8 +442,7 @@ const getPopular = async (req, res) => {
                 if (randCourse) {
                     let data = {
                         courseID: randCourse.courseID,
-                        title: randCourse.title,
-                        level: randCourse.level,
+                        title: randCourse.name,
                         category: randCourse.category,
                         count: 0
                     }

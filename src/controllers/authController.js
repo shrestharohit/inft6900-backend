@@ -363,7 +363,7 @@ const deleteUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
-    const { userID, firstName, lastName, currentPassword, newPassword, role, notificationEnabled } = req.body;
+    const { userID, firstName, lastName, currentPassword, newPassword, role } = req.body;
 
     // Validate userId is provided
     if (!userID) {
@@ -421,7 +421,6 @@ const updateUser = async (req, res) => {
     if (firstName !== undefined) updateData.firstName = firstName;
     if (lastName !== undefined) updateData.lastName = lastName;
     if (role !== undefined) updateData.role = role;
-    if (notificationEnabled !== undefined) updateData.notificationEnabled = notificationEnabled;
     if (hashedPassword !== null) updateData.passwordHash = hashedPassword;
 
     // Update user
@@ -435,7 +434,6 @@ const updateUser = async (req, res) => {
         lastName: updatedUser.lastName,
         email: updatedUser.email,
         role: updatedUser.role,
-        notificationEnabled: updatedUser.notificationEnabled,
         updated_at: updatedUser.updated_at
       }
     });
