@@ -1,103 +1,119 @@
 const DiscussionBoard = require('../models/DiscussionBoard');
+const User = require('../models/User');
 const Course = require('../models/Course');
-const VALID_BOARD_STATUS = ['draft', 'wait_for_approval', 'active', 'inactive'];
 
-// Register a discussion board for a course
-const registerBoard = async (req, res) => {
+// Create a top-level post
+const createPost = async (req, res) => {
   try {
     const courseID = parseInt(req.params.courseid);
-    const { title, status } = req.body;
+    const { userID, title, postText } = req.body;
 
-    if (!courseID) {
-      return res.status(400).json({ error: 'Course ID is required' });
-    }
-    if (!title) {
-      return res.status(400).json({ error: 'Title is required' });
-    }
-
-    // Validate course exists
-    const course = await Course.findById(courseID);
-    if (!course) {
-      return res.status(404).json({ error: 'Course not found' });
-    }
-
-    // Validate status
-    if (status && !VALID_BOARD_STATUS.includes(status)) {
-      return res.status(400).json({ error: `Invalid status. Valid values: ${VALID_BOARD_STATUS.join(', ')}` });
-    }
-
-    const newBoard = await DiscussionBoard.create({ courseID, title, status });
-    res.json({ message: 'Discussion board created successfully', board: newBoard });
-  } catch (error) {
-    console.error('Register board error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-// Update discussion board
-const updateBoard = async (req, res) => {
-  try {
-    const boardID = parseInt(req.params.boardid);
-    const { title, status } = req.body;
-
-    const board = await DiscussionBoard.findById(boardID);
-    if (!board) return res.status(404).json({ error: 'Board not found' });
-
-    if (status && !VALID_BOARD_STATUS.includes(status)) {
-      return res.status(400).json({ error: `Invalid status. Valid values: ${VALID_BOARD_STATUS.join(', ')}` });
-    }
-
-    const updatedBoard = await DiscussionBoard.update(boardID, { title, status });
-    res.json({ message: 'Discussion board updated successfully', board: updatedBoard });
-  } catch (error) {
-    console.error('Update board error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-// Get all boards in a course
-const getBoards = async (req, res) => {
-  try {
-    const courseID = parseInt(req.params.courseid);
+    if (!courseID || !userID || !title || !postText)
+      return res.status(400).json({ error: 'Course, user, title, and content are required' });
 
     const course = await Course.findById(courseID);
     if (!course) return res.status(404).json({ error: 'Course not found' });
 
-    const boards = await DiscussionBoard.findByCourse(courseID);
-    res.json({ boards });
+    const user = await User.findById(userID);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const newPost = await DiscussionBoard.create({ courseID, userID, title, postText });
+    res.json({ message: 'Post created', post: newPost });
   } catch (error) {
-    console.error('Get boards error:', error);
+    console.error('Create post error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
 
-// Get single board
-const getBoard = async (req, res) => {
+// Reply to a post
+const replyPost = async (req, res) => {
   try {
-    const boardID = parseInt(req.params.boardid);
-    const board = await DiscussionBoard.findById(boardID);
-    if (!board) return res.status(404).json({ error: 'Board not found' });
-    res.json({ board });
+    const parentPostID = parseInt(req.params.postid);
+    const { userID, title, postText } = req.body;
+
+    const parentPost = await DiscussionBoard.findById(parentPostID);
+    if (!parentPost) return res.status(404).json({ error: 'Parent post not found' });
+
+    const user = await User.findById(userID);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // Auto-generate title if missing
+    const replyTitle = title || `Re: ${parentPost.title}`;
+
+    const newReply = await DiscussionBoard.create({
+      courseID: parentPost.courseID,
+      userID,
+      title: replyTitle,
+      postText,
+      parentPostID
+    });
+    res.json({ message: 'Reply created', post: newReply });
   } catch (error) {
-    console.error('Get board error:', error);
+    console.error('Reply post error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
 
-// Delete a discussion board
-const deleteBoard = async (req, res) => {
+// Get all posts + replies for a course
+const getPosts = async (req, res) => {
   try {
-    const boardID = parseInt(req.params.boardid);
+    const courseID = parseInt(req.params.courseid);
+    const posts = await DiscussionBoard.findByCourse(courseID);
 
-    const existing = await DiscussionBoard.findById(boardID);
-    if (!existing) return res.status(404).json({ error: 'Board not found' });
+    const topLevelPosts = posts.filter(p => !p.parentPostID);
+    topLevelPosts.forEach(post => {
+      post.replies = posts.filter(p => p.parentPostID === post.postID);
+    });
 
-    await DiscussionBoard.delete(boardID);
-    res.json({ message: 'Board deleted successfully' });
+    res.json({ posts: topLevelPosts });
   } catch (error) {
-    console.error('Delete board error:', error);
+    console.error('Get posts error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
 
-module.exports = { registerBoard, updateBoard, getBoards, getBoard, deleteBoard};
+// Get posts by user
+const getPostsByUser = async (req, res) => {
+  try {
+    const userID = parseInt(req.params.userid);
+    const posts = await DiscussionBoard.findByUser(userID);
+    res.json({ posts });
+  } catch (error) {
+    console.error('Get posts by user error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Update post
+const updatePost = async (req, res) => {
+  try {
+    const postID = parseInt(req.params.postid);
+    const { title, postText } = req.body;
+
+    const post = await DiscussionBoard.findById(postID);
+    if (!post) return res.status(404).json({ error: 'Post not found' });
+
+    const updated = await DiscussionBoard.update(postID, { title, postText });
+    res.json({ message: 'Post updated', post: updated });
+  } catch (error) {
+    console.error('Update post error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Delete post
+const deletePost = async (req, res) => {
+  try {
+    const postID = parseInt(req.params.postid);
+    const post = await DiscussionBoard.findById(postID);
+    if (!post) return res.status(404).json({ error: 'Post not found' });
+
+    await DiscussionBoard.delete(postID);
+    res.json({ message: 'Post deleted' });
+  } catch (error) {
+    console.error('Delete post error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+module.exports = { createPost, replyPost, getPosts, getPostsByUser, updatePost, deletePost };

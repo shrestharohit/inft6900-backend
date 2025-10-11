@@ -225,27 +225,31 @@ CREATE TABLE "CourseReview" (
 -- DISCUSSION BOARD
 -- ==================
 CREATE TABLE "DiscussionBoard" (
-    "boardID" SERIAL PRIMARY KEY,
+"postID" SERIAL PRIMARY KEY,
     "courseID" INT NOT NULL,
-    "title" VARCHAR(200) NOT NULL,
-    "status" VARCHAR(50) DEFAULT 'active',
-    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("courseID") REFERENCES "Course"("courseID") ON DELETE CASCADE
-);
-
-CREATE TABLE "BoardPost" (
-    "postID" SERIAL PRIMARY KEY,
-    "boardID" INT NOT NULL,
     "userID" INT NOT NULL,
     "title" TEXT NOT NULL,
     "postText" TEXT NOT NULL,
-    "status" VARCHAR(50) DEFAULT 'active',
+    "parentPostID" INT,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("boardID") REFERENCES "DiscussionBoard"("boardID") ON DELETE CASCADE,
-    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE
+    "updated_at" TIMESTAMP,
+    FOREIGN KEY ("courseID") REFERENCES "Course"("courseID"),
+    FOREIGN KEY ("userID") REFERENCES "User"("userID"),
+    FOREIGN KEY ("parentPostID") REFERENCES "DiscussionBoard"("postID") ON DELETE CASCADE
 );
+
+--CREATE TABLE "BoardPost" (
+--    "postID" SERIAL PRIMARY KEY,
+--    "boardID" INT NOT NULL,
+--    "userID" INT NOT NULL,
+--    "title" TEXT NOT NULL,
+--    "postText" TEXT NOT NULL,
+--    "status" VARCHAR(50) DEFAULT 'active',
+--    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--    FOREIGN KEY ("boardID") REFERENCES "DiscussionBoard"("boardID") ON DELETE CASCADE,
+--    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE
+--);
 
 -- ==================
 -- DIRECT MESSAGE FOR QUESTIONS

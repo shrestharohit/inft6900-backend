@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////
 // Common emails
 ////////////////////////////////////////////////
-const OTPMsg = `
+const OTPMsg = ({ firstName, otp }) =>`
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Welcome to Brainwave!</h2>
         <p>Hi ${firstName},</p>
@@ -21,7 +21,7 @@ const OTPMsg = `
     </div>
     `;
 
-const OTPEmailForpasswordResetMsg = `
+const OTPEmailForpasswordResetMsg = ({ firstName, otp }) => `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Password reset</h2>
         <p>Hi ${firstName},</p>
@@ -45,7 +45,7 @@ const OTPEmailForpasswordResetMsg = `
 ////////////////////////////////////////////////
 // Admin/Course Owner emails
 ////////////////////////////////////////////////
-const initialPasswordMsg = `
+const initialPasswordMsg = ({ firstName, password }) => `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Welcome to Brainwave!</h2>
         <p>Hi ${firstName},</p>
@@ -69,7 +69,7 @@ const initialPasswordMsg = `
 ////////////////////////////////////////////////
 // Admin emails
 ////////////////////////////////////////////////
-const approvalRequestNotificationMsg = `
+const approvalRequestNotificationMsg = ({ requestor, requestingItem }) => `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Action required: Please approve or decline the request</h2>
         <p>There is a new request for approval from ${requestor.firstName}.</p>
@@ -90,7 +90,7 @@ const approvalRequestNotificationMsg = `
 ////////////////////////////////////////////////
 // Course Owner emails
 ////////////////////////////////////////////////
-const approvalNotificationMsg = `
+const approvalNotificationMsg = ({ requestor, requestingItem }) => `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Your request has been approved</h2>
         <p>Hi ${requestor.firstName},</p>
@@ -108,7 +108,7 @@ const approvalNotificationMsg = `
     </div>
     `;
 
-const declineNotificationMsg = `
+const declineNotificationMsg = ({ requestor, requestingItem }) => `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Your request has been declined</h2>
         <p>Hi ${requestor.firstName},</p>

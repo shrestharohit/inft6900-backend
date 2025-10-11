@@ -1,27 +1,30 @@
 const express = require('express');
+const router = express.Router();
 const {
-  registerBoard,
-  updateBoard,
-  getBoards,
-  getBoard,
-  deleteBoard
+  createPost,
+  replyPost,
+  getPosts,
+  getPostsByUser,
+  updatePost,
+  deletePost
 } = require('../../controllers/discussionBoardController');
 
-const router = express.Router();
+// Create new post
+router.post('/:courseid/create', createPost);
 
-// Create board in a course
-router.post('/:courseid/register', registerBoard);
+// Reply to a post
+router.post('/reply/:postid', replyPost);
 
-// Update board
-router.put('/update/:boardid', updateBoard);
+// Get all posts for a course
+router.get('/course/:courseid', getPosts);
 
-// Get all boards in a course
-router.get('/:courseid/getAll', getBoards);
+// Get all posts by a user
+router.get('/user/:userid', getPostsByUser);
 
-// Get single board
-router.get('/:boardid', getBoard);
+// update a post or reply
+router.put('/update/:postid', updatePost);
 
-// Delete a board
-router.delete('/delete/:boardid', deleteBoard);
+// Delete a post or reply
+router.delete('/delete/:postid', deletePost);
 
 module.exports = router;
