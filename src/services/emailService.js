@@ -112,14 +112,12 @@ const sendApprovalRequestNotification = async (requestor, requestingItem) => {
   try {
     const transporter = createTransporter();
     const admins = await User.findByRole('admin');
-    const receivers = await getNotificationReceivers('1', admins);
+    const receivers = admins.filter(admin => admin.notificationEnabled === true)
     
     if (receivers.length === 0) {
       console.log("✅ No error occured, but notification setting turned off for user");
       return { success: true };
     }
-
-    console.log(receivers)
 
     const emails = receivers.map(row => row.email)
     console.log("sending emails to followigs... " + emails);
@@ -146,9 +144,7 @@ const sendApprovalNotification = async (requestor, requestingItem) => {
   try {
     const transporter = createTransporter();
 
-    const receivers = await getNotificationReceivers('2', [requestor]);
-    console.log(receivers)
-    if (receivers.length === 0) {
+    if (!requestor.notificationEnabled) {
       console.log("✅ No error occured, but notification setting turned off for user");
       return { success: true };
     }
@@ -174,9 +170,7 @@ const sendDeclineNotification = async (requestor, requestingItem) => {
   try {
     const transporter = createTransporter();
 
-    const receivers = await getNotificationReceivers('3', [requestor]);
-
-    if (receivers.length === 0) {
+    if (!requestor.notificationEnabled) {
       console.log("✅ No error occured, but notification setting turned off for user");
       return { success: true };
     }

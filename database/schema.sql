@@ -24,17 +24,17 @@ CREATE TABLE "User" (
 );
 
 -- ==================
--- NOTIFICATIONS 
+-- USER SETTINGS 
 -- ==================
-CREATE TABLE "NotificationSetting" (
-    "settingID" SERIAL PRIMARY KEY,
-    "userID" INT NOT NULL,
-    "notificationType" VARCHAR(50),
-    "enabled" BOOLEAN DEFAULT TRUE,
+CREATE TABLE "PomodoroSetting" (
+    "pomodoroID" SERIAL PRIMARY KEY,
+    "userID" INT NOT NULL UNIQUE,
+    "isEnabled" BOOLEAN DEFAULT TRUE,
+    "focusPeriod" TIME DEFAULT '00:25:00',
+    "breakPeriod" TIME DEFAULT '00:05:00',
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE,
-    UNIQUE ("userID", "notificationType")
+    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE
 );
 
 -- ==================
