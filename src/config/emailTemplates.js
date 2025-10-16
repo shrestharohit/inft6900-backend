@@ -126,6 +126,99 @@ const declineNotificationMsg = ({ requestor, requestingItem }) => `
     </div>
     `;
 
+const newDMMsg = ({ firstName, courseName, DM }) => `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">You have received a new question</h2>
+        <p>Hi ${firstName},</p>
+
+        <p>You have received a new question from a student in your course, ${courseName}.</p>
+        <p>Question title: ${DM.title}</p>
+        <p>Student: ${DM.firstName} ${DM.lastName}</p>
+        <p>Question: ${DM.message}</p>
+        
+        <p>Please login to Brainwave to see more detail.</p>
+
+        <hr style="margin: 30px 0;">
+        <p style="color: #666; font-size: 12px;">
+        This is an automated message from Brainwave. Please do not reply to this email.
+        </p>
+    </div>
+    `;
+
+const newCourseReviewMsg = ({ firstName, courseName, review }) => `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">You have received a new review</h2>
+        <p>Hi ${firstName},</p>
+
+        <p>You have received a new question from a student in your course, ${courseName}.</p>
+        <p>Rating: ${review.rating}</p>
+        <p>Student: ${review.firstName} ${review.lastName}</p>
+        <p>Review: ${review.comment}</p>
+        
+        <p>Please login to Brainwave to see more detail.</p>
+
+        <hr style="margin: 30px 0;">
+        <p style="color: #666; font-size: 12px;">
+        This is an automated message from Brainwave. Please do not reply to this email.
+        </p>
+    </div>
+    `;
+
+////////////////////////////////////////////////
+// Student emails
+////////////////////////////////////////////////
+const newAnnouncementMsg = ({firstName, announcement}) => `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Announcement: ${announcement.title}</h2>
+        <p>Hi ${firstName},</p>
+
+        <p>There is a new announcement made in ${announcement.courseName}</p>
+        <p>Message: ${announcement.content}</p>
+        
+        <p>Please login to Brainwave to see more detail.</p>
+
+        <hr style="margin: 30px 0;">
+        <p style="color: #666; font-size: 12px;">
+        This is an automated message from Brainwave. Please do not reply to this email.
+        </p>
+    </div>
+    `;
+
+const PostRepliedMsg = ({firstName, post}) => `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">You have received a reply on your post</h2>
+        <p>Hi ${firstName},</p>
+
+        <p>The post you have made in the course ${post.courseName} received a reply</p>
+        <p>Replied user: ${post.firstName} ${post.lastName}</p>
+        <p>Reply: ${post.postText}</p>
+        
+        <p>Please login to Brainwave to see more detail.</p>
+
+        <hr style="margin: 30px 0;">
+        <p style="color: #666; font-size: 12px;">
+        This is an automated message from Brainwave. Please do not reply to this email.
+        </p>
+    </div>
+    `;
+
+const DMRepliedMsg = ({firstName, DM}) => `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">You have received a reply on your question</h2>
+        <p>Hi ${firstName},</p>
+
+        <p>Your requested item has been declined by our admin. Here is the detail of approval result.</p>
+        <p>Reply: ${DM.reply}</p>
+        
+        <p>Please login to Brainwave to see more detail.</p>
+
+        <hr style="margin: 30px 0;">
+        <p style="color: #666; font-size: 12px;">
+        This is an automated message from Brainwave. Please do not reply to this email.
+        </p>
+    </div>
+    `;
+
 
 module.exports = {
     OTPMsg,
@@ -133,5 +226,10 @@ module.exports = {
     initialPasswordMsg,
     approvalRequestNotificationMsg,
     approvalNotificationMsg,
-    declineNotificationMsg
+    declineNotificationMsg,
+    newDMMsg,
+    newCourseReviewMsg,
+    newAnnouncementMsg,
+    PostRepliedMsg,
+    DMRepliedMsg
 }
