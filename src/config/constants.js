@@ -11,7 +11,6 @@ const VALID_OPTION_STATUS = ['active', 'inactive'];
 
 const VALID_CONTENT_STATUS = ['draft', 'wait_for_approval', 'active', 'inactive'];
 const VALID_PATHWAY_STATUS = ['draft', 'wait_for_approval', 'active', 'inactive'];
-const VALID_BOARDPOST_STATUS = ['draft', 'wait_for_approval', 'active', 'inactive'];
 const VALID_ANNOUNCEMENT_STATUS = ['draft', 'wait_for_approval', 'active', 'inactive'];
 
 const VALID_ENROLMENT_STATUS = ['enrolled', 'in progress', 'completed', 'disenrolled'];
@@ -19,9 +18,46 @@ const VALID_ENROLMENT_STATUS = ['enrolled', 'in progress', 'completed', 'disenro
 const VALID_REVIEW_STATUS = ['active', 'inactive'];
 
 const VALID_NOTIFICATIONSETTING_TYPE = {
-  1: 'request for approval notification',
-  2: 'approved notification',
-  3: 'decline notification'
+  1: {
+    event: 'Received new request for approval',
+    role: 'admin'
+  },
+  2: {
+    event: 'Item (Course/Quiz/Module) approved',
+    role: 'course_owner'
+  },
+  3: {
+    event: 'Item (Course/Quiz/Module) declined',
+    role: 'course_owner'
+  },
+  4: {
+    event: 'New post on Discussion Board',
+    role: 'course_owner'
+  },
+  5: {
+    event: 'New message on Direct Message',
+    role: 'course_owner'
+  },
+  6: {
+    event: 'Received new review',
+    role: 'course_owner'
+  },
+  7: {
+    event: 'Reply on Discussion Board',
+    role: 'student'
+  },
+  8: {
+    event: 'Reply on Direct Message',
+    role: 'student'
+  },
+  9: {
+    event: 'Complete course',
+    role: 'student'
+  },
+  10: {
+    event: 'Complete pathway',
+    role: 'student'
+  }
 }
 
 module.exports = {
@@ -35,6 +71,7 @@ module.exports = {
   VALID_OPTION_STATUS,
   VALID_PATHWAY_STATUS,
   VALID_ENROLMENT_STATUS,
+  VALID_ANNOUNCEMENT_STATUS,
   VALID_REVIEW_STATUS,
   VALID_NOTIFICATIONSETTING_TYPE
 };

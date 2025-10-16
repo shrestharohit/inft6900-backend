@@ -1,6 +1,8 @@
 const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
+const path = require('path')
+
 require('dotenv').config();
 
 // Import routes
@@ -11,7 +13,7 @@ const pathwayRoutes = require('./routes/pathwayRoutes');
 const moduleAccessRoutes = require('./routes/moduleAccessRoutes'); 
 const certificateRoutes = require('./routes/course/certificateRoutes');
 const discussionBoardRoutes = require('./routes/course/discussionBoardRoutes');
-const boardPostRoutes = require('./routes/course/boardPostRoutes');
+
 const scheduleRoutes = require('./routes/course/scheduleRoutes');
 const announcementRoutes = require('./routes/course/announcementRoutes');
 
@@ -28,6 +30,8 @@ const enrolmentRoutes = require('./routes/enrolmentRoutes');
 const notificationSettingRoutes = require('./routes/notificationSettingRoutes');
 
 const dashboardRoutes = require('./routes/dashboardRoutes');
+
+const uploadRoutes = require('./routes/uploadRoutes');
 
 // Import database connection
 const { connectDB } = require('./config/database');
@@ -85,7 +89,6 @@ app.use('/api/pathway', pathwayRoutes);
 app.use('/api/moduleAccess', moduleAccessRoutes); 
 app.use('/api/certificate', certificateRoutes);
 app.use('/api/discussion', discussionBoardRoutes);
-app.use('/api/post', boardPostRoutes);
 app.use('/api/course/:courseid/schedules', scheduleRoutes);
 app.use('/api/announcement', announcementRoutes);
 
@@ -101,6 +104,11 @@ app.use('/api/enrolment', enrolmentRoutes);
 app.use('/api/notification', notificationSettingRoutes);
 
 app.use('/api/dashboard', dashboardRoutes);
+
+app.use('/api/upload', uploadRoutes);
+
+// Static folder
+app.use('/uploads/', express.static(path.join(__dirname, '../uploads')));
 
 // ✅ Health check
 app.get('/health', (req, res) => {

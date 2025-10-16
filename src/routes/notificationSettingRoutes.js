@@ -1,11 +1,16 @@
 const express = require("express");
 const {
+  initializeSettings,
   saveSettings,
   getUserSettings,
   getMeta
 } = require('../controllers/notificationSettingController');
 
 const router = express.Router();
+
+
+// Register new pathway
+router.post("/initialize", initializeSettings);
 
 // Register new pathway
 router.post("/save", saveSettings);

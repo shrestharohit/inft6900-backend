@@ -3,6 +3,7 @@ const {
   register,
   update,
   getCourseReviews,
+  getPathwayReviews,
   getUserReviews,
   getReview,
   getTopReviews,
@@ -19,6 +20,8 @@ router.post("/register", register);
 router.put("/update/:reviewID", update);
 
 router.get("/course/:courseID", getCourseReviews);
+
+router.get("/pathway/:pathwayID", getPathwayReviews);
 
 router.get("/user/:userID", getUserReviews);
 
