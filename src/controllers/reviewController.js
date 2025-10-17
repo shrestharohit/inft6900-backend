@@ -141,9 +141,18 @@ const getCourseReviews = async (req, res) => {
             });
         };
 
-        const review = await processCourseReviews(courseID);        
+        // Check Course ID
+        const exists = !!(await Course.findById(courseID));
+        if (!exists) {
+            return res.status(400).json({ 
+                error: 'Course not found' 
+            });
+        };
+        
+        const review = await processCourseReviews(courseID);
+
         res.json({
-            reviews: review.reviewws,
+            reviews: review.reviews,
             avgRating: review.avgRating,
             course: review.course
         });
@@ -151,7 +160,6 @@ const getCourseReviews = async (req, res) => {
     } catch (error) {
         console.error('Get course review error:', error);
         res.status(500).json({ error: 'Internal server error' });
-
     }
 }
 
@@ -307,11 +315,11 @@ const processCourseReviews = async(courseID) => {
     };
     
     // Get reviews
-    const reviewws = await CourseReview.findByCourseID(courseID);
+    const reviews = await CourseReview.findByCourseID(courseID);
     const avgRating = await CourseReview.getAvgRatings(courseID);
     
     return {
-        reviews: reviewws,
+        reviews: reviews,
         avgRating: avgRating? avgRating.AvgRating : 0.0,
         course: course
     };
