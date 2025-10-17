@@ -59,8 +59,9 @@ class CourseReview {
     static async findByCourseID(courseID, status = ["active"], client = null) {
         const db = client || pool;
         const query = `
-            SELECT r.*, c."title" FROM "CourseReview" r
+            SELECT r.*, c."title", u."firstName", u."lastName" FROM "CourseReview" r
             LEFT JOIN "Course" c ON c."courseID" = r."courseID"
+            LEFT JOIN "User" u ON r."userID" = u."userID" 
             WHERE r."courseID" = $1 AND r."status" = ANY($2)`;
         const result = await db.query(query, [courseID, status]);
         return result.rows;
