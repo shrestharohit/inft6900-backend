@@ -86,7 +86,7 @@ const updateQuestion = async (quiz, question, client) => {
         };
 
         // Validate if the question number is already takne
-        if (questionNumber !== existingQuestion.questionNumber) {
+        if (questionNumber !== undefined && questionNumber !== existingQuestion.questionNumber) {
             const existingQuestionNumber = await Question.findByQuizIdQuestionNumber(quiz.quizID, questionNumber);
             console.log(questionNumber)
             console.log(existingQuestion.questionNumber)
