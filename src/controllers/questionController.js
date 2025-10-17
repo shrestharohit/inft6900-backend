@@ -62,8 +62,6 @@ const updateQuestion = async (quiz, question, client) => {
 
         // Validate if question ID exists
         const existingQuestion = await Question.findById(questionID);
-        console.log(questionID)
-        console.log(existingQuestion)
         if (!existingQuestion) {
             throw new Error('Question update error: Selected question does not exist.')
         };
@@ -83,14 +81,16 @@ const updateQuestion = async (quiz, question, client) => {
             }
         };
 
-        if ((currentAnswer && answerCounter > 0) || answerCounter > 1) {
+        if (answerCounter > 1) {
             throw new Error('Option update error: Multiple correct options selected.')
         };
 
         // Validate if the question number is already takne
         if (questionNumber !== existingQuestion.questionNumber) {
             const existingQuestionNumber = await Question.findByQuizIdQuestionNumber(quiz.quizID, questionNumber);
-            if (existingQuestionNumber) {
+            console.log(questionNumber)
+            console.log(existingQuestion.questionNumber)
+            if (existingQuestionNumber !== undefined) {
                 throw new Error('Question update error: Selected question number already used');
             }
         }
@@ -100,6 +100,7 @@ const updateQuestion = async (quiz, question, client) => {
             throw new Error('Options must be an array.');
         }
         
+        console.log(options)
         // Try updating questions first
         const optionIDs = (await AnswerOption.findByQuestionID(existingQuestion.questionID)).map(o=> o.optionID);
         for (const id of optionIDs) {
