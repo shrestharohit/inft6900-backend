@@ -90,7 +90,7 @@ app.use('/api/pathway', pathwayRoutes);
 app.use('/api/moduleAccess', moduleAccessRoutes); 
 app.use('/api/certificate', certificateRoutes);
 app.use('/api/discussion', discussionBoardRoutes);
-app.use('/api/course/:courseid/schedules', scheduleRoutes);
+app.use('/api/schedule', scheduleRoutes);
 app.use('/api/announcement', announcementRoutes);
 
 app.use('/api/quiz', quizRoutes);

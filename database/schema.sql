@@ -275,7 +275,12 @@ CREATE TABLE "Schedule" (
     "scheduleID" SERIAL PRIMARY KEY,
     "userID" INT NOT NULL,
     "moduleID" INT NOT NULL,
-    "scheduledDateTime" TIMESTAMP NOT NULL,
+    "date" DATE NOT NULL,
+    "startTime" TIME NOT NULL,
+    "endTime" TIME NOT NULL,
+    "totalHours" DECIMAL(4,2) GENERATED ALWAYS AS (
+    EXTRACT(EPOCH FROM ("endTime" - "startTime")) / 3600
+    ) STORED,
     FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE,
     FOREIGN KEY ("moduleID") REFERENCES "Module"("moduleID") ON DELETE CASCADE
 );

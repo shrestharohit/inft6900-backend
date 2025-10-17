@@ -1,48 +1,80 @@
 const { pool } = require('../config/database');
 
 class Schedule {
-  static async create({ courseID, moduleID, userID, scheduledDateTime, status = 'active' }) {
+  // Create a new study session
+  static async create({ userID, moduleID, date, startTime, endTime }) {
     const query = `
-      INSERT INTO "Schedule" ("courseID", "moduleID", "userID", "scheduledDateTime", "status", "created_at")
-      VALUES ($1, $2, $3, $4, $5, NOW())
+      INSERT INTO "Schedule" ("userID", "moduleID", "date", "startTime", "endTime")
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING *;
     `;
-    const result = await pool.query(query, [courseID, moduleID, userID, scheduledDateTime, status]);
+    const result = await pool.query(query, [userID, moduleID, date, startTime, endTime]);
     return result.rows[0];
   }
 
-  static async findByCourse(courseID) {
-    const query = `SELECT * FROM "Schedule" WHERE "courseID" = $1 ORDER BY "scheduledDateTime" ASC`;
-    const result = await pool.query(query, [courseID]);
-    return result.rows;
-  }
-
-  static async findByUser(userID) {
-    const query = `SELECT * FROM "Schedule" WHERE "userID" = $1 ORDER BY "scheduledDateTime" ASC`;
-    const result = await pool.query(query, [userID]);
-    return result.rows;
-  }
-
+  // Find a schedule by scheduleID
   static async findById(scheduleID) {
-    const query = `SELECT * FROM "Schedule" WHERE "scheduleID" = $1`;
+    const query = `
+      SELECT s.*, m."title" AS "moduleTitle", m."expectedHours"
+      FROM "Schedule" s
+      JOIN "Module" m ON s."moduleID" = m."moduleID"
+      WHERE s."scheduleID" = $1
+    `;
     const result = await pool.query(query, [scheduleID]);
     return result.rows[0];
-  }
+}
 
-  static async update(scheduleID, { scheduledDateTime, status }) {
-    const updates = [];
-    const values = [];
-    let count = 1;
+  // Get all sessions for a user (optionally by module)
+  static async findByUser(userID, moduleID = null) {
+    let query = `
+      SELECT s.*, m."title" AS "moduleTitle", m."expectedHours"
+      FROM "Schedule" s
+      JOIN "Module" m ON s."moduleID" = m."moduleID"
+      WHERE s."userID" = $1
+    `;
+    const values = [userID];
 
-    if (scheduledDateTime !== undefined) { updates.push(`"scheduledDateTime" = $${count++}`); values.push(scheduledDateTime); }
-    if (status !== undefined) { updates.push(`"status" = $${count++}`); values.push(status); }
+    if (moduleID) {
+      query += ` AND s."moduleID" = $2`;
+      values.push(moduleID);
+    }
 
-    updates.push(`"updated_at" = NOW()`);
-    const query = `UPDATE "Schedule" SET ${updates.join(', ')} WHERE "scheduleID" = $${count} RETURNING *`;
-    values.push(scheduleID);
+    query += ` ORDER BY s."date", s."startTime"`;
 
     const result = await pool.query(query, values);
+    return result.rows;
+  }
+
+  // Update a study session
+  static async update(scheduleID, { date, startTime, endTime }) {
+    const query = `
+      UPDATE "Schedule"
+      SET 
+        "date" = COALESCE($1, "date"),
+        "startTime" = COALESCE($2, "startTime"),
+        "endTime" = COALESCE($3, "endTime")
+      WHERE "scheduleID" = $4
+      RETURNING *;
+    `;
+    const result = await pool.query(query, [date, startTime, endTime, scheduleID]);
     return result.rows[0];
+  }
+
+  // Delete a session
+  static async delete(scheduleID) {
+    const query = `DELETE FROM "Schedule" WHERE "scheduleID" = $1`;
+    await pool.query(query, [scheduleID]);
+  }
+
+  // Get total scheduled hours per module
+  static async getTotalHours(userID, moduleID) {
+    const query = `
+      SELECT SUM("totalHours") AS "scheduledHours"
+      FROM "Schedule"
+      WHERE "userID" = $1 AND "moduleID" = $2;
+    `;
+    const result = await pool.query(query, [userID, moduleID]);
+    return result.rows[0].scheduledHours || 0;
   }
 }
 
