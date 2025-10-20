@@ -68,7 +68,7 @@ CREATE TABLE "Module" (
     "courseID" INT NOT NULL,
     "title" VARCHAR(150) NOT NULL,
     "description" TEXT,
-    "moduleNumber" INT UNIQUE NOT NULL,
+    "moduleNumber" INT NOT NULL,
     "expectedHours" TIME,
     "status" VARCHAR(20),
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

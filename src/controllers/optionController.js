@@ -64,9 +64,12 @@ const updateOption = async (question, option, client) => {
         };
 
         // Validate if the option order is already takne
+        console.log('option order: ' + optionOrder)
+        console.log('existing option: ' + existingOption.optionOrder)
         if (optionOrder !== existingOption.optionOrder) {
             const existingOptionOrder = await AnswerOption.findByQuestionIdOptionOrder(question.questionID, optionOrder);
-            if (existingOptionOrder) {
+            console.log(existingOptionOrder)
+            if (existingOptionOrder !== undefined) {
                 throw new Error('Option update error: Selected option order already used');
             }
         }
