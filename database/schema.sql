@@ -18,23 +18,23 @@ CREATE TABLE "User" (
     "otpCode" VARCHAR(6),
     "otpExpiresAt" TIMESTAMP,
     "isEmailVerified" BOOLEAN DEFAULT FALSE,
-    "notificationEnebaled" BOOLEAN DEFAULT TRUE,
+    "notificationEnabled" BOOLEAN DEFAULT TRUE,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ==================
--- NOTIFICATIONS 
+-- USER SETTINGS 
 -- ==================
-CREATE TABLE "NotificationSetting" (
-    "settingID" SERIAL PRIMARY KEY,
-    "userID" INT NOT NULL,
-    "notificationType" VARCHAR(50),
-    "enabled" BOOLEAN DEFAULT TRUE,
+CREATE TABLE "PomodoroSetting" (
+    "pomodoroID" SERIAL PRIMARY KEY,
+    "userID" INT NOT NULL UNIQUE,
+    "isEnabled" BOOLEAN DEFAULT TRUE,
+    "focusPeriod" TIME DEFAULT '00:25:00',
+    "breakPeriod" TIME DEFAULT '00:05:00',
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE,
-    UNIQUE ("userID", "notificationType")
+    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE
 );
 
 -- ==================
@@ -68,7 +68,7 @@ CREATE TABLE "Module" (
     "courseID" INT NOT NULL,
     "title" VARCHAR(150) NOT NULL,
     "description" TEXT,
-    "moduleNumber" INT UNIQUE NOT NULL,
+    "moduleNumber" INT NOT NULL,
     "expectedHours" TIME,
     "status" VARCHAR(20),
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -275,7 +275,12 @@ CREATE TABLE "Schedule" (
     "scheduleID" SERIAL PRIMARY KEY,
     "userID" INT NOT NULL,
     "moduleID" INT NOT NULL,
-    "scheduledDateTime" TIMESTAMP NOT NULL,
+    "date" DATE NOT NULL,
+    "startTime" TIME NOT NULL,
+    "endTime" TIME NOT NULL,
+    "totalHours" DECIMAL(4,2) GENERATED ALWAYS AS (
+    EXTRACT(EPOCH FROM ("endTime" - "startTime")) / 3600
+    ) STORED,
     FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE,
     FOREIGN KEY ("moduleID") REFERENCES "Module"("moduleID") ON DELETE CASCADE
 );
