@@ -4,7 +4,7 @@ class PomodoroSetting {
     static async create({ userID, isEnabled = true, focusPeriod = '00:25:00', breakPeriod = '00:05:00' }, client = null) {
         const db = client || pool;
         const query = `
-            INSERT INTO "PomodoroSetting" ("userID", "isEnabled", "focusPeriod", "breakPeriod", "created_at")
+            INSERT INTO "tblPomodoroSetting" ("userID", "isEnabled", "focusPeriod", "breakPeriod", "created_at")
             VALUES ($1, $2, $3, $4, NOW())
             RETURNING *
         `;
@@ -35,7 +35,7 @@ class PomodoroSetting {
         values.push(id);
 
         const query = `
-            UPDATE "PomodoroSetting"
+            UPDATE "tblPomodoroSetting"
             SET ${updates.join(', ')}
             WHERE "pomodoroID" = $${paramCount}
             RETURNING *
@@ -48,7 +48,7 @@ class PomodoroSetting {
     static async findById(id, client = null) {
         const db = client || pool;
         const query = `
-            SELECT * FROM "PomodoroSetting" WHERE "pomodoroID" = $1
+            SELECT * FROM "tblPomodoroSetting" WHERE "pomodoroID" = $1
         `;
         const result = await db.query(query, [id]);
         return result.rows[0];
@@ -56,7 +56,7 @@ class PomodoroSetting {
 
     static async findByUserID(userID, client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "PomodoroSetting" WHERE "userID" = $1`;
+        const query = `SELECT * FROM "tblPomodoroSetting" WHERE "userID" = $1`;
         const result = await db.query(query, [userID]);
         return result.rows[0];
     }

@@ -4,7 +4,7 @@ class NotificationSetting {
     static async create({ userID, notificationType, enabled = true }, client = null) {
         const db = client || pool;
         const query = `
-            INSERT INTO "NotificationSetting" ("userID", "notificationType", "enabled", "created_at")
+            INSERT INTO "tblNotificationSetting" ("userID", "notificationType", "enabled", "created_at")
             VALUES ($1, $2, $3, NOW())
             RETURNING *
         `;
@@ -35,7 +35,7 @@ class NotificationSetting {
         values.push(id);
 
         const query = `
-            UPDATE "NotificationSetting"
+            UPDATE "tblNotificationSetting"
             SET ${updates.join(', ')}
             WHERE "settingID" = $${paramCount}
             RETURNING *
@@ -48,7 +48,7 @@ class NotificationSetting {
     static async findById(id, client = null) {
         const db = client || pool;
         const query = `
-            SELECT * FROM "NotificationSetting" WHERE "settingID" = $1
+            SELECT * FROM "tblNotificationSetting" WHERE "settingID" = $1
         `;
         const result = await db.query(query, [id]);
         return result.rows[0];
@@ -56,28 +56,28 @@ class NotificationSetting {
 
     static async findByUserIDType(userID, notificationType, client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "NotificationSetting" WHERE "userID" = $1 AND "notificationType" = $2`;
+        const query = `SELECT * FROM "tblNotificationSetting" WHERE "userID" = $1 AND "notificationType" = $2`;
         const result = await db.query(query, [userID, notificationType]);
         return result.rows;
     }
 
     static async findByUserID(userID, client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "NotificationSetting" WHERE "userID" = $1`;
+        const query = `SELECT * FROM "tblNotificationSetting" WHERE "userID" = $1`;
         const result = await db.query(query, [userID]);
         return result.rows;
     }
 
     static async getEnabledNotifications(userID, client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "NotificationSetting" WHERE "userID" = $1 AND "enabled" = TRUE`;
+        const query = `SELECT * FROM "tblNotificationSetting" WHERE "userID" = $1 AND "enabled" = TRUE`;
         const result = await db.query(query, [userID]);
         return result.rows;
     }
 
     static async getEnabledUsers(notificationType, client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "NotificationSetting" WHERE "notificationType" = $1 AND "enabled" = TRUE`;
+        const query = `SELECT * FROM "tblNotificationSetting" WHERE "notificationType" = $1 AND "enabled" = TRUE`;
         const result = await db.query(query, [notificationType]);
         return result.rows;
     }
