@@ -16,7 +16,7 @@ const register = async (req, res) => {
         if (!module) return res.status(404).json({ error: 'Module not found' });
 
         // Validate user exists
-        const userResult = await pool.query(`SELECT * FROM "User" WHERE "userID" = $1`, [userID]);
+        const userResult = await pool.query(`SELECT * FROM "tblUser" WHERE "userID" = $1`, [userID]);
         if (userResult.rows.length === 0) return res.status(404).json({ error: 'User not found' });
 
         const newAccess = await ModuleAccess.create({ moduleID, userID, duration });

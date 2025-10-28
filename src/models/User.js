@@ -3,7 +3,7 @@ const { pool } = require('../config/database');
 class User {
   static async create({ firstName, lastName, email, passwordHash, role }) {
     const query = `
-      INSERT INTO "User" ("firstName", "lastName", "email", "passwordHash", "role", "created_at")
+      INSERT INTO "tblUser" ("firstName", "lastName", "email", "passwordHash", "role", "created_at")
       VALUES ($1, $2, $3, $4, $5, NOW())
       RETURNING "userID", "firstName", "lastName", "email", "passwordHash", "role", "notificationEnabled", "created_at"
     `;
@@ -12,7 +12,7 @@ class User {
   }
 
   static async findByEmail(email) {
-    const query = 'SELECT * FROM "User" WHERE "email" = $1';
+    const query = 'SELECT * FROM "tblUser" WHERE "email" = $1';
     const result = await pool.query(query, [email]);
     return result.rows[0];
   }
@@ -20,7 +20,7 @@ class User {
   static async findById(id) {
     const query = `
       SELECT "userID", "firstName", "lastName", "email", "role", "notificationEnabled", "created_at"
-      FROM "User" WHERE "userID" = $1
+      FROM "tblUser" WHERE "userID" = $1
     `;
     const result = await pool.query(query, [id]);
     return result.rows[0];
@@ -29,7 +29,7 @@ class User {
   static async findByRole(role) {
     const query = `
       SELECT "userID", "firstName", "lastName", "email", "role","notificationEnabled", "created_at"
-      FROM "User" WHERE "role" = $1
+      FROM "tblUser" WHERE "role" = $1
     `;
     const result = await pool.query(query, [role]);
     return result.rows;
@@ -57,7 +57,7 @@ class User {
     values.push(id);
 
     const query = `
-      UPDATE "User"
+      UPDATE "tblUser"
       SET ${updates.join(', ')}
       WHERE "userID" = $${paramCount}
       RETURNING "userID", "firstName", "lastName", "email", "role", "notificationEnabled", "updated_at"
@@ -70,7 +70,7 @@ class User {
   static async getAll() {
     const query = `
       SELECT "userID", "firstName", "lastName", "email", "role", "isEmailVerified", "notificationEnabled", "created_at"
-      FROM "User" ORDER BY "created_at" DESC
+      FROM "tblUser" ORDER BY "created_at" DESC
     `;
     const result = await pool.query(query);
     return result.rows;
@@ -78,7 +78,7 @@ class User {
 
   static async deleteById(id) {
     const query = `
-      DELETE FROM "User" 
+      DELETE FROM "tblUser" 
       WHERE "userID" = $1
     `;
     const result = await pool.query(query, [id]);
@@ -88,7 +88,7 @@ class User {
   static async getAllNonStudents() {
     const query = `
       SELECT "userID", "firstName", "lastName", "email", "role", "isEmailVerified", "notificationEnabled", "created_at"
-      FROM "User" WHERE NOT "role" = 'student'
+      FROM "tblUser" WHERE NOT "role" = 'student'
       ORDER BY "created_at" DESC
     `;
     const result = await pool.query(query);
@@ -98,7 +98,7 @@ class User {
   // 🔹 OTP Methods
   static async setOTP(email, otpCode, expiresAt) {
     const query = `
-      UPDATE "User"
+      UPDATE "tblUser"
       SET "otpCode" = $1, "otpExpiresAt" = $2, "updated_at" = NOW()
       WHERE "email" = $3
       RETURNING "userID", "email", "otpCode", "otpExpiresAt"
@@ -109,7 +109,7 @@ class User {
 
   static async verifyOTP(email, otpCode) {
     const query = `
-      SELECT * FROM "User"
+      SELECT * FROM "tblUser"
       WHERE "email" = $1 AND "otpCode" = $2 AND "otpExpiresAt" > NOW() AND "isEmailVerified" = FALSE
     `;
     const result = await pool.query(query, [email, otpCode]);
@@ -118,7 +118,7 @@ class User {
 
   static async verifyResetOTP(email, otpCode) {
     const query = `
-      SELECT * FROM "User"
+      SELECT * FROM "tblUser"
       WHERE "email" = $1 AND "otpCode" = $2 AND "otpExpiresAt" > NOW()
     `;
     const result = await pool.query(query, [email, otpCode]);
@@ -127,7 +127,7 @@ class User {
 
   static async markEmailVerified(email) {
     const query = `
-      UPDATE "User"
+      UPDATE "tblUser"
       SET "isEmailVerified" = TRUE, "otpCode" = NULL, "otpExpiresAt" = NULL, "updated_at" = NOW()
       WHERE "email" = $1
       RETURNING "userID", "firstName", "lastName", "email", "role", "isEmailVerified"
@@ -139,7 +139,7 @@ class User {
   // 🔹 Reset Password
   static async updatePassword(email, newHashedPassword) {
     const query = `
-      UPDATE "User"
+      UPDATE "tblUser"
       SET "passwordHash" = $1, "updated_at" = NOW()
       WHERE "email" = $2
       RETURNING "userID", "firstName", "lastName", "email", "role", "isEmailVerified";
@@ -147,8 +147,6 @@ class User {
     const result = await pool.query(query, [newHashedPassword, email]);
     return result.rows[0];
   }
-
-  
 }
 
 module.exports = User;

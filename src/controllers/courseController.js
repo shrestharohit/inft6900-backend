@@ -45,7 +45,7 @@ const register = async (req, res) => {
 
         // Validate pathway
         const pathway = await Pathway.findById(pathwayID)
-        if (pathwayID !== undefined && !pathway) {
+        if (pathwayID != undefined && !pathway) {
             return res.status(400).json({
                 error: 'Invalid pathway ID. Pathway not found.'
             });
@@ -53,7 +53,7 @@ const register = async (req, res) => {
 
         // Check if there is already a course with the same level in the pathway
         const hasSameLevel = !!(await Course.findByPathwayIDCourseLevel(pathwayID, level));
-        if (pathwayID !== undefined && hasSameLevel) {
+        if (pathwayID != undefined && hasSameLevel) {
             return res.status(400).json({
                 error: 'Pathway can have only 1 course in each level. Course with selected level already exists in pathway.'
             });

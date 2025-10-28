@@ -3,7 +3,7 @@ const { pool } = require('../config/database');
 class Enrolment {
     static async create({ pathwayID, courseID, userID, status='enrolled' }) {
         const query = `
-            INSERT INTO "Enrolment" ("enrolDate", "pathwayID", "courseID", "userID", "status")
+            INSERT INTO "tblEnrolment" ("enrolDate", "pathwayID", "courseID", "userID", "status")
             VALUES (NOW(), $1, $2, $3, $4)
             RETURNING *
         `;
@@ -12,26 +12,26 @@ class Enrolment {
     }
 
     static async findByCourseId(courseID) {
-        const query = 'SELECT * FROM "Enrolment" WHERE "courseID" = $1';
+        const query = 'SELECT * FROM "tblEnrolment" WHERE "courseID" = $1';
         const result = await pool.query(query, [courseID]);
         return result.rows;
     }
 
     static async findByPathwayId(pathwayID) {
-        const query = 'SELECT * FROM "Enrolment" WHERE "pathwayID" = $1';
+        const query = 'SELECT * FROM "tblEnrolment" WHERE "pathwayID" = $1';
         const result = await pool.query(query, [pathwayID]);
         return result.rows;
     }
 
     static async findByUserID(userID) {
-        const query = 'SELECT * FROM "Enrolment" WHERE "userID" = $1';
+        const query = 'SELECT * FROM "tblEnrolment" WHERE "userID" = $1';
         const result = await pool.query(query, [userID]);
         return result.rows;
     }
 
     static async findById(id) {
         const query = `
-            SELECT * FROM "Enrolment" WHERE "enrolmentID" = $1
+            SELECT * FROM "tblEnrolment" WHERE "enrolmentID" = $1
         `;
         const result = await pool.query(query, [id]);
         return result.rows[0];
@@ -39,7 +39,7 @@ class Enrolment {
 
     static async findByCourseIdUserID(courseID, userID) {
         const query = `
-            SELECT * FROM "Enrolment" WHERE "courseID" = $1 AND "userID" = $2
+            SELECT * FROM "tblEnrolment" WHERE "courseID" = $1 AND "userID" = $2
         `;
         const result = await pool.query(query, [courseID, userID]);
         return result.rows[0];
@@ -47,7 +47,7 @@ class Enrolment {
 
     static async findByPathwayIdUserID(pathwayID, userID) {
         const query = `
-            SELECT * FROM "Enrolment" WHERE "pathwayID" = $1 AND "userID" = $2
+            SELECT * FROM "tblEnrolment" WHERE "pathwayID" = $1 AND "userID" = $2
         `;
         const result = await pool.query(query, [pathwayID, userID]);
         return result.rows;
@@ -83,7 +83,7 @@ class Enrolment {
         values.push(id);
 
         const query = `
-            UPDATE "Enrolment"
+            UPDATE "tblEnrolment"
             SET ${updates.join(', ')}
             WHERE "enrolmentID" = $${paramCount}
             RETURNING *
@@ -95,8 +95,8 @@ class Enrolment {
 
     static async getPopularCourses() {
         const query =`
-            SELECT e."courseID", c."title", c."category", c."level", COUNT(e."userID") "count" FROM "Enrolment" e
-            LEFT JOIN "Course" c ON e."courseID" = c."courseID"
+            SELECT e."courseID", c."title", c."category", c."level", COUNT(e."userID") "count" FROM "tblEnrolment" e
+            LEFT JOIN "tblCourse" c ON e."courseID" = c."courseID"
             WHERE NOT e."status" = 'disenrolled'
             GROUP BY e."courseID", c."title", c."category", c."level"
             ORDER BY "count" DESC
@@ -108,8 +108,8 @@ class Enrolment {
 
     static async getPopularPathways() {
         const query =`
-            SELECT e."pathwayID", p."name", COUNT(e."userID") "count" FROM "Enrolment" e
-            LEFT JOIN "Pathway" p ON e."pathwayID" = p."pathwayID"
+            SELECT e."pathwayID", p."name", COUNT(e."userID") "count" FROM "tblEnrolment" e
+            LEFT JOIN "tblPathway" p ON e."pathwayID" = p."pathwayID"
             WHERE e."pathwayID" IS NOT NULL AND NOT e."status" = 'disenrolled'
             GROUP BY e."pathwayID", p."name"
             ORDER BY "count" DESC
@@ -122,7 +122,7 @@ class Enrolment {
     static async getUserEnrolledPathways(userID) {
         const query =`
             SELECT DISTINCT("pathwayID")
-            FROM "Enrolment"
+            FROM "tblEnrolment"
             WHERE "userID" = $1 AND NOT "status" = 'disenrolled'
         `
 
@@ -133,7 +133,7 @@ class Enrolment {
 
     static async getAll() {
         const query = `
-            SELECT * FROM "Enrolment" ORDER BY "enrolDate" DESC
+            SELECT * FROM "tblEnrolment" ORDER BY "enrolDate" DESC
         `;
         const result = await pool.query(query);
         return result.rows;

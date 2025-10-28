@@ -4,7 +4,7 @@ class Schedule {
   // Create a new study session
   static async create({ userID, moduleID, date, startTime, endTime }) {
     const query = `
-      INSERT INTO "Schedule" ("userID", "moduleID", "date", "startTime", "endTime")
+      INSERT INTO "tblSchedule" ("userID", "moduleID", "date", "startTime", "endTime")
       VALUES ($1, $2, $3, $4, $5)
       RETURNING *;
     `;
@@ -16,8 +16,8 @@ class Schedule {
   static async findById(scheduleID) {
     const query = `
       SELECT s.*, m."title" AS "moduleTitle", m."expectedHours"
-      FROM "Schedule" s
-      JOIN "Module" m ON s."moduleID" = m."moduleID"
+      FROM "tblSchedule" s
+      JOIN "tblModule" m ON s."moduleID" = m."moduleID"
       WHERE s."scheduleID" = $1
     `;
     const result = await pool.query(query, [scheduleID]);
@@ -28,8 +28,8 @@ class Schedule {
   static async findByUser(userID, moduleID = null) {
     let query = `
       SELECT s.*, m."title" AS "moduleTitle", m."expectedHours"
-      FROM "Schedule" s
-      JOIN "Module" m ON s."moduleID" = m."moduleID"
+      FROM "tblSchedule" s
+      JOIN "tblModule" m ON s."moduleID" = m."moduleID"
       WHERE s."userID" = $1
     `;
     const values = [userID];
@@ -48,7 +48,7 @@ class Schedule {
   // Update a study session
   static async update(scheduleID, { date, startTime, endTime }) {
     const query = `
-      UPDATE "Schedule"
+      UPDATE "tblSchedule"
       SET 
         "date" = COALESCE($1, "date"),
         "startTime" = COALESCE($2, "startTime"),
@@ -62,7 +62,7 @@ class Schedule {
 
   // Delete a session
   static async delete(scheduleID) {
-    const query = `DELETE FROM "Schedule" WHERE "scheduleID" = $1`;
+    const query = `DELETE FROM "tblSchedule" WHERE "scheduleID" = $1`;
     await pool.query(query, [scheduleID]);
   }
 
@@ -70,7 +70,7 @@ class Schedule {
   static async getTotalHours(userID, moduleID) {
     const query = `
       SELECT SUM("totalHours") AS "scheduledHours"
-      FROM "Schedule"
+      FROM "tblSchedule"
       WHERE "userID" = $1 AND "moduleID" = $2;
     `;
     const result = await pool.query(query, [userID, moduleID]);
