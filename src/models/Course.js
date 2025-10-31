@@ -3,7 +3,7 @@ const { pool } = require('../config/database');
 class Course {
     static async create({ userID, title, pathwayID, category, level, outline, status='draft' }) {
         const query = `
-            INSERT INTO "Course" ("userID", "title", "pathwayID", "category", "level", "outline", "status", "created_at")
+            INSERT INTO "tblCourse" ("userID", "title", "pathwayID", "category", "level", "outline", "status", "created_at")
             VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
             RETURNING *
         `;
@@ -13,7 +13,7 @@ class Course {
 
     static async findById(id) {
         const query = `
-            SELECT * FROM "Course" WHERE "courseID" = $1
+            SELECT * FROM "tblCourse" WHERE "courseID" = $1
         `;
         const result = await pool.query(query, [id]);
         return result.rows[0];
@@ -21,7 +21,7 @@ class Course {
 
     static async findByCategory(category) {
         const query = `
-            SELECT * FROM "Course" WHERE "category" = $1
+            SELECT * FROM "tblCourse" WHERE "category" = $1
         `;
         const result = await pool.query(query, [category]);
         return result.rows;
@@ -29,7 +29,7 @@ class Course {
 
     static async findByOwner(userID) {
         const query = `
-            SELECT * FROM "Course" WHERE "userID" = $1
+            SELECT * FROM "tblCourse" WHERE "userID" = $1
         `;
         const result = await pool.query(query, [userID]);
         return result.rows;
@@ -37,7 +37,7 @@ class Course {
 
     static async findByStatus(status) {
         const query = `
-            SELECT * FROM "Course" WHERE "status" = $1
+            SELECT * FROM "tblCourse" WHERE "status" = $1
         `;
         const result = await pool.query(query, [status]);
         return result.rows;
@@ -45,7 +45,7 @@ class Course {
 
     static async findByUserID(userID) {
         const query = `
-            SELECT * FROM "Course" WHERE "userID" = $1
+            SELECT * FROM "tblCourse" WHERE "userID" = $1
         `;
         const result = await pool.query(query, [userID]);
         return result.rows;
@@ -53,7 +53,7 @@ class Course {
 
     static async findByPathwayId(pathwayID) {
         const query = `
-            SELECT * FROM "Course" WHERE "pathwayID" = $1
+            SELECT * FROM "tblCourse" WHERE "pathwayID" = $1
         `;
         const result = await pool.query(query, [pathwayID]);
         return result.rows;
@@ -63,8 +63,8 @@ class Course {
     static async findByPathwayIDCourseLevel(pathwayID, level) {
         const query = `
             SELECT c.*, p."name"
-            FROM "Course" c
-            LEFT JOIN "Pathway" p ON c."pathwayID" = p."pathwayID"
+            FROM "tblCourse" c
+            LEFT JOIN "tblPathway" p ON c."pathwayID" = p."pathwayID"
             WHERE c."pathwayID" = $1 AND c."level" = $2
         `;
         const result = await pool.query(query, [pathwayID, level]);
@@ -93,7 +93,7 @@ class Course {
         values.push(id);
 
         const query = `
-            UPDATE "Course"
+            UPDATE "tblCourse"
             SET ${updates.join(', ')}
             WHERE "courseID" = $${paramCount}
             RETURNING *
@@ -105,7 +105,7 @@ class Course {
 
     static async getAllCategories() {
         const query = `
-            SELECT DISTINCT "category" FROM "Course"
+            SELECT DISTINCT "category" FROM "tblCourse"
         `;
         const result = await pool.query(query);
         return result.rows;
@@ -113,7 +113,7 @@ class Course {
 
     static async getAll(status = ['draft', 'wait_for_approval', 'active', 'inactive']) {
         const query = `
-            SELECT * FROM "Course"
+            SELECT * FROM "tblCourse"
             WHERE "status" = ANY($1)
             ORDER BY "created_at" DESC
         `;

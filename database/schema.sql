@@ -8,7 +8,7 @@
 -- ==================
 -- USER & ROLES
 -- ==================
-CREATE TABLE "User" (
+CREATE TABLE "tblUser" (
     "userID" SERIAL PRIMARY KEY,
     "firstName" VARCHAR(100) NOT NULL,
     "lastName" VARCHAR(100) NOT NULL,
@@ -18,29 +18,29 @@ CREATE TABLE "User" (
     "otpCode" VARCHAR(6),
     "otpExpiresAt" TIMESTAMP,
     "isEmailVerified" BOOLEAN DEFAULT FALSE,
-    "notificationEnebaled" BOOLEAN DEFAULT TRUE,
+    "notificationEnabled" BOOLEAN DEFAULT TRUE,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ==================
--- NOTIFICATIONS 
+-- USER SETTINGS 
 -- ==================
-CREATE TABLE "NotificationSetting" (
-    "settingID" SERIAL PRIMARY KEY,
-    "userID" INT NOT NULL,
-    "notificationType" VARCHAR(50),
-    "enabled" BOOLEAN DEFAULT TRUE,
+CREATE TABLE "tblPomodoroSetting" (
+    "pomodoroID" SERIAL PRIMARY KEY,
+    "userID" INT NOT NULL UNIQUE,
+    "isEnabled" BOOLEAN DEFAULT TRUE,
+    "focusPeriod" TIME DEFAULT '00:25:00',
+    "breakPeriod" TIME DEFAULT '00:05:00',
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE,
-    UNIQUE ("userID", "notificationType")
+    FOREIGN KEY ("userID") REFERENCES "tblUser"("userID") ON DELETE CASCADE
 );
 
 -- ==================
 -- PATHWAY & COURSES
 -- ==================
-CREATE TABLE "Pathway" (
+CREATE TABLE "tblPathway" (
     "pathwayID" SERIAL PRIMARY KEY,
     "name" VARCHAR(150) NOT NULL,
     "outline" TEXT,
@@ -48,7 +48,7 @@ CREATE TABLE "Pathway" (
     "createdDate" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE "Course" (
+CREATE TABLE "tblCourse" (
     "courseID" SERIAL PRIMARY KEY,
     "userID" INT NOT NULL,
     "title" VARCHAR(150) NOT NULL,
@@ -59,28 +59,28 @@ CREATE TABLE "Course" (
     "pathwayID" INT,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE,
-    FOREIGN KEY ("pathwayID") REFERENCES "Pathway"("pathwayID") ON DELETE SET NULL
+    FOREIGN KEY ("userID") REFERENCES "tblUser"("userID") ON DELETE CASCADE,
+    FOREIGN KEY ("pathwayID") REFERENCES "tblPathway"("pathwayID") ON DELETE SET NULL
 );
 
-CREATE TABLE "Module" (
+CREATE TABLE "tblModule" (
     "moduleID" SERIAL PRIMARY KEY,
     "courseID" INT NOT NULL,
     "title" VARCHAR(150) NOT NULL,
     "description" TEXT,
-    "moduleNumber" INT UNIQUE NOT NULL,
+    "moduleNumber" INT NOT NULL,
     "expectedHours" TIME,
     "status" VARCHAR(20),
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("courseID") REFERENCES "Course"("courseID") ON DELETE CASCADE,
+    FOREIGN KEY ("courseID") REFERENCES "tblCourse"("courseID") ON DELETE CASCADE,
     UNIQUE ("courseID", "moduleNumber")
 );
 
 -- ==================
 -- ENROLMENTS & ACCESS
 -- ==================
-CREATE TABLE "Enrolment" (
+CREATE TABLE "tblEnrolment" (
     "enrolmentID" SERIAL PRIMARY KEY,
     "enrolDate" DATE DEFAULT CURRENT_DATE,
     "pathwayID" INT,
@@ -90,25 +90,25 @@ CREATE TABLE "Enrolment" (
     "completionDate" DATE,
     "disenrolledDate" DATE,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("pathwayID") REFERENCES "Pathway"("pathwayID"),
-    FOREIGN KEY ("courseID") REFERENCES "Course"("courseID"),
-    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE
+    FOREIGN KEY ("pathwayID") REFERENCES "tblPathway"("pathwayID"),
+    FOREIGN KEY ("courseID") REFERENCES "tblCourse"("courseID"),
+    FOREIGN KEY ("userID") REFERENCES "tblUser"("userID") ON DELETE CASCADE
 );
 
-CREATE TABLE "ModuleAccess" (
+CREATE TABLE "tblModuleAccess" (
     "accessID" SERIAL PRIMARY KEY,
     "moduleID" INT NOT NULL,
     "userID" INT NOT NULL,
     "accessDate" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "duration" INTERVAL,
-    FOREIGN KEY ("moduleID") REFERENCES "Module"("moduleID") ON DELETE CASCADE,
-    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE
+    FOREIGN KEY ("moduleID") REFERENCES "tblModule"("moduleID") ON DELETE CASCADE,
+    FOREIGN KEY ("userID") REFERENCES "tblUser"("userID") ON DELETE CASCADE
 );
 
 -- ==================
 -- CONTENT & QUIZZES
 -- ==================
-CREATE TABLE "Content" (
+CREATE TABLE "tblContent" (
     "contentID" SERIAL PRIMARY KEY,
     "moduleID" INT NOT NULL,
     "title" VARCHAR(150),
@@ -117,10 +117,10 @@ CREATE TABLE "Content" (
     "status" VARCHAR(50),
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("moduleID") REFERENCES "Module"("moduleID") ON DELETE CASCADE
+    FOREIGN KEY ("moduleID") REFERENCES "tblModule"("moduleID") ON DELETE CASCADE
 );
 
-CREATE TABLE "Quiz" (
+CREATE TABLE "tblQuiz" (
     "quizID" SERIAL PRIMARY KEY,
     "moduleID" INT NOT NULL,
     "title" VARCHAR(150),
@@ -129,10 +129,10 @@ CREATE TABLE "Quiz" (
     "status" VARCHAR(50),
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("moduleID") REFERENCES "Module"("moduleID") ON DELETE CASCADE
+    FOREIGN KEY ("moduleID") REFERENCES "tblModule"("moduleID") ON DELETE CASCADE
 );
 
-CREATE TABLE "Question" (
+CREATE TABLE "tblQuestion" (
     "questionID" SERIAL PRIMARY KEY,
     "quizID" INT NOT NULL,
     "questionNumber" INT NOT NULL,
@@ -141,10 +141,10 @@ CREATE TABLE "Question" (
     "status" VARCHAR(50), -- to define if it's deleted or active
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("quizID") REFERENCES "Quiz"("quizID") ON DELETE CASCADE
+    FOREIGN KEY ("quizID") REFERENCES "tblQuiz"("quizID") ON DELETE CASCADE
 );
 
-CREATE TABLE "AnswerOption" (
+CREATE TABLE "tblAnswerOption" (
     "optionID" SERIAL PRIMARY KEY,
     "questionID" INT NOT NULL,
     "optionText" TEXT NOT NULL,
@@ -154,13 +154,13 @@ CREATE TABLE "AnswerOption" (
     "status" VARCHAR(50),
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("questionID") REFERENCES "Question"("questionID") ON DELETE CASCADE
+    FOREIGN KEY ("questionID") REFERENCES "tblQuestion"("questionID") ON DELETE CASCADE
 );
 
 -- ==================
 -- ATTEMPTS & FEEDBACK
 -- ==================
-CREATE TABLE "QuizAttempt" (
+CREATE TABLE "tblQuizAttempt" (
     "attemptID" SERIAL PRIMARY KEY,
     "quizID" INT NOT NULL,
     "enrolmentID" INT NOT NULL,
@@ -169,19 +169,19 @@ CREATE TABLE "QuizAttempt" (
     "score" DOUBLE PRECISION,
     "passed" BOOLEAN,
     "count" INT, -- required to manage multiple attempts
-    FOREIGN KEY ("quizID") REFERENCES "Quiz"("quizID") ON DELETE CASCADE,
-    FOREIGN KEY ("enrolmentID") REFERENCES "Enrolment"("enrolmentID") ON DELETE CASCADE
+    FOREIGN KEY ("quizID") REFERENCES "tblQuiz"("quizID") ON DELETE CASCADE,
+    FOREIGN KEY ("enrolmentID") REFERENCES "tblEnrolment"("enrolmentID") ON DELETE CASCADE
 );
 
-CREATE TABLE "AttemptAnswer" (
+CREATE TABLE "tblAttemptAnswer" (
     "attemptAnswerID" SERIAL PRIMARY KEY,
     "attemptID" INT NOT NULL,
     "questionID" INT NOT NULL,
     "optionID" INT,
     "isCorrect" BOOLEAN,
-    FOREIGN KEY ("attemptID") REFERENCES "QuizAttempt"("attemptID") ON DELETE CASCADE,
-    FOREIGN KEY ("questionID") REFERENCES "Question"("questionID") ON DELETE CASCADE,
-    FOREIGN KEY ("optionID") REFERENCES "AnswerOption"("optionID") ON DELETE CASCADE
+    FOREIGN KEY ("attemptID") REFERENCES "tblQuizAttempt"("attemptID") ON DELETE CASCADE,
+    FOREIGN KEY ("questionID") REFERENCES "tblQuestion"("questionID") ON DELETE CASCADE,
+    FOREIGN KEY ("optionID") REFERENCES "tblAnswerOption"("optionID") ON DELETE CASCADE
 );
 
 -- CREATE TABLE "Feedback" (
@@ -195,21 +195,21 @@ CREATE TABLE "AttemptAnswer" (
 -- ==================
 -- CERTIFICATES
 -- ==================
-CREATE TABLE "Certificate" (
+CREATE TABLE "tblCertificate" (
     "certificateID" SERIAL PRIMARY KEY,
     "userID" INT NOT NULL,
     "courseID" INT,
     "issueDate" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "content" TEXT,
     "certificateURL" TEXT,
-    FOREIGN KEY ("userID") REFERENCES "User"("userID"),
-    FOREIGN KEY ("courseID") REFERENCES "Course"("courseID")
+    FOREIGN KEY ("userID") REFERENCES "tblUser"("userID"),
+    FOREIGN KEY ("courseID") REFERENCES "tblCourse"("courseID")
 );
 
 -- ==================
 -- COURSE REVIEW
 -- ==================
-CREATE TABLE "CourseReview" (
+CREATE TABLE "tblCourseReview" (
     "reviewID" SERIAL PRIMARY KEY,
     "userID" INT NOT NULL,
     "courseID" INT NOT NULL,
@@ -218,14 +218,14 @@ CREATE TABLE "CourseReview" (
     "status" VARCHAR(50) DEFAULT 'active',
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("userID") REFERENCES "User"("userID"),
-    FOREIGN KEY ("courseID") REFERENCES "Course"("courseID")
+    FOREIGN KEY ("userID") REFERENCES "tblUser"("userID"),
+    FOREIGN KEY ("courseID") REFERENCES "tblCourse"("courseID")
 );
 
 -- ==================
 -- DISCUSSION BOARD
 -- ==================
-CREATE TABLE "DiscussionBoard" (
+CREATE TABLE "tblDiscussionBoard" (
 "postID" SERIAL PRIMARY KEY,
     "courseID" INT NOT NULL,
     "userID" INT NOT NULL,
@@ -234,9 +234,9 @@ CREATE TABLE "DiscussionBoard" (
     "parentPostID" INT,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP,
-    FOREIGN KEY ("courseID") REFERENCES "Course"("courseID"),
-    FOREIGN KEY ("userID") REFERENCES "User"("userID"),
-    FOREIGN KEY ("parentPostID") REFERENCES "DiscussionBoard"("postID") ON DELETE CASCADE
+    FOREIGN KEY ("courseID") REFERENCES "tblCourse"("courseID"),
+    FOREIGN KEY ("userID") REFERENCES "tblUser"("userID"),
+    FOREIGN KEY ("parentPostID") REFERENCES "tblDiscussionBoard"("postID") ON DELETE CASCADE
 );
 
 --CREATE TABLE "BoardPost" (
@@ -255,7 +255,7 @@ CREATE TABLE "DiscussionBoard" (
 -- ==================
 -- DIRECT MESSAGE FOR QUESTIONS
 -- ==================
-CREATE TABLE "DirectMessage" (
+CREATE TABLE "tblDirectMessage" (
     "msgID" SERIAL PRIMARY KEY,
     "userID" INT NOT NULL,
     "courseID" INT NOT NULL,
@@ -264,26 +264,31 @@ CREATE TABLE "DirectMessage" (
     "status" VARCHAR(50),
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE,
-    FOREIGN KEY ("courseID") REFERENCES "Course"("courseID") ON DELETE CASCADE
+    FOREIGN KEY ("userID") REFERENCES "tblUser"("userID") ON DELETE CASCADE,
+    FOREIGN KEY ("courseID") REFERENCES "tblCourse"("courseID") ON DELETE CASCADE
 );
 
 -- ==================
 -- SCHEDULE
 -- ==================
-CREATE TABLE "Schedule" (
+CREATE TABLE "tblSchedule" (
     "scheduleID" SERIAL PRIMARY KEY,
     "userID" INT NOT NULL,
     "moduleID" INT NOT NULL,
-    "scheduledDateTime" TIMESTAMP NOT NULL,
-    FOREIGN KEY ("userID") REFERENCES "User"("userID") ON DELETE CASCADE,
-    FOREIGN KEY ("moduleID") REFERENCES "Module"("moduleID") ON DELETE CASCADE
+    "date" DATE NOT NULL,
+    "startTime" TIME NOT NULL,
+    "endTime" TIME NOT NULL,
+    "totalHours" DECIMAL(4,2) GENERATED ALWAYS AS (
+    EXTRACT(EPOCH FROM ("endTime" - "startTime")) / 3600
+    ) STORED,
+    FOREIGN KEY ("userID") REFERENCES "tblUser"("userID") ON DELETE CASCADE,
+    FOREIGN KEY ("moduleID") REFERENCES "tblModule"("moduleID") ON DELETE CASCADE
 );
 
 -- ==================
 -- ANNOUNCEMENT
 -- ==================
-CREATE TABLE "Announcement" (
+CREATE TABLE "tblAnnouncement" (
     "announcementID" SERIAL PRIMARY KEY,
     "courseID" INT NOT NULL,
     "title" VARCHAR(200) NOT NULL,
@@ -291,11 +296,11 @@ CREATE TABLE "Announcement" (
     "status" VARCHAR(50) DEFAULT 'active',
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("courseID") REFERENCES "Course"("courseID") ON DELETE CASCADE
+    FOREIGN KEY ("courseID") REFERENCES "tblCourse"("courseID") ON DELETE CASCADE
 );
 
 -- ==================
 -- INDEXES
 -- ==================
 -- Index for faster email lookups
-CREATE INDEX "idx_users_email" ON "User"("email");
+CREATE INDEX "idx_users_email" ON "tblUser"("email");

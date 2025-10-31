@@ -4,12 +4,12 @@ class QuizAttempt {
     static async start({ quizID, enrolmentID }, client = null) {
         const db = client || pool;
         const query = `
-        INSERT INTO "QuizAttempt" ("quizID", "enrolmentID", "count", "startTime")
+        INSERT INTO "tblQuizAttempt" ("quizID", "enrolmentID", "count", "startTime")
         SELECT
             $1 AS "quizID", 
             $2 AS "enrolmentID",
             COALESCE((
-                SELECT COUNT(*) FROM "QuizAttempt" 
+                SELECT COUNT(*) FROM "tblQuizAttempt" 
                 WHERE "quizID" = $1 AND "enrolmentID" = $2
             ), 0) + 1 AS "count",
             NOW() AS  "startTime"
@@ -21,7 +21,7 @@ class QuizAttempt {
 
     static async submit({ attemptID, score, passed }, client = null) {
         const query = `
-        UPDATE "QuizAttempt"
+        UPDATE "tblQuizAttempt"
         SET
             "score" = $2, 
             "passed" = $3,
@@ -36,7 +36,7 @@ class QuizAttempt {
     static async findById(attemptID, client = null) {
         const db = client || pool;
         const query = `
-        SELECT * FROM "QuizAttempt" WHERE "attemptID" = $1
+        SELECT * FROM "tblQuizAttempt" WHERE "attemptID" = $1
         `;
         const result = await db.query(query, [attemptID]);
         return result.rows[0];
@@ -44,7 +44,7 @@ class QuizAttempt {
 
     static async findByQuizId(quizID, client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "QuizAttempt" WHERE "quizID" = $1`;
+        const query = `SELECT * FROM "tblQuizAttempt" WHERE "quizID" = $1`;
         const result = await db.query(query, [quizID]);
         return result.rows;
     }
@@ -52,10 +52,10 @@ class QuizAttempt {
     static async findByUserModule(userID, moduleID, client = null) {
         const db = client || pool;
         const query = `
-        SELECT a.* FROM "QuizAttempt" a
-        LEFT JOIN "Quiz" q ON a."quizID" = q."quizID"
-        LEFT JOIN "Module" m ON m."moduleID" = q."moduleID"
-        LEFT JOIN "Enrolment" e ON m."courseID" = e."courseID"
+        SELECT a.* FROM "tblQuizAttempt" a
+        LEFT JOIN "tblQuiz" q ON a."quizID" = q."quizID"
+        LEFT JOIN "tblModule" m ON m."moduleID" = q."moduleID"
+        LEFT JOIN "tblEnrolment" e ON m."courseID" = e."courseID"
         WHERE e."userID" = $1 AND m."moduleID" = $2
         `;
         const result = await db.query(query, [userID, moduleID]);
@@ -65,10 +65,10 @@ class QuizAttempt {
     static async findByUserCourse(userID, courseID, client = null) {
         const db = client || pool;
         const query = `
-        SELECT a.* FROM "QuizAttempt" a
-        LEFT JOIN "Quiz" q ON a."quizID" = q."quizID"
-        LEFT JOIN "Module" m ON m."moduleID" = q."moduleID"
-        LEFT JOIN "Enrolment" e ON m."courseID" = e."courseID"
+        SELECT a.* FROM "tblQuizAttempt" a
+        LEFT JOIN "tblQuiz" q ON a."quizID" = q."quizID"
+        LEFT JOIN "tblModule" m ON m."moduleID" = q."moduleID"
+        LEFT JOIN "tblEnrolment" e ON m."courseID" = e."courseID"
         WHERE e."userID" = $1 AND m."moduleID" = $2
         `;
         const result = await db.query(query, [userID, courseID]);
@@ -97,7 +97,7 @@ class QuizAttempt {
     //     values.push(attemptID);
 
     //     const query = `
-    //     UPDATE "QuizAttemp"
+    //     UPDATE "tblQuizAttemp"
     //     SET ${updates.join(', ')}
     //     WHERE "attemptID" = $${paramCount}
     //     RETURNING *
