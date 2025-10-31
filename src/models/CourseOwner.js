@@ -4,7 +4,7 @@ class CourseOwner {
     // Pathway to be added in Sprint 2
     static async create({ ownerID, department }) {
         const query = `
-            INSERT INTO "CourseOwner" ("ownerID", "department", "created_at")
+            INSERT INTO "tblCourseOwner" ("ownerID", "department", "created_at")
             VALUES ($1, $2, NOW())
             RETURNING "ownerID", "department", "created_at"
         `;
@@ -13,14 +13,14 @@ class CourseOwner {
     }
 
     static async findByDepartment(department) {
-        const query = 'SELECT * FROM "CourseOwner" WHERE "department" = $1';
+        const query = 'SELECT * FROM "tblCourseOwner" WHERE "department" = $1';
         const result = await pool.query(query, [department]);
         return result.rows[0];
     }
 
     static async findById(id) {
         const query = `
-            SELECT * FROM "CourseOwner" WHERE "ownerID" = $1
+            SELECT * FROM "tblCourseOwner" WHERE "ownerID" = $1
         `;
         const result = await pool.query(query, [id]);
         return result.rows[0];
@@ -48,7 +48,7 @@ class CourseOwner {
         values.push(id);
 
         const query = `
-            UPDATE "CourseOwner"
+            UPDATE "tblCourseOwner"
             SET ${updates.join(', ')}
             WHERE "ownerID" = $${paramCount}
             RETURNING "ownerID", "department", "updated_at"
@@ -60,7 +60,7 @@ class CourseOwner {
 
     static async getAll() {
         const query = `
-            SELECT * FROM "CourseOwner" ORDER BY "created_at" DESC
+            SELECT * FROM "tblCourseOwner" ORDER BY "created_at" DESC
         `;
         const result = await pool.query(query);
         return result.rows;

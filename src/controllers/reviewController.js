@@ -2,7 +2,10 @@ const CourseReview = require('../models/CourseReview');
 const User = require('../models/User');
 const Enrolment = require('../models/Enrolment');
 const Course = require('../models/Course');
+const Pathway = require('../models/Pathway');
 const { VALID_REVIEW_STATUS } = require('../config/constants');
+const { sendNewReviewNotification } = require('../services/emailService');
+
 
 const register = async (req, res) => {
     try {
@@ -61,6 +64,8 @@ const register = async (req, res) => {
             comment,
             rating
         });
+
+        sendNotification(newReview);
 
         res.json({
             message: 'Review posted successfully',
@@ -140,26 +145,63 @@ const getCourseReviews = async (req, res) => {
             });
         };
 
-        // Validate course ID
-        const course = await Course.findById(courseID);
-        if (!course) {
-            return res.status(400).json({
-                error: 'Invalid course ID. Course does not exist.'
+        // Check Course ID
+        const exists = !!(await Course.findById(courseID));
+        if (!exists) {
+            return res.status(400).json({ 
+                error: 'Course not found' 
             });
         };
         
-        // Get reviews
-        const reviewws = await CourseReview.findByCourseID(courseID);
-        const avgRating = await CourseReview.getAvgRatings(courseID);
-        
+        const review = await processCourseReviews(courseID);
+
         res.json({
-            reviews: reviewws,
-            avgRating: avgRating.AvgRating,
-            course: course
+            reviews: review.reviews,
+            avgRating: review.avgRating,
+            course: review.course
         });
 
     } catch (error) {
         console.error('Get course review error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+const getPathwayReviews = async (req, res) => {
+    try {
+        const pathwayID = req.params.pathwayID;
+
+        // Basic validataion
+        if (!pathwayID) {
+            return res.status(400).json({ 
+                error: 'Pathway ID is required' 
+            });
+        };
+
+        // Validate course ID
+        const pathway = await Pathway.findById(pathwayID);
+        if (!pathway) {
+            return res.status(400).json({
+                error: 'Invalid pathway ID. Pathway does not exist.'
+            });
+        };
+        
+        // Get courses under pathway
+        const courses = await Course.findByPathwayId(pathway.pathwayID);
+        const reviews = [];
+        for (const course of courses) {
+            let review = await processCourseReviews(course.courseID);
+            reviews.push({
+                course: course,
+                reviews: review.reviews,
+                avgRating: review.avgRating
+            });
+        }
+
+        res.json(reviews);
+
+    } catch (error) {
+        console.error('Get pathway review error:', error);
         res.status(500).json({ error: 'Internal server error' });
 
     }
@@ -268,10 +310,60 @@ const getMeta = (req, res) => {
 }
 
 
+
+const processCourseReviews = async(courseID) => {
+    // Validate course ID
+    const course = await Course.findById(courseID);
+    if (!course) {
+        throw new Error('Invalid course ID. Course does not exist.');
+    };
+    
+    // Get reviews
+    const reviews = await CourseReview.findByCourseID(courseID);
+    for (let review of reviews) {
+        let user = await User.findById(review.userID);
+        review.firstName = user.firstName;
+        review.lastName = user.lastName;
+    }
+
+    const avgRating = await CourseReview.getAvgRatings(courseID);
+    
+    return {
+        reviews: reviews,
+        avgRating: avgRating? avgRating.AvgRating : 0.0,
+        course: course
+    };
+}
+
+
+const sendNotification = async(review) => {
+    try {
+        const course = await Course.findById(review.courseID);
+        if (!course) {
+            throw new Error('Invalid courseID. Course not found.')
+        }
+
+        const recipient = await User.findById(course.userID);
+        if (!recipient) {
+            throw new Error('Invalid userID. Course owner not found.')
+        }
+
+        const reviewer = await User.findById(review.userID);
+        review.firstName = reviewer.firstName;
+        review.lastName = reviewer.lastName;
+
+        sendNewReviewNotification(recipient, course.title, review);
+
+    } catch (error) {
+        throw new Error(`Notification error: ${error.message}`);
+    }
+}
+
 module.exports = {
   register,
   update,
   getCourseReviews,
+  getPathwayReviews,
   getUserReviews,
   getReview,
   getTopReviews,

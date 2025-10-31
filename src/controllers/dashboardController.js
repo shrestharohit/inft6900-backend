@@ -1,6 +1,7 @@
 const Enrolment = require('../models/Enrolment');
 const User = require('../models/User');
 const Course = require('../models/Course');
+const Quiz = require('../models/Quiz');
 const CourseReview = require('../models/CourseReview');
 const { VALID_MODULE_STATUS } = require('../config/constants');
 const { pool } = require('../config/database');
@@ -41,9 +42,10 @@ const getCourseOwnerData = async (req, res) => {
             totalEnrolments += courseData.enrolments;
 
             // push avg ratings
+            courseData.avgRating = 0.0;
             let avgRating = await CourseReview.getAvgRatings(course.courseID);
             if (avgRating) {
-                courseData.avgRating = avgRating.AvgRating;
+                courseData.avgRating = parseFloat(avgRating.AvgRating);
             }
 
             // push released date (created_at is fine...?)
@@ -63,9 +65,10 @@ const getCourseOwnerData = async (req, res) => {
         const announcements = await Announcement.findByCourseOwner(userID, ['active']);
         overallData.totalPublishedAnnouncement = announcements.length;
 
+        overallData.avgRating = 0.0;
         const courseOwnerRating = await CourseReview.getAvgCourseOwnerRatings(userID);
         if (courseOwnerRating) {
-            overallData.avgRating = courseOwnerRating.AvgRating;
+            overallData.avgRating = parseFloat(courseOwnerRating.AvgRating);
         }
 
         res.json({
@@ -80,7 +83,41 @@ const getCourseOwnerData = async (req, res) => {
 };
 
 
+const getAdminData = async (req, res) => {
+    // total users
+    const allUsers = await User.getAll();
+
+    // new users
+    const today = new Date();
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(today.getDate() -7);
+
+    const newUsers = allUsers.filter(user => user.created_at >= sevenDaysAgo);
+
+    // each role
+    const students = allUsers.filter(user => user.role === 'student');
+    const courseOwners = allUsers.filter(user => user.role === 'course_owner');
+    const admins = allUsers.filter(user => user.role === 'admin');
+
+    // pending courses
+    const pnedingCourses = await Course.findByStatus('wait_for_approval');
+    const pendingQuizzes = await Quiz.getApprovalList();
+
+    const data = {
+        totalUserCount: allUsers.length,
+        newUserCount: newUsers.length,
+        studentCount: students.length,
+        courseOwnerCount: courseOwners.length,
+        adminCount: admins.length,
+        pendingCourseCount: pnedingCourses.length,
+        pendingQuizCount: pendingQuizzes.length,
+        newUsers: newUsers
+    }
+
+    res.json(data);
+}
 
 module.exports = {
-  getCourseOwnerData
+  getCourseOwnerData,
+  getAdminData
 };

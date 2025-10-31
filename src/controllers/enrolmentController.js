@@ -406,16 +406,8 @@ const refreshStatus = async (enrolmentID) => {
         }
 
         // switch to completed if all quizzes are passed
-        quizzes = await Quiz.findByCourseID(enrolment.courseID);
-        let completed = false;
-        for (let quiz of quizzes) {
-            if (!quiz.passed) {
-                completed = false;
-                break;
-            } else {
-                completed = true;
-            }
-        }
+        const quizzes = await Quiz.findByCourseID(enrolment.courseID);
+        const completed = quizzes.length > 0 && quizzes.every(q => q.passed);
 
         if (completed) {
             updatedEnrolment = await Enrolment.update(enrolmentID, {status: 'completed'});
@@ -428,15 +420,76 @@ const refreshStatus = async (enrolmentID) => {
 }
 
 const getPopular = async (req, res) => {
-    const popularCourses = await Enrolment.getPopularCourses();
-    const popularPathways = await Enrolment.getPopularPathways();
-    result = {
-        popularCourses: popularCourses,
-        popularPathways: popularPathways
-    }
-    res.json(result);
-}
+    try {
+        const popularCourses = await Enrolment.getPopularCourses();
+        // in case there are no 3 courses with enrolment, get random courses
+        if (popularCourses.length !== 3) {
+            const popularIds = popularCourses.map(item => item.courseID);
+            const courses = await Course.getAll(['active']);
+            let courseIds = courses.map(item => item.courseID).filter(id => !popularIds.includes(id));
 
+            // get up to 3 courses
+            const len = courses.length < 3 ? courses.length : 3;
+            for (let i = len - popularCourses.length; popularCourses.length < len ; i++) {
+                let randId = courseIds[Math.floor(Math.random() * courseIds.length)];
+                let randCourse = await Course.findById(randId);
+                courseIds = courseIds.filter(id => id !== randId);
+                if (randCourse) {
+                    let data = {
+                        courseID: randCourse.courseID,
+                        title: randCourse.title,
+                        level: randCourse.level,
+                        category: randCourse.category,
+                        count: 0
+                    }
+                    popularCourses.push(data);
+                }
+
+                if(popularCourses.length === courses.length) {
+                    break;
+                }
+            }
+        }
+
+        const popularPathways = await Enrolment.getPopularPathways();
+        // in case there are no 3 courses with enrolment, get random pathways
+        if (popularPathways.length !== 3) {
+            const popularPathIds = popularPathways.map(item => item.pathwayID);
+            const pathways = await Pathway.getAll(['active']);
+            let pathIds = pathways.map(item => item.pathwayID).filter(id => !popularPathIds.includes(id));
+
+            // get up to 3 pathways
+            const len = pathways.length < 3 ? pathways.length : 3;
+            for (let i = len - popularPathways.length; popularPathways.length < len; i++) {
+                let randId = pathIds[Math.floor(Math.random() * pathIds.length)];
+                let randPath = await Pathway.findById(randId);
+                pathIds = pathIds.filter(id => id !== randId);
+                if (randPath) {
+                    let data = {
+                        pathwayID: randId,
+                        name: randPath.name,
+                        count: 0
+                    }
+                    popularPathways.push(data);
+                }
+                
+                if(popularPathways.length === pathways.length) {
+                    break;
+                }
+
+            }
+        }
+
+        result = {
+            popularCourses: popularCourses,
+            popularPathways: popularPathways
+        }
+        res.json(result);
+    } catch(error) {
+        console.error('Get popular item error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
 
 const getEnrolment = async (req, res) => {
     try {

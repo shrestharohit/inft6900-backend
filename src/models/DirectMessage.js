@@ -4,7 +4,7 @@ class DirectMessage {
     static async create({ userID, courseID, message }, client = null) {
         const db = client || pool;
         const query = `
-            INSERT INTO "DirectMessage" ("userID", "courseID", "message", "status", "created_at")
+            INSERT INTO "tblDirectMessage" ("userID", "courseID", "message", "status", "created_at")
             VALUES ($1, $2, $3, 'active', NOW())
             RETURNING *
         `;
@@ -35,7 +35,7 @@ class DirectMessage {
         values.push(id);
 
         const query = `
-            UPDATE "DirectMessage"
+            UPDATE "tblDirectMessage"
             SET ${updates.join(', ')}
             WHERE "msgID" = $${paramCount}
             RETURNING *
@@ -48,9 +48,9 @@ class DirectMessage {
     static async findById(id, status = ["active"], client = null) {
         const db = client || pool;
         const query = `
-            SELECT d.*, c."title", u."firstName", u."lastName" FROM "DirectMessage"  d
-            LEFT JOIN "Course" c ON d."courseID" = c."courseID"
-            LEFT JOIN "User" u ON d."userID" = u."userID"
+            SELECT d.*, c."title", u."firstName", u."lastName" FROM "tblDirectMessage"  d
+            LEFT JOIN "tblCourse" c ON d."courseID" = c."courseID"
+            LEFT JOIN "tblUser" u ON d."userID" = u."userID"
             WHERE d."msgID" = $1 AND d."status" = ANY($2)
         `;
         const result = await db.query(query, [id, status]);
@@ -60,9 +60,9 @@ class DirectMessage {
     static async findByCourseID(courseID, status = ["active"], client = null) {
         const db = client || pool;
         const query = `
-            SELECT d.*, c."title", u."firstName", u."lastName" FROM "DirectMessage"  d
-            LEFT JOIN "Course" c ON d."courseID" = c."courseID"
-            LEFT JOIN "User" u ON d."userID" = u."userID"
+            SELECT d.*, c."title", u."firstName", u."lastName" FROM "tblDirectMessage"  d
+            LEFT JOIN "tblCourse" c ON d."courseID" = c."courseID"
+            LEFT JOIN "tblUser" u ON d."userID" = u."userID"
             WHERE d."courseID" = $1 AND d."status" = ANY($2)
         `;
         const result = await db.query(query, [courseID, status]);
@@ -72,9 +72,9 @@ class DirectMessage {
     static async findByUserID(userID, status = ["active"], client = null) {
         const db = client || pool;
         const query = `
-            SELECT d.*, c."title", u."firstName", u."lastName" FROM "DirectMessage"  d
-            LEFT JOIN "Course" c ON d."courseID" = c."courseID"
-            LEFT JOIN "User" u ON d."userID" = u."userID"
+            SELECT d.*, c."title", u."firstName", u."lastName" FROM "tblDirectMessage"  d
+            LEFT JOIN "tblCourse" c ON d."courseID" = c."courseID"
+            LEFT JOIN "tblUser" u ON d."userID" = u."userID"
             WHERE d."userID" = $1 AND d."status" = ANY($2)
         `;
         const result = await db.query(query, [userID, status]);
@@ -84,9 +84,9 @@ class DirectMessage {
     static async findByUserIDCourseID(userID, courseID, status = ["active"], client = null) {
         const db = client || pool;
         const query = `
-            SELECT d.*, c."title", u."firstName", u."lastName" FROM "DirectMessage"  d
-            LEFT JOIN "Course" c ON d."courseID" = c."courseID"
-            LEFT JOIN "User" u ON d."userID" = u."userID"
+            SELECT d.*, c."title", u."firstName", u."lastName" FROM "tblDirectMessage"  d
+            LEFT JOIN "tblCourse" c ON d."courseID" = c."courseID"
+            LEFT JOIN "tblUser" u ON d."userID" = u."userID"
             WHERE d."userID" = $1 AND d."courseID" = $2 d."status" = ANY($3)
         `;
         const result = await db.query(query, [userID, courseID, status]);
@@ -96,9 +96,9 @@ class DirectMessage {
     static async findByCourseOwner(userID, status = ["active"], client = null) {
         const db = client || pool;
         const query = `
-            SELECT d.*, c."title", u."firstName", u."lastName" FROM "DirectMessage"  d
-            LEFT JOIN "Course" c ON d."courseID" = c."courseID"
-            LEFT JOIN "User" u ON d."userID" = u."userID"
+            SELECT d.*, c."title", u."firstName", u."lastName" FROM "tblDirectMessage"  d
+            LEFT JOIN "tblCourse" c ON d."courseID" = c."courseID"
+            LEFT JOIN "tblUser" u ON d."userID" = u."userID"
             WHERE c."userID" = $1 AND d."status" = ANY($2)
         `;
         const result = await db.query(query, [userID, status]);

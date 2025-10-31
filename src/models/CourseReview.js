@@ -4,7 +4,7 @@ class CourseReview {
     static async create({ userID, courseID, comment, rating }, client = null) {
         const db = client || pool;
         const query = `
-            INSERT INTO "CourseReview" ("userID", "courseID", "comment", "rating", "status", "created_at")
+            INSERT INTO "tblCourseReview" ("userID", "courseID", "comment", "rating", "status", "created_at")
             VALUES ($1, $2, $3, $4, 'active', NOW())
             RETURNING *
         `;
@@ -35,7 +35,7 @@ class CourseReview {
         values.push(id);
 
         const query = `
-            UPDATE "CourseReview"
+            UPDATE "tblCourseReview"
             SET ${updates.join(', ')}
             WHERE "reviewID" = $${paramCount}
             RETURNING *
@@ -48,7 +48,9 @@ class CourseReview {
     static async findById(id, status = ["active"], client = null) {
         const db = client || pool;
         const query = `
-            SELECT * FROM "CourseReview" WHERE "reviewID" = $1 AND "status" = ANY($2)
+            SELECT r.*, u."firstName", u."lastName" FROM "tblCourseReview" r
+            LEFT JOIN "tblUser" u ON u."userID" = r."userID"
+            WHERE r."reviewID" = $1 AND r."status" = ANY($2)
         `;
         const result = await db.query(query, [id, status]);
         return result.rows[0];
@@ -56,7 +58,21 @@ class CourseReview {
 
     static async findByCourseID(courseID, status = ["active"], client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "CourseReview" WHERE "courseID" = $1 AND "status" = ANY($2)`;
+        const query = `
+            SELECT r.*, c."title", u."firstName", u."lastName" FROM "tblCourseReview" r
+            LEFT JOIN "tblCourse" c ON c."courseID" = r."courseID"
+            LEFT JOIN "tblUser" u ON r."userID" = u."userID" 
+            WHERE r."courseID" = $1 AND r."status" = ANY($2)`;
+        const result = await db.query(query, [courseID, status]);
+        return result.rows;
+    }
+
+    static async findByPathwayID(courseID, status = ["active"], client = null) {
+        const db = client || pool;
+        const query = `
+            SELECT r.*, c."title" FROM "tblCourseReview" r
+            LEFT JOIN "tblCourse" c ON c."courseID" = r."courseID"
+            WHERE c."pathwayID" = $1 AND r."status" = ANY($2)`;
         const result = await db.query(query, [courseID, status]);
         return result.rows;
     }
@@ -65,8 +81,8 @@ class CourseReview {
         const db = client || pool;
         const query = `
             SELECT c."courseID", c."title", ROUND(AVG(r."rating"),1) as "AvgRating"
-            FROM "CourseReview"  r
-            LEFT JOIN "Course" c ON r."courseID" = c."courseID"
+            FROM "tblCourseReview"  r
+            LEFT JOIN "tblCourse" c ON r."courseID" = c."courseID"
             WHERE c."courseID" = $1 AND r."status" = 'active'
             GROUP BY c."courseID", c."title"
         `;
@@ -78,8 +94,8 @@ class CourseReview {
         const db = client || pool;
         const query = `
             SELECT c."userID", ROUND(AVG(r."rating"),1) as "AvgRating"
-            FROM "CourseReview"  r
-            LEFT JOIN "Course" c ON r."courseID" = c."courseID"
+            FROM "tblCourseReview"  r
+            LEFT JOIN "tblCourse" c ON r."courseID" = c."courseID"
             WHERE c."userID" = $1 AND r."status" = 'active'
             GROUP BY c."userID"
         `;
@@ -89,14 +105,20 @@ class CourseReview {
 
     static async findByUserID(userID, status = ["active"], client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "CourseReview" WHERE "userID" = $1 AND "status" = ANY($2)`;
+        const query = `
+            SELECT r.*, u."firstName", u."lastName" FROM "tblCourseReview" r
+            LEFT JOIN "tblUser" u ON u."userID" = r."userID"
+            WHERE r."userID" = $1 AND r."status" = ANY($2)`;
         const result = await db.query(query, [userID, status]);
         return result.rows;
     }
 
     static async findByUserIDCourseID(userID, courseID, status = ["active"], client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "CourseReview" WHERE "userID" = $1 AND "courseID" = $2 AND "status" = ANY($3)`;
+        const query = `
+            SELECT * FROM "tblCourseReview" r
+            LEFT JOIN "tblUser" u ON u."userID" = r."userID"
+            WHERE r."userID" = $1 AND r."courseID" = $2 AND r."status" = ANY($3)`;
         const result = await db.query(query, [userID, courseID, status]);
         return result.rows;
     }
@@ -105,9 +127,9 @@ class CourseReview {
         const db = client || pool;
         const query = `
             SELECT r.*, c."courseID", c."title", u."userID", u."firstName", u."lastName"
-            FROM "CourseReview" r
-            LEFT JOIN "Course" c ON r."courseID" = c."courseID"
-            LEFT JOIN "User" u ON r."userID" = u."userID"
+            FROM "tblCourseReview" r
+            LEFT JOIN "tblCourse" c ON r."courseID" = c."courseID"
+            LEFT JOIN "tblUser" u ON r."userID" = u."userID"
             WHERE r."rating" = 5 AND r."status" = 'active'
         `;
         const result = await db.query(query);

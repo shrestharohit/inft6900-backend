@@ -45,7 +45,7 @@ const register = async (req, res) => {
 
         // Validate pathway
         const pathway = await Pathway.findById(pathwayID)
-        if (pathwayID !== undefined && !pathway) {
+        if (pathwayID != undefined && !pathway) {
             return res.status(400).json({
                 error: 'Invalid pathway ID. Pathway not found.'
             });
@@ -53,7 +53,7 @@ const register = async (req, res) => {
 
         // Check if there is already a course with the same level in the pathway
         const hasSameLevel = !!(await Course.findByPathwayIDCourseLevel(pathwayID, level));
-        if (pathwayID !== undefined && hasSameLevel) {
+        if (pathwayID != undefined && hasSameLevel) {
             return res.status(400).json({
                 error: 'Pathway can have only 1 course in each level. Course with selected level already exists in pathway.'
             });
@@ -195,8 +195,20 @@ const getAllCategories = async (req, res) => {
 
 
 const getAll = async (req, res) => {
-    const courses = await Course.getAll();
+  try{
+    const userId = req.headers['x-user-id'];
+    let showingStatus = ['active'];
 
+    // set showing status based on the user role
+    // for example, students should be only allowed to see acive courses
+    if (userId != undefined) {
+      const user = await User.findById(userId);
+      if (user && (user.role === 'course_owner' || user.role === 'admin')) {
+        showingStatus = VALID_COURSE_STATUS;
+      }
+    }
+
+    const courses = await Course.getAll(showingStatus);
     const processedData = [];
 
     // get modules and contents nested
@@ -218,6 +230,10 @@ const getAll = async (req, res) => {
     }
 
     res.json(processedData);
+  } catch(error) {
+        console.error('Gel course error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+  }
 }
 
 

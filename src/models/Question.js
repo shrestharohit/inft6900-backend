@@ -3,7 +3,7 @@ const { pool } = require('../config/database');
 class Question {
     static async create({ quizID, questionNumber, questionText, status }) {
         const query = `
-        INSERT INTO "Question" ("quizID", "questionNumber", "questionText", "status", "created_at")
+        INSERT INTO "tblQuestion" ("quizID", "questionNumber", "questionText", "status", "created_at")
         VALUES ($1, $2, $3, $4, NOW())
         RETURNING "questionID", "quizID", "questionNumber", "questionText", "status", "created_at"
         `;
@@ -13,21 +13,21 @@ class Question {
 
     static async findById(questionID, client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "Question" WHERE "questionID" = $1 AND "status" = 'active'`;
+        const query = `SELECT * FROM "tblQuestion" WHERE "questionID" = $1 AND "status" = 'active'`;
         const result = await db.query(query, [questionID]);
         return result.rows[0];
     }
 
     static async findByQuizId(quizID, client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "Question" WHERE "quizID" = $1 AND "status" = 'active' ORDER BY "questionNumber" DESC`;
+        const query = `SELECT * FROM "tblQuestion" WHERE "quizID" = $1 AND "status" = 'active' ORDER BY "questionNumber" DESC`;
         const result = await db.query(query, [quizID]);
         return result.rows;
     }
 
     static async findByQuizIdQuestionNumber(quizId, questionNumber, client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "Question" WHERE "quizID" = $1 AND "questionNumber" = $2 AND "status" = 'active'`;
+        const query = `SELECT * FROM "tblQuestion" WHERE "quizID" = $1 AND "questionNumber" = $2 AND "status" = 'active'`;
         const result = await db.query(query, [quizId, questionNumber]);
         return result.rows[0];
     }
@@ -35,8 +35,8 @@ class Question {
     static async findAnswer(questionID, client = null) {
         const db = client || pool;
         const query = `
-        SELECT ao.* FROM "Question" q
-        LEFT JOIN "AnswerOption" ao ON q."questionID" = ao."questionID"
+        SELECT ao.* FROM "tblQuestion" q
+        LEFT JOIN "tblAnswerOption" ao ON q."questionID" = ao."questionID"
         WHERE q."questionID" = $1 AND ao."isCorrect" = TRUE AND ao."status" = 'active' AND q."status" = 'active'
         `;
         const result = await db.query(query, [questionID]);
@@ -64,7 +64,7 @@ class Question {
         values.push(questionID);
 
         const query = `
-        UPDATE "Question"
+        UPDATE "tblQuestion"
         SET ${updates.join(', ')}
         WHERE "questionID" = $${paramCount}
         RETURNING *

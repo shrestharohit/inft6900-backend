@@ -139,6 +139,23 @@ const getDetail = async (req, res) => {
     }
 };
 
+// Get all courses in a pathway
+const getCoursesInPathway = async (req, res) => {
+  try {
+    const pathwayID = parseInt(req.params.pathwayid);
+    if (!pathwayID) return res.status(400).json({ error: 'Pathway ID is required' });
+
+    const pathway = await Pathway.findById(pathwayID);
+    if (!pathway) return res.status(404).json({ error: 'Pathway not found' });
+
+    const courses = await Pathway.getCourses(pathwayID);
+    res.json({ pathwayID, courses });
+  } catch (error) {
+    console.error('Get courses in pathway error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 // Get all pathways
 const getAll = async (req, res) => {
     try {
@@ -162,5 +179,6 @@ module.exports = {
     getAll,
     getMeta,
     getApprovalList,
-    getDetail
+    getDetail,
+    getCoursesInPathway
 };

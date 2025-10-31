@@ -3,7 +3,7 @@ const { pool } = require('../config/database');
 class Course {
     static async create({ userID, title, pathwayID, category, level, outline, status='draft' }) {
         const query = `
-            INSERT INTO "Course" ("userID", "title", "pathwayID", "category", "level", "outline", "status", "created_at")
+            INSERT INTO "tblCourse" ("userID", "title", "pathwayID", "category", "level", "outline", "status", "created_at")
             VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
             RETURNING *
         `;
@@ -11,63 +11,67 @@ class Course {
         return result.rows[0];
     }
 
-    static async findById(id) {
+    static async findById(id, status = ['draft', 'wait_for_approval', 'active', 'inactive']) {
         const query = `
-            SELECT * FROM "Course" WHERE "courseID" = $1
+            SELECT * FROM "tblCourse" 
+            WHERE "courseID" = $1 AND "status" = ANY($2)
         `;
-        const result = await pool.query(query, [id]);
+        const result = await pool.query(query, [id, status]);
         return result.rows[0];
     }
 
-    static async findByCategory(category) {
+    static async findByCategory(category, status = ['draft', 'wait_for_approval', 'active', 'inactive']) {
         const query = `
-            SELECT * FROM "Course" WHERE "category" = $1
+            SELECT * FROM "tblCourse" 
+            WHERE "category" = $1 AND "status" = ANY($2)
         `;
-        const result = await pool.query(query, [category]);
+        const result = await pool.query(query, [category, status]);
         return result.rows;
     }
 
-    static async findByOwner(userID) {
+    static async findByOwner(userID, status = ['draft', 'wait_for_approval', 'active', 'inactive']) {
         const query = `
-            SELECT * FROM "Course" WHERE "userID" = $1
+            SELECT * FROM "tblCourse" 
+            WHERE "userID" = $1 AND "status" = ANY($2)
         `;
-        const result = await pool.query(query, [userID]);
+        const result = await pool.query(query, [userID, status]);
         return result.rows;
     }
 
     static async findByStatus(status) {
         const query = `
-            SELECT * FROM "Course" WHERE "status" = $1
+            SELECT * FROM "tblCourse" WHERE "status" = $1
         `;
         const result = await pool.query(query, [status]);
         return result.rows;
     }
 
-    static async findByUserID(userID) {
+    static async findByUserID(userID, status = ['draft', 'wait_for_approval', 'active', 'inactive']) {
         const query = `
-            SELECT * FROM "Course" WHERE "userID" = $1
+            SELECT * FROM "tblCourse" 
+            WHERE "userID" = $1 AND "status" = ANY($2)
         `;
-        const result = await pool.query(query, [userID]);
+        const result = await pool.query(query, [userID, status]);
         return result.rows;
     }
 
-    static async findByPathwayId(pathwayID) {
+    static async findByPathwayId(pathwayID, status = ['draft', 'wait_for_approval', 'active', 'inactive']) {
         const query = `
-            SELECT * FROM "Course" WHERE "pathwayID" = $1
+            SELECT * FROM "tblCourse" WHERE "pathwayID" = $1 AND "status" = ANY($2)
         `;
-        const result = await pool.query(query, [pathwayID]);
+        const result = await pool.query(query, [pathwayID, status]);
         return result.rows;
     }
 
     // Get a course with a specific level in a pathway
-    static async findByPathwayIDCourseLevel(pathwayID, level) {
+    static async findByPathwayIDCourseLevel(pathwayID, level, status = ['draft', 'wait_for_approval', 'active', 'inactive']) {
         const query = `
             SELECT c.*, p."name"
-            FROM "Course" c
-            LEFT JOIN "Pathway" p ON c."pathwayID" = p."pathwayID"
-            WHERE c."pathwayID" = $1 AND c."level" = $2
+            FROM "tblCourse" c
+            LEFT JOIN "tblPathway" p ON c."pathwayID" = p."pathwayID"
+            WHERE c."pathwayID" = $1 AND c."level" = $2 AND "status" = ANY($3)
         `;
-        const result = await pool.query(query, [pathwayID, level]);
+        const result = await pool.query(query, [pathwayID, level, status]);
         return result.rows[0];
     }
     
@@ -93,7 +97,7 @@ class Course {
         values.push(id);
 
         const query = `
-            UPDATE "Course"
+            UPDATE "tblCourse"
             SET ${updates.join(', ')}
             WHERE "courseID" = $${paramCount}
             RETURNING *
@@ -105,17 +109,19 @@ class Course {
 
     static async getAllCategories() {
         const query = `
-            SELECT DISTINCT "category" FROM "Course"
+            SELECT DISTINCT "category" FROM "tblCourse"
         `;
         const result = await pool.query(query);
         return result.rows;
     }
 
-    static async getAll() {
+    static async getAll(status = ['draft', 'wait_for_approval', 'active', 'inactive']) {
         const query = `
-            SELECT * FROM "Course" ORDER BY "created_at" DESC
+            SELECT * FROM "tblCourse"
+            WHERE "status" = ANY($1)
+            ORDER BY "created_at" DESC
         `;
-        const result = await pool.query(query);
+        const result = await pool.query(query, [status]);
         return result.rows;
     }
 

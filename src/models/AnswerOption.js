@@ -3,7 +3,7 @@ const { pool } = require('../config/database');
 class AnswerOption {
     static async create({ questionID, optionText, isCorrect, optionOrder, feedbackText, status }) {
         const query = `
-        INSERT INTO "AnswerOption" ("questionID", "optionText", "isCorrect", "optionOrder", "feedbackText", "status", "created_at")
+        INSERT INTO "tblAnswerOption" ("questionID", "optionText", "isCorrect", "optionOrder", "feedbackText", "status", "created_at")
         VALUES ($1, $2, $3, $4, $5, $6, NOW())
         RETURNING "optionID", "questionID", "optionText", "isCorrect", "optionOrder", "feedbackText", "status", "created_at"
         `;
@@ -13,28 +13,28 @@ class AnswerOption {
 
     static async findById(optionID, client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "AnswerOption" WHERE "optionID" = $1`;
+        const query = `SELECT * FROM "tblAnswerOption" WHERE "optionID" = $1`;
         const result = await db.query(query, [optionID]);
         return result.rows[0];
     }
 
     static async findByQuestionID(questionID, client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "AnswerOption" WHERE "questionID" = $1 AND "status" = 'active' ORDER BY "optionOrder" DESC`;
+        const query = `SELECT * FROM "tblAnswerOption" WHERE "questionID" = $1 AND "status" = 'active' ORDER BY "optionOrder" DESC`;
         const result = await db.query(query, [questionID]);
         return result.rows;
     }
 
     static async findByQuestionIdOptionOrder(questionID, optionOrder, client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "AnswerOption" WHERE "questionID" = $1 AND "optionOrder" = $2 AND "status" = 'active'`;
+        const query = `SELECT * FROM "tblAnswerOption" WHERE "questionID" = $1 AND "optionOrder" = $2 AND "status" = 'active'`;
         const result = await db.query(query, [questionID, optionOrder]);
         return result.rows[0];
     }
     
     static async findAnswerForQuestion(questionID, client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "AnswerOption" WHERE "questionID" = $1 AND "isCorrect" = true AND "status" = 'active'`;
+        const query = `SELECT * FROM "tblAnswerOption" WHERE "questionID" = $1 AND "isCorrect" = true AND "status" = 'active'`;
         const result = await db.query(query, [questionID]);
         return result.rows[0];
     }
@@ -60,7 +60,7 @@ class AnswerOption {
         values.push(optionID);
 
         const query = `
-        UPDATE "AnswerOption"
+        UPDATE "tblAnswerOption"
         SET ${updates.join(', ')}
         WHERE "optionID" = $${paramCount}
         RETURNING "optionID", "questionID", "optionText", "isCorrect", "optionOrder", "feedbackText", "status", "updated_at"

@@ -5,7 +5,7 @@ class Content {
     static async create({ moduleID, title, description, pageNumber, status = 'draft'}, client = null) {
         const db = client || pool;
         const query = `
-            INSERT INTO "Content" 
+            INSERT INTO "tblContent" 
             ("moduleID", "title", "description", "pageNumber", "status", "created_at")
             VALUES ($1, $2, $3, $4, $5, NOW())
             RETURNING "contentID", "moduleID", "title", "description", "pageNumber", "status", "created_at"
@@ -16,14 +16,14 @@ class Content {
 
     static async findByModuleId(moduleID, client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "Content" WHERE "moduleID" = $1 ORDER BY "created_at" DESC`;
+        const query = `SELECT * FROM "tblContent" WHERE "moduleID" = $1 ORDER BY "created_at" DESC`;
         const result = await db.query(query, [moduleID]);
         return result.rows;
     }
 
     static async findById(contentID, client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "Content" WHERE "contentID" = $1`;
+        const query = `SELECT * FROM "tblContent" WHERE "contentID" = $1`;
         const result = await db.query(query, [contentID]);
         return result.rows[0];
     }
@@ -51,7 +51,7 @@ class Content {
         values.push(contentID);
 
         const query = `
-            UPDATE "Content"
+            UPDATE "tblContent"
             SET ${updates.join(', ')}
             WHERE "contentID" = $${paramCount}
             RETURNING "contentID", "moduleID", "title", "description", "pageNumber", "status", "updated_at"
@@ -63,7 +63,7 @@ class Content {
 
     static async getAll(client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "Content" ORDER BY "created_at" DESC`;
+        const query = `SELECT * FROM "tblContent" ORDER BY "created_at" DESC`;
         const result = await db.query(query);
         return result.rows;
     }

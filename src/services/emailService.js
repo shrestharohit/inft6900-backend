@@ -1,6 +1,17 @@
 const nodemailer = require("nodemailer");
 const User = require('../models/User');
 const { getNotificationReceivers } = require('../controllers/notificationSettingController');
+const {
+    OTPMsg,
+    OTPEmailForpasswordResetMsg,
+    initialPasswordMsg,
+    approvalRequestNotificationMsg,
+    approvalNotificationMsg,
+    declineNotificationMsg,
+    newDMMsg,
+    DMRepliedMsg,
+    newCourseReviewMsg
+} = require('../config/emailTemplates')
 
 // Email configuration for MailerSend
 const createTransporter = () => {
@@ -34,25 +45,7 @@ const sendOTPEmail = async (email, otp, firstName) => {
       from: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER,
       to: email,
       subject: "Brainwave - Email Verification Code",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">Welcome to Brainwave!</h2>
-          <p>Hi ${firstName},</p>
-          <p>Thank you for registering with Brainwave. Please use the following verification code to complete your registration:</p>
-          
-          <div style="background-color: #f4f4f4; padding: 20px; text-align: center; margin: 20px 0;">
-            <h1 style="color: #007bff; font-size: 32px; margin: 0; letter-spacing: 5px;">${otp}</h1>
-          </div>
-          
-          <p>This code will expire in 10 minutes.</p>
-          <p>If you didn't request this code, please ignore this email.</p>
-          
-          <hr style="margin: 30px 0;">
-          <p style="color: #666; font-size: 12px;">
-            This is an automated message from Brainwave. Please do not reply to this email.
-          </p>
-        </div>
-      `,
+      html: OTPMsg({ firstName, otp }),
     };
 
     const result = await transporter.sendMail(mailOptions);
@@ -77,25 +70,7 @@ const sendOTPEmailForpasswordReset = async (email, otp, firstName) => {
       from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,
       to: email,
       subject: "Brainwave - Email Verification Code",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">Password reset</h2>
-          <p>Hi ${firstName},</p>
-          <p>Here is a verification code to reset your password:</p>
-          
-          <div style="background-color: #f4f4f4; padding: 20px; text-align: center; margin: 20px 0;">
-            <h1 style="color: #007bff; font-size: 32px; margin: 0; letter-spacing: 5px;">${otp}</h1>
-          </div>
-          
-          <p>This code will expire in 10 minutes.</p>
-          <p>If you didn't request this code, please ignore this email.</p>
-          
-          <hr style="margin: 30px 0;">
-          <p style="color: #666; font-size: 12px;">
-            This is an automated message from Brainwave. Please do not reply to this email.
-          </p>
-        </div>
-      `,
+      html: OTPEmailForpasswordResetMsg({ firstName, otp }),
     };
 
     const result = await transporter.sendMail(mailOptions);
@@ -120,25 +95,7 @@ const sendInitialPassword = async (email, password, firstName) => {
       from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,
       to: email,
       subject: "Brainwave - Your account has been created",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">Welcome to Brainwave!</h2>
-          <p>Hi ${firstName},</p>
-          <p>Your account has been created by our admin. Here is the initial password:</p>
-          
-          <div style="background-color: #f4f4f4; padding: 20px; text-align: center; margin: 20px 0;">
-            <h1 style="color: #007bff; font-size: 32px; margin: 0; letter-spacing: 5px;">${password}</h1>
-          </div>
-          
-          <p>Please do not share this password wtih anyone.</p>
-          <p>If you did not request for account registration, please ignore this email.</p>
-          
-          <hr style="margin: 30px 0;">
-          <p style="color: #666; font-size: 12px;">
-            This is an automated message from Brainwave. Please do not reply to this email.
-          </p>
-        </div>
-      `,
+      html: initialPasswordMsg({ firstName, password }),
     };
 
     const result = await transporter.sendMail(mailOptions);
@@ -158,14 +115,12 @@ const sendApprovalRequestNotification = async (requestor, requestingItem) => {
   try {
     const transporter = createTransporter();
     const admins = await User.findByRole('admin');
-    const receivers = await getNotificationReceivers('1', admins);
+    const receivers = admins.filter(admin => admin.notificationEnabled === true)
     
     if (receivers.length === 0) {
       console.log("✅ No error occured, but notification setting turned off for user");
       return { success: true };
     }
-
-    console.log(receivers)
 
     const emails = receivers.map(row => row.email)
     console.log("sending emails to followigs... " + emails);
@@ -174,22 +129,7 @@ const sendApprovalRequestNotification = async (requestor, requestingItem) => {
       from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,
       to: emails,
       subject: "Brainwave - Request for approval",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">Action required: Please approve or decline the request</h2>
-          <p>There is a new request for approval from ${requestor.firstName}.</p>
-                    
-          <p>Request item: ${requestingItem.type}</p>
-          <p>Request item name: ${requestingItem.name}</p>
-          
-          <p>Please login to Brainwave and approve or decline the request.</p>
-
-          <hr style="margin: 30px 0;">
-          <p style="color: #666; font-size: 12px;">
-            This is an automated message from Brainwave. Please do not reply to this email.
-          </p>
-        </div>
-      `,
+      html: approvalRequestNotificationMsg({ requestor, requestingItem }) ,
     };
 
     const result = await transporter.sendMail(mailOptions);
@@ -207,9 +147,7 @@ const sendApprovalNotification = async (requestor, requestingItem) => {
   try {
     const transporter = createTransporter();
 
-    const receivers = await getNotificationReceivers('2', [requestor]);
-    console.log(receivers)
-    if (receivers.length === 0) {
+    if (!requestor.notificationEnabled) {
       console.log("✅ No error occured, but notification setting turned off for user");
       return { success: true };
     }
@@ -218,23 +156,7 @@ const sendApprovalNotification = async (requestor, requestingItem) => {
       from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,
       to: requestor.email,
       subject: `Brainwave - ${requestingItem.type} Approved`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">Your request has been approved</h2>
-          <p>Hi ${requestor.firstName},</p>
-
-          <p>Your requested item has been approved by our admin. Here is the detail of approval result.</p>
-          <p>Request item: ${requestingItem.type}</p>
-          <p>Request item name: ${requestingItem.name}</p>
-          
-          <p>Please login to Brainwave to see more detail.</p>
-
-          <hr style="margin: 30px 0;">
-          <p style="color: #666; font-size: 12px;">
-            This is an automated message from Brainwave. Please do not reply to this email.
-          </p>
-        </div>
-      `,
+      html: approvalNotificationMsg({ requestor, requestingItem }),
     };
 
     const result = await transporter.sendMail(mailOptions);
@@ -251,9 +173,7 @@ const sendDeclineNotification = async (requestor, requestingItem) => {
   try {
     const transporter = createTransporter();
 
-    const receivers = await getNotificationReceivers('3', [requestor]);
-
-    if (receivers.length === 0) {
+    if (!requestor.notificationEnabled) {
       console.log("✅ No error occured, but notification setting turned off for user");
       return { success: true };
     }
@@ -262,23 +182,7 @@ const sendDeclineNotification = async (requestor, requestingItem) => {
       from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,
       to: requestor.email,
       subject: `Brainwave - ${requestingItem.type} Delined`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">Your request has been declined</h2>
-          <p>Hi ${requestor.firstName},</p>
-
-          <p>Your requested item has been declined by our admin. Here is the detail of approval result.</p>
-          <p>Request item: ${requestingItem.type}</p>
-          <p>Request item name: ${requestingItem.name}</p>
-          
-          <p>Please login to Brainwave to see more detail.</p>
-
-          <hr style="margin: 30px 0;">
-          <p style="color: #666; font-size: 12px;">
-            This is an automated message from Brainwave. Please do not reply to this email.
-          </p>
-        </div>
-      `,
+      html: declineNotificationMsg({ requestor, requestingItem }),
     };
 
     const result = await transporter.sendMail(mailOptions);
@@ -291,7 +195,86 @@ const sendDeclineNotification = async (requestor, requestingItem) => {
 };
 
 
+// Notification for course owner receiving DM
+const sendDMNotificationToOwner = async (recipient, dm) => {
+  try {
+    const transporter = createTransporter();
 
+    if (!recipient.notificationEnabled) {
+      console.log("✅ No error occured, but notification setting turned off for user");
+      return { success: true };
+    }
+
+    const mailOptions = {
+      from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,
+      to: recipient.email,
+      subject: `Brainwave - New question for your course, ${dm.title} `,
+      html: newDMMsg({ recipient, dm }),
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log("✅ New DM notification sent successfully:", result.messageId);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error("❌ Failed to send new DM notification:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Notification for course owner receiving DM
+const sendDMNotificationToStudent = async (recipient, dm) => {
+  try {
+    const transporter = createTransporter();
+
+    if (!recipient.notificationEnabled) {
+      console.log("✅ No error occured, but notification setting turned off for user");
+      return { success: true };
+    }
+
+    const mailOptions = {
+      from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,
+      to: recipient.email,
+      subject: `Brainwave - You received a reply from your course owner of ${dm.title} `,
+      html: DMRepliedMsg({ recipient, dm }),
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log("✅ DM reply notification sent successfully:", result.messageId);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error("❌ Failed to send DM reply notification:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+
+// Notification for course owner receiving DM
+const sendNewReviewNotification = async (recipient, courseName, review) => {
+  try {
+    const transporter = createTransporter();
+
+    if (!recipient.notificationEnabled) {
+      console.log("✅ No error occured, but notification setting turned off for user");
+      return { success: true };
+    }
+    
+    console.log(review)
+
+    const mailOptions = {
+      from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,
+      to: recipient.email,
+      subject: `Brainwave - You received a new review for your course, ${courseName} `,
+      html: newCourseReviewMsg({ recipient, courseName, review }),
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log("✅ New review notification sent successfully:", result.messageId);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error("❌ Failed to send new review notification:", error);
+    return { success: false, error: error.message };
+  }
+};
 
 module.exports = {
   generateOTP,
@@ -300,5 +283,8 @@ module.exports = {
   sendInitialPassword,
   sendApprovalRequestNotification,
   sendApprovalNotification,
-  sendDeclineNotification
+  sendDeclineNotification,
+  sendDMNotificationToOwner,
+  sendDMNotificationToStudent,
+  sendNewReviewNotification
 };

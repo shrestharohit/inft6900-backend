@@ -3,6 +3,7 @@ const User = require('../models/User');
 const { VALID_USER_ROLES } = require('../config/constants');
 const { generateOTP, sendOTPEmail, sendOTPEmailForpasswordReset, sendInitialPassword } = require('../services/emailService');
 const { setInitialSettings } = require('./notificationSettingController');
+const { initialisePomodoro } = require('./pomodoroSettingController');
 
 const register = async (req, res) => {
   try {
@@ -79,17 +80,18 @@ const register = async (req, res) => {
       role: userRole,
     });
 
-    try {
-      setInitialSettings(newUser.userID);
-    } catch(err) {
-      console.log('User creaetd but error occured while initialising notification setting: '&err)
-      return res.status(400).json({
-        error: "User creaetd but error occured while initialising notification setting",
-      });
-    }
-
-    // Check if user needs email verification (only students need verification)
+    // Initialise pomodoro setting & check if user needs email verification (only students need verification)
     if (userRole === "student") {
+      // Initialise pomodoro setting for students only
+      try {
+        initialisePomodoro(newUser.userID);
+      } catch(err) {
+        console.log('User creaetd but error occured while initialising pomodoro setting: '&err)
+        return res.status(400).json({
+          error: "User creaetd but error occured while initialising pomodoro setting",
+        });
+      }
+
       // Generate OTP for students
       const otpCode = generateOTP();
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
@@ -363,7 +365,7 @@ const deleteUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
-    const { userID, firstName, lastName, currentPassword, newPassword, role } = req.body;
+    const { userID, firstName, lastName, currentPassword, newPassword, role, notificationEnabled } = req.body;
 
     // Validate userId is provided
     if (!userID) {
@@ -421,7 +423,8 @@ const updateUser = async (req, res) => {
     if (firstName !== undefined) updateData.firstName = firstName;
     if (lastName !== undefined) updateData.lastName = lastName;
     if (role !== undefined) updateData.role = role;
-    if (hashedPassword !== undefined) updateData.passwordHash = hashedPassword;
+    if (notificationEnabled !== undefined) updateData.notificationEnabled = notificationEnabled;
+    if (hashedPassword !== null) updateData.passwordHash = hashedPassword;
 
     // Update user
     const updatedUser = await User.update(userID, updateData);
@@ -434,6 +437,7 @@ const updateUser = async (req, res) => {
         lastName: updatedUser.lastName,
         email: updatedUser.email,
         role: updatedUser.role,
+        notificationEnabled: updatedUser.notificationEnabled,
         updated_at: updatedUser.updated_at
       }
     });

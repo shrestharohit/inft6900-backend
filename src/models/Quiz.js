@@ -3,7 +3,7 @@ const { pool } = require('../config/database');
 class Quiz {
     static async create({ moduleID, title, timeLimit, status }) {
         const query = `
-        INSERT INTO "Quiz" ("moduleID", title, "timeLimit", "status", "created_at")
+        INSERT INTO "tblQuiz" ("moduleID", title, "timeLimit", "status", "created_at")
         VALUES ($1, $2, $3, $4, NOW())
         RETURNING "quizID", "moduleID", title, "timeLimit", "status", "created_at"
         `;
@@ -13,14 +13,14 @@ class Quiz {
 
     static async findById(quizID, client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "Quiz" WHERE "quizID" = $1`;
+        const query = `SELECT * FROM "tblQuiz" WHERE "quizID" = $1`;
         const result = await db.query(query, [quizID]);
         return result.rows[0];
     }
 
     static async findByModuleID(moduleID, client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "Quiz" WHERE "moduleID" = $1 ORDER BY "created_at" DESC`;
+        const query = `SELECT * FROM "tblQuiz" WHERE "moduleID" = $1 ORDER BY "created_at" DESC`;
         const result = await db.query(query, [moduleID]);
         return result.rows[0];
     }
@@ -28,8 +28,8 @@ class Quiz {
     static async findByCourseID(courseID, client = null) {
         const db = client || pool;
         const query = `
-        SELECT a.* FROM "Quiz" a
-        LEFT JOIN "Module" m ON a."moduleID" = m."moduleID"
+        SELECT a.* FROM "tblQuiz" a
+        LEFT JOIN "tblModule" m ON a."moduleID" = m."moduleID"
         WHERE m."courseID" = $1 
         ORDER BY m."moduleNumber" DESC
         `;
@@ -40,12 +40,22 @@ class Quiz {
     static async findByCourseOwner(userID, client = null) {
         const db = client || pool;
         const query = `
-        SELECT q.*, c."courseID", c."title" AS "courseTitle", m."title" AS "moduleTitle", m."moduleNumber" AS "moduleNumber" FROM "Quiz" q
-        LEFT JOIN "Module" m ON q."moduleID" = m."moduleID"
-        LEFT JOIN "Course" c ON c."courseID" = m."courseID"
+        SELECT q.*, c."courseID", c."title" AS "courseTitle", m."title" AS "moduleTitle", m."moduleNumber" AS "moduleNumber" FROM "tblQuiz" q
+        LEFT JOIN "tblModule" m ON q."moduleID" = m."moduleID"
+        LEFT JOIN "tblCourse" c ON c."courseID" = m."courseID"
         WHERE c."userID" = $1 
         `;
         const result = await db.query(query, [userID]);
+        return result.rows;
+    }
+
+    static async getApprovalList(client = null) {
+        const db = client || pool;
+        const query = `
+        SELECT * FROM "tblQuiz"
+        WHERE "status" = 'wait_for_approval'
+        `;
+        const result = await db.query(query);
         return result.rows;
     }
 
@@ -70,7 +80,7 @@ class Quiz {
         values.push(quizID);
 
         const query = `
-        UPDATE "Quiz"
+        UPDATE "tblQuiz"
         SET ${updates.join(', ')}
         WHERE "quizID" = $${paramCount}
         RETURNING "quizID", "moduleID", "title", "timeLimit", "status", "updated_at"
@@ -81,7 +91,7 @@ class Quiz {
 
     static async delete(quizID, client = null) {
         const db = client || pool;
-        const query = `DELETE FROM "Quiz" WHERE "quizID" = $1`;
+        const query = `DELETE FROM "tblQuiz" WHERE "quizID" = $1`;
         await db.query(query, [quizID]);
         return `Quiz ID {$quizID} is successfully deleted`;
     }
