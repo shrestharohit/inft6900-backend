@@ -7,7 +7,10 @@ const {
     initialPasswordMsg,
     approvalRequestNotificationMsg,
     approvalNotificationMsg,
-    declineNotificationMsg
+    declineNotificationMsg,
+    newDMMsg,
+    DMRepliedMsg,
+    newCourseReviewMsg
 } = require('../config/emailTemplates')
 
 // Email configuration for MailerSend
@@ -192,7 +195,86 @@ const sendDeclineNotification = async (requestor, requestingItem) => {
 };
 
 
+// Notification for course owner receiving DM
+const sendDMNotificationToOwner = async (recipient, dm) => {
+  try {
+    const transporter = createTransporter();
 
+    if (!recipient.notificationEnabled) {
+      console.log("✅ No error occured, but notification setting turned off for user");
+      return { success: true };
+    }
+
+    const mailOptions = {
+      from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,
+      to: recipient.email,
+      subject: `Brainwave - New question for your course, ${dm.title} `,
+      html: newDMMsg({ recipient, dm }),
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log("✅ New DM notification sent successfully:", result.messageId);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error("❌ Failed to send new DM notification:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Notification for course owner receiving DM
+const sendDMNotificationToStudent = async (recipient, dm) => {
+  try {
+    const transporter = createTransporter();
+
+    if (!recipient.notificationEnabled) {
+      console.log("✅ No error occured, but notification setting turned off for user");
+      return { success: true };
+    }
+
+    const mailOptions = {
+      from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,
+      to: recipient.email,
+      subject: `Brainwave - You received a reply from your course owner of ${dm.title} `,
+      html: DMRepliedMsg({ recipient, dm }),
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log("✅ DM reply notification sent successfully:", result.messageId);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error("❌ Failed to send DM reply notification:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+
+// Notification for course owner receiving DM
+const sendNewReviewNotification = async (recipient, courseName, review) => {
+  try {
+    const transporter = createTransporter();
+
+    if (!recipient.notificationEnabled) {
+      console.log("✅ No error occured, but notification setting turned off for user");
+      return { success: true };
+    }
+    
+    console.log(review)
+
+    const mailOptions = {
+      from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,
+      to: recipient.email,
+      subject: `Brainwave - You received a new review for your course, ${courseName} `,
+      html: newCourseReviewMsg({ recipient, courseName, review }),
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log("✅ New review notification sent successfully:", result.messageId);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error("❌ Failed to send new review notification:", error);
+    return { success: false, error: error.message };
+  }
+};
 
 module.exports = {
   generateOTP,
@@ -201,5 +283,8 @@ module.exports = {
   sendInitialPassword,
   sendApprovalRequestNotification,
   sendApprovalNotification,
-  sendDeclineNotification
+  sendDeclineNotification,
+  sendDMNotificationToOwner,
+  sendDMNotificationToStudent,
+  sendNewReviewNotification
 };

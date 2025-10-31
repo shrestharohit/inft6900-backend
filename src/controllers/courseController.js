@@ -195,8 +195,20 @@ const getAllCategories = async (req, res) => {
 
 
 const getAll = async (req, res) => {
-    const courses = await Course.getAll();
+  try{
+    const userId = req.headers['x-user-id'];
+    let showingStatus = ['active'];
 
+    // set showing status based on the user role
+    // for example, students should be only allowed to see acive courses
+    if (userId != undefined) {
+      const user = await User.findById(userId);
+      if (user && (user.role === 'course_owner' || user.role === 'admin')) {
+        showingStatus = VALID_COURSE_STATUS;
+      }
+    }
+
+    const courses = await Course.getAll(showingStatus);
     const processedData = [];
 
     // get modules and contents nested
@@ -218,6 +230,10 @@ const getAll = async (req, res) => {
     }
 
     res.json(processedData);
+  } catch(error) {
+        console.error('Gel course error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+  }
 }
 
 

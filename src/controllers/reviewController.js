@@ -4,6 +4,8 @@ const Enrolment = require('../models/Enrolment');
 const Course = require('../models/Course');
 const Pathway = require('../models/Pathway');
 const { VALID_REVIEW_STATUS } = require('../config/constants');
+const { sendNewReviewNotification } = require('../services/emailService');
+
 
 const register = async (req, res) => {
     try {
@@ -62,6 +64,8 @@ const register = async (req, res) => {
             comment,
             rating
         });
+
+        sendNotification(newReview);
 
         res.json({
             message: 'Review posted successfully',
@@ -325,6 +329,29 @@ const processCourseReviews = async(courseID) => {
     };
 }
 
+
+const sendNotification = async(review) => {
+    try {
+        const course = await Course.findById(review.courseID);
+        if (!course) {
+            throw new Error('Invalid courseID. Course not found.')
+        }
+
+        const recipient = await User.findById(course.userID);
+        if (!recipient) {
+            throw new Error('Invalid userID. Course owner not found.')
+        }
+
+        const reviewer = await User.findById(review.userID);
+        review.firstName = reviewer.firstName;
+        review.lastName = reviewer.lastName;
+
+        sendNewReviewNotification(recipient, course.title, review);
+
+    } catch (error) {
+        throw new Error(`Notification error: ${error.message}`);
+    }
+}
 
 module.exports = {
   register,
