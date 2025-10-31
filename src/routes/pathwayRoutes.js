@@ -4,6 +4,7 @@ const {
   update,
   getAll,
   getPathway,
+  getUserPathways,
   getMeta,
   getApprovalList,
   getDetail,
@@ -23,6 +24,9 @@ router.get("/getAll", getAll);
 
 // Get metadata
 router.get("/getMeta", getMeta);
+
+// Get a single pathway by pathwayID
+router.get("/user/:userID", getUserPathways);
 
 // Get a single pathway by pathwayID
 router.get("/:pathwayid", getPathway);

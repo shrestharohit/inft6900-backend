@@ -1,10 +1,11 @@
 const Pathway = require('../models/Pathway');
+const User = require('../models/User');
 const { VALID_PATHWAY_STATUS } = require('../config/constants');
 
 // Register pathway
 const register = async (req, res) => {
     try {
-        const { name, outline, status } = req.body;
+        const { name, userID, outline, status } = req.body;
 
         if (!name) {
             return res.status(400).json({ error: 'Pathway name is required' });
@@ -17,12 +18,20 @@ const register = async (req, res) => {
             });
         }
 
-        const newPathway = await Pathway.create({ name, outline, status: pathwayStatus });
+        const user = await User.findById(userID)
+        if (!user || user.role !== 'course_owner') {
+            return res.status(404).json({
+                error: 'User ID invalid. Course owner account not found.'
+            })
+        }
+
+        const newPathway = await Pathway.create({ name, userID, outline, status: pathwayStatus });
         res.json({
             message: 'Pathway registered successfully',
             pathway: {
                 pathwayID: newPathway.pathwayID,
                 name: newPathway.name,
+                userID: newPathway.userID,
                 outline: newPathway.outline,
                 status: newPathway.status,
                 createdDate: newPathway.createdDate
@@ -87,6 +96,24 @@ const getPathway = async (req, res) => {
         res.json({ pathway });
     } catch (error) {
         console.error('Get pathway error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+// Get single pathway
+const getUserPathways = async (req, res) => {
+    try {
+        const userID = parseInt(req.params.userID);
+        if (!userID) {
+            return res.status(404).json({
+                error: 'UserID is required.'
+            })
+        }
+
+        const pathways = await Pathway.findByUserId(userID);
+        res.json(pathways);
+    } catch (error) {
+        console.error('Get user pathway error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };
@@ -180,5 +207,6 @@ module.exports = {
     getMeta,
     getApprovalList,
     getDetail,
+    getUserPathways,
     getCoursesInPathway
 };

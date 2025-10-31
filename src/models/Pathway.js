@@ -2,13 +2,13 @@ const { pool } = require('../config/database');
 
 class Pathway {
     // Create new pathway
-    static async create({ name, outline, status = 'draft' }) {
+    static async create({ name, userID, outline, status = 'active' }) {
         const query = `
-            INSERT INTO "tblPathway" ("name", "outline", "status", "createdDate")
-            VALUES ($1, $2, $3, NOW())
-            RETURNING "pathwayID", "name", "outline", "status", "createdDate"
+            INSERT INTO "tblPathway" ("name", "userID", "outline", "status", "createdDate")
+            VALUES ($1, $2, $3, $4, NOW())
+            RETURNING *
         `;
-        const result = await pool.query(query, [name, outline, status]);
+        const result = await pool.query(query, [name, userID, outline, status]);
         return result.rows[0];
     }
 
@@ -17,6 +17,18 @@ class Pathway {
         const query = `SELECT * FROM "tblPathway" WHERE "pathwayID" = $1`;
         const result = await pool.query(query, [pathwayID]);
         return result.rows[0];
+    }
+
+    // Find pathway by User ID
+    static async findByUserId(userID) {
+        const query = `
+            SELECT p.*, u."firstName", u."lastName"
+            FROM "tblPathway" p
+            LEFT JOIN "tblUser" u ON p."userID" = u."userID"
+            WHERE p."userID" = $1
+        `;
+        const result = await pool.query(query, [userID]);
+        return result.rows;
     }
 
     // Find pathways by status
