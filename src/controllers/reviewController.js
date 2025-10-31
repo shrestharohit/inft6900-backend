@@ -320,6 +320,12 @@ const processCourseReviews = async(courseID) => {
     
     // Get reviews
     const reviews = await CourseReview.findByCourseID(courseID);
+    for (let review of reviews) {
+        let user = await User.findById(review.userID);
+        review.firstName = user.firstName;
+        review.lastName = user.lastName;
+    }
+
     const avgRating = await CourseReview.getAvgRatings(courseID);
     
     return {
