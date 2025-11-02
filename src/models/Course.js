@@ -69,7 +69,7 @@ class Course {
             SELECT c.*, p."name"
             FROM "tblCourse" c
             LEFT JOIN "tblPathway" p ON c."pathwayID" = p."pathwayID"
-            WHERE c."pathwayID" = $1 AND c."level" = $2 AND "status" = ANY($3)
+            WHERE c."pathwayID" = $1 AND c."level" = $2 AND c."status" = ANY($3)
         `;
         const result = await pool.query(query, [pathwayID, level, status]);
         return result.rows[0];

@@ -27,9 +27,9 @@ const register = async (req, res) => {
         });
       }
 
-      if (password.length < 6) {
+      if (!validatePassword(password, 8)) {
         return res.status(400).json({ 
-          error: 'Password must be at least 6 characters long' 
+          error: 'Password must be at least 8 characters long, and should at least include 1 upper case, lower case, number and special character' 
         });
       }
       
@@ -45,15 +45,11 @@ const register = async (req, res) => {
       }
 
       // initial password generation
-      const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*_+~|:./-";
-      for (let i=0; i < 12; i++) {
-        const random = Math.floor(Math.random() * chars.length);
-        userPassword += chars[random];
-      }
+      userPassword = generatePassword(12);
     }
 
     // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]{2,}\.[^\s@]{2,}$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({
         error: "Please provide a valid email address",
@@ -697,6 +693,68 @@ const getNonStudentUsers = async(req, res) => {
     console.error('Get all non student error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
+}
+
+const validatePassword = (password, minLen) => {
+    const lower = 'abcdefghijklmnopqrstuvwxyz';
+    const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const num = '0123456789';
+    const special = '@$!%*?&';
+    let includeUpper = false;
+    let includeLower = false;
+    let includeNum = false;
+    let includeSpecial = false;
+
+    // length check
+    if (password.length < minLen) return false;
+
+    // char type check
+    for (const p of password) {
+      if (lower.includes(p)) includeLower = true;
+      else if (upper.includes(p)) includeUpper = true;
+      else if (num.includes(p)) includeNum = true;
+      else if (special.includes(p)) includeSpecial = true;
+
+      if (includeLower && includeUpper && includeNum && includeSpecial) {
+        return true;
+      };
+    };
+    
+    return false;
+}
+
+const generatePassword = (length) => {
+    const lower = 'abcdefghijklmnopqrstuvwxyz';
+    const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const num = '0123456789';
+    const special = '@$!%*?&';
+    const allChars = lower + upper + num + special;
+
+    let passwordChars = [];
+    
+    // add each char type to ensure at least 1 of each will be included
+    passwordChars.push(
+      lower[Math.floor(Math.random() * lower.length)],
+      upper[Math.floor(Math.random() * upper.length)],
+      num[Math.floor(Math.random() * num.length)],
+      special[Math.floor(Math.random() * special.length)]
+    )
+
+    // randomly generate the rest to fill the length
+    while (passwordChars.length < length) {
+      const char = allChars[Math.floor(Math.random() * allChars.length)];
+      passwordChars.push(char);
+    }
+
+    // shuffle the array to randomise the char type order
+    for (let i = passwordChars.length -1; i > 0; i--) {
+      let j = Math.floor(Math.random() * (i + 1));
+      let temp = passwordChars[i];
+      passwordChars[i] = passwordChars[j];
+      passwordChars[j] = temp;
+    }
+
+    return passwordChars.join('');
 }
 
 module.exports = {
