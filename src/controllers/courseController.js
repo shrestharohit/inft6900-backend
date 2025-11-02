@@ -153,6 +153,7 @@ const update = async (req, res) => {
         const updateData = {};
         if (userID !== undefined) updateData.userID = userID;
         if (title !== undefined) updateData.title = title;
+        if (pathwayID !== undefined) updateData.pathwayID = pathwayID;
         if (category !== undefined) updateData.category = category;
         if (level !== undefined) updateData.level = courseLevel;
         if (outline !== undefined) updateData.outline = outline;
