@@ -115,7 +115,7 @@ const update = async (req, res) => {
 
         // Validate level
         courseLevel = level;
-        if (courseLevel !== undefined && !VALID_COURSE_LEVEL.includes(courseLevel)) {
+        if (courseLevel != undefined && !VALID_COURSE_LEVEL.includes(courseLevel)) {
             return res.status(400).json({
                 error: `Invalid status. Must be:${VALID_COURSE_LEVEL.join(', ')} `
             });
@@ -123,7 +123,7 @@ const update = async (req, res) => {
 
         // Validate status
         courseStatus = status;
-        if (courseStatus !== undefined && !VALID_COURSE_STATUS.includes(courseStatus)) {
+        if (courseStatus != undefined && !VALID_COURSE_STATUS.includes(courseStatus)) {
             return res.status(400).json({
                 error: `Invalid status. Must be:${VALID_COURSE_STATUS.join(', ')} `
             });
@@ -131,7 +131,7 @@ const update = async (req, res) => {
 
         // Validate pathway
         const pathway = await Pathway.findById(pathwayID)
-        if (pathwayID !== undefined && !pathway) {
+        if (pathwayID != undefined && !pathway) {
             return res.status(400).json({
                 error: 'Invalid pathway ID. Pathway not found.'
             });
@@ -142,7 +142,7 @@ const update = async (req, res) => {
         const checkingLevel = level || existingCourse.level;
 
         const hasSameLevel = !!(await Course.findByPathwayIDCourseLevel(checkingPathwayID, checkingLevel));
-        if (checkingPathwayID !== undefined && hasSameLevel) {
+        if (checkingPathwayID != undefined && hasSameLevel) {
             return res.status(400).json({
                 error: 'Pathway can have only 1 course in each level. Course with selected level already exists in pathway.'
             });
@@ -162,7 +162,7 @@ const update = async (req, res) => {
         const updateCourse = await Course.update(courseID, updateData)
 
         // Send notification in case of status change
-        if (originalStatus !== updateData.status && originalStatus !== 'active') {
+        if (originalStatus != updateData.status && originalStatus !== 'active') {
           sendNotification(updateCourse.courseID);
         }
 

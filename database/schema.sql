@@ -43,9 +43,11 @@ CREATE TABLE "tblPomodoroSetting" (
 CREATE TABLE "tblPathway" (
     "pathwayID" SERIAL PRIMARY KEY,
     "name" VARCHAR(150) NOT NULL,
+    "userID" INT NOT NULL,
     "outline" TEXT,
-    "status" VARCHAR(20) DEFAULT 'draft',
-    "createdDate" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    "status" VARCHAR(20) DEFAULT 'active',
+    "createdDate" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY ("userID") REFERENCES "tblUser"("userID") ON DELETE CASCADE
 );
 
 CREATE TABLE "tblCourse" (
