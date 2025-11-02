@@ -141,8 +141,8 @@ const update = async (req, res) => {
         const checkingPathwayID = pathwayID || existingCourse.pathwayID;
         const checkingLevel = level || existingCourse.level;
 
-        const hasSameLevel = !!(await Course.findByPathwayIDCourseLevel(checkingPathwayID, checkingLevel));
-        if (checkingPathwayID != undefined && hasSameLevel) {
+        const sameLevelCourse = await Course.findByPathwayIDCourseLevel(checkingPathwayID, checkingLevel);
+        if (checkingPathwayID != undefined && (sameLevelCourse && sameLevelCourse.courseID != courseID)) {
             return res.status(400).json({
                 error: 'Pathway can have only 1 course in each level. Course with selected level already exists in pathway.'
             });
