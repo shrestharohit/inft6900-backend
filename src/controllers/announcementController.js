@@ -1,6 +1,6 @@
 const Announcement = require('../models/Announcement');
 const Course = require('../models/Course');
-
+const { sendNewAnnouncementNotification } = require('../services/emailService');
 
 const createAnnouncement = async (req, res) => {
   try {
@@ -18,6 +18,30 @@ const createAnnouncement = async (req, res) => {
 
     const newAnnouncement = await Announcement.create({ courseID, title, content, status });
     res.json({ message: 'Announcement created', announcement: newAnnouncement });
+
+    // Send Email Notification
+    if (status === 'active') { // only send when announcement is active
+      try {
+        const recipients = await db.query(`
+          SELECT u."email", u."firstName", COALESCE(n."notificationEnabled", true) AS "notificationEnabled"
+          FROM "tblUser" u
+          JOIN "tblEnrollment" e ON u."userID" = e."userID"
+          LEFT JOIN "tblNotificationSetting" n ON u."userID" = n."userID"
+          WHERE e."courseID" = $1
+        `, [courseID]);
+
+        await sendNewAnnouncementNotification(recipients.rows, {
+          courseName: course.courseName,
+          title,
+          content
+        });
+
+        console.log("✅ Announcement notifications sent successfully.");
+      } catch (notifyError) {
+        console.error('Error sending notifications:', notifyError);
+      }
+    }
+
   } catch (error) {
     console.error('Create announcement error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -31,7 +55,7 @@ const updateAnnouncement = async (req, res) => {
 
     const existing = await Announcement.findById(announcementID);
     if (!existing) return res.status(404).json({ error: 'Announcement not found' });
-    
+
     // validate status
     const VALID_ANNOUNCEMENT_STATUS = ['draft', 'wait_for_approval', 'active', 'inactive'];
     if (status && !VALID_ANNOUNCEMENT_STATUS.includes(status)) {
@@ -84,4 +108,10 @@ const deleteAnnouncement = async (req, res) => {
   }
 };
 
-module.exports = { createAnnouncement, updateAnnouncement, getAnnouncements, getAnnouncement, deleteAnnouncement };
+module.exports = {
+  createAnnouncement,
+  updateAnnouncement,
+  getAnnouncements,
+  getAnnouncement,
+  deleteAnnouncement
+};
