@@ -19,6 +19,7 @@ CREATE TABLE "tblUser" (
     "otpExpiresAt" TIMESTAMP,
     "isEmailVerified" BOOLEAN DEFAULT FALSE,
     "notificationEnabled" BOOLEAN DEFAULT TRUE,
+    "status" VARCHAR(50) NOT NULL DEFAULT 'active',
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
