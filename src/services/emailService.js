@@ -276,6 +276,63 @@ const sendNewReviewNotification = async (recipient, courseName, review) => {
   }
 };
 
+// Notification for new announcement to students
+const sendNewAnnouncementNotification = async (recipients, announcement) => {
+  try {
+    const transporter = createTransporter();
+
+    const activeRecipients = recipients.filter(r => r.notificationEnabled);
+    if (activeRecipients.length === 0) {
+      console.log("✅ No users have email notifications enabled for announcements");
+      return { success: true };
+    }
+
+    for (const user of activeRecipients) {
+      const mailOptions = {
+        from: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER,
+        to: user.email,
+        subject: `Brainwave - New announcement in ${announcement.courseName}`,
+        html: newAnnouncementMsg({ firstName: user.firstName, announcement }),
+      };
+      await transporter.sendMail(mailOptions);
+      console.log(`📩 Announcement email sent to ${user.email}`);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("❌ Failed to send announcement notification:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+
+// Notification for user when their post gets a reply
+const sendPostReplyNotification = async (recipient, post) => {
+  try {
+    const transporter = createTransporter();
+
+    if (!recipient.notificationEnabled) {
+      console.log("✅ No error occurred, but notification setting turned off for user");
+      return { success: true };
+    }
+
+    const mailOptions = {
+      from: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER,
+      to: recipient.email,
+      subject: `Brainwave - Someone replied to your post in ${post.courseName}`,
+      html: PostRepliedMsg({ firstName: recipient.firstName, post }),
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log("✅ Post reply notification sent successfully:", result.messageId);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error("❌ Failed to send post reply notification:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+
 module.exports = {
   generateOTP,
   sendOTPEmail,
@@ -286,5 +343,7 @@ module.exports = {
   sendDeclineNotification,
   sendDMNotificationToOwner,
   sendDMNotificationToStudent,
-  sendNewReviewNotification
+  sendNewReviewNotification,
+  sendNewAnnouncementNotification,
+  sendPostReplyNotification
 };
