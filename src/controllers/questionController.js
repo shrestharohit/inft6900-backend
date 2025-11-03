@@ -100,7 +100,6 @@ const updateQuestion = async (quiz, question, client) => {
             throw new Error('Options must be an array.');
         }
         
-        console.log(options)
         // Try updating questions first
         const optionIDs = (await AnswerOption.findByQuestionID(existingQuestion.questionID)).map(o=> o.optionID);
         for (const id of optionIDs) {

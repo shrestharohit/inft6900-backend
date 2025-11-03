@@ -20,14 +20,21 @@ class Question {
 
     static async findByQuizId(quizID, client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "tblQuestion" WHERE "quizID" = $1 AND "status" = 'active' ORDER BY "questionNumber" DESC`;
+        const query = `
+            SELECT * FROM "tblQuestion" 
+            WHERE "quizID" = $1 AND "status" = 'active'
+            ORDER BY "questionNumber"
+        `;
         const result = await db.query(query, [quizID]);
         return result.rows;
     }
 
     static async findByQuizIdQuestionNumber(quizId, questionNumber, client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "tblQuestion" WHERE "quizID" = $1 AND "questionNumber" = $2 AND "status" = 'active'`;
+        const query = `
+            SELECT * FROM "tblQuestion" 
+            WHERE "quizID" = $1 AND "questionNumber" = $2 AND "status" = 'active'
+            `;
         const result = await db.query(query, [quizId, questionNumber]);
         return result.rows[0];
     }
@@ -35,9 +42,9 @@ class Question {
     static async findAnswer(questionID, client = null) {
         const db = client || pool;
         const query = `
-        SELECT ao.* FROM "tblQuestion" q
-        LEFT JOIN "tblAnswerOption" ao ON q."questionID" = ao."questionID"
-        WHERE q."questionID" = $1 AND ao."isCorrect" = TRUE AND ao."status" = 'active' AND q."status" = 'active'
+            SELECT ao.* FROM "tblQuestion" q
+            LEFT JOIN "tblAnswerOption" ao ON q."questionID" = ao."questionID"
+            WHERE q."questionID" = $1 AND ao."isCorrect" = TRUE AND ao."status" = 'active' AND q."status" = 'active'
         `;
         const result = await db.query(query, [questionID]);
         return result.rows[0];

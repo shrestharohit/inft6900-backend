@@ -5,6 +5,8 @@ const User = require('../models/User');
 const Pathway = require('../models/Pathway');
 const { VALID_COURSE_STATUS, VALID_COURSE_LEVEL } = require('../config/constants');
 const { sendApprovalRequestNotification, sendApprovalNotification, sendDeclineNotification } = require('../services/emailService');
+const { syncModuleStatus } = require('../controllers/moduleController');
+const { syncQuizStatus } = require('../controllers/quizController');
 
 const register = async (req, res) => {
     try {
@@ -115,7 +117,7 @@ const update = async (req, res) => {
 
         // Validate level
         courseLevel = level;
-        if (courseLevel !== undefined && !VALID_COURSE_LEVEL.includes(courseLevel)) {
+        if (courseLevel != undefined && !VALID_COURSE_LEVEL.includes(courseLevel)) {
             return res.status(400).json({
                 error: `Invalid status. Must be:${VALID_COURSE_LEVEL.join(', ')} `
             });
@@ -123,7 +125,7 @@ const update = async (req, res) => {
 
         // Validate status
         courseStatus = status;
-        if (courseStatus !== undefined && !VALID_COURSE_STATUS.includes(courseStatus)) {
+        if (courseStatus != undefined && !VALID_COURSE_STATUS.includes(courseStatus)) {
             return res.status(400).json({
                 error: `Invalid status. Must be:${VALID_COURSE_STATUS.join(', ')} `
             });
@@ -131,7 +133,7 @@ const update = async (req, res) => {
 
         // Validate pathway
         const pathway = await Pathway.findById(pathwayID)
-        if (pathwayID !== undefined && !pathway) {
+        if (pathwayID != undefined && !pathway) {
             return res.status(400).json({
                 error: 'Invalid pathway ID. Pathway not found.'
             });
@@ -141,8 +143,8 @@ const update = async (req, res) => {
         const checkingPathwayID = pathwayID || existingCourse.pathwayID;
         const checkingLevel = level || existingCourse.level;
 
-        const hasSameLevel = !!(await Course.findByPathwayIDCourseLevel(checkingPathwayID, checkingLevel));
-        if (checkingPathwayID !== undefined && hasSameLevel) {
+        const sameLevelCourse = await Course.findByPathwayIDCourseLevel(checkingPathwayID, checkingLevel);
+        if (checkingPathwayID != undefined && (sameLevelCourse && sameLevelCourse.courseID != courseID)) {
             return res.status(400).json({
                 error: 'Pathway can have only 1 course in each level. Course with selected level already exists in pathway.'
             });
@@ -153,6 +155,7 @@ const update = async (req, res) => {
         const updateData = {};
         if (userID !== undefined) updateData.userID = userID;
         if (title !== undefined) updateData.title = title;
+        if (pathwayID !== undefined) updateData.pathwayID = pathwayID;
         if (category !== undefined) updateData.category = category;
         if (level !== undefined) updateData.level = courseLevel;
         if (outline !== undefined) updateData.outline = outline;
@@ -161,8 +164,12 @@ const update = async (req, res) => {
         // Create course
         const updateCourse = await Course.update(courseID, updateData)
 
+        // Sync status
+        syncModuleStatus(courseID);
+        syncQuizStatus(courseID);
+
         // Send notification in case of status change
-        if (originalStatus !== updateData.status && originalStatus !== 'active') {
+        if (originalStatus != updateData.status && originalStatus !== 'active') {
           sendNotification(updateCourse.courseID);
         }
 
@@ -195,8 +202,20 @@ const getAllCategories = async (req, res) => {
 
 
 const getAll = async (req, res) => {
-    const courses = await Course.getAll();
+  try{
+    const userId = req.headers['x-user-id'];
+    let showingStatus = ['active'];
 
+    // set showing status based on the user role
+    // for example, students should be only allowed to see acive courses
+    if (userId != undefined) {
+      const user = await User.findById(userId);
+      if (user && (user.role === 'course_owner' || user.role === 'admin')) {
+        showingStatus = VALID_COURSE_STATUS;
+      }
+    }
+
+    const courses = await Course.getAll(showingStatus);
     const processedData = [];
 
     // get modules and contents nested
@@ -218,6 +237,10 @@ const getAll = async (req, res) => {
     }
 
     res.json(processedData);
+  } catch(error) {
+        console.error('Gel course error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+  }
 }
 
 

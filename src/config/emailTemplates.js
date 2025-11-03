@@ -126,15 +126,14 @@ const declineNotificationMsg = ({ requestor, requestingItem }) => `
     </div>
     `;
 
-const newDMMsg = ({ firstName, courseName, DM }) => `
+const newDMMsg = ({ recipient, dm }) => `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">You have received a new question</h2>
-        <p>Hi ${firstName},</p>
+        <p>Hi ${recipient.firstName},</p>
 
-        <p>You have received a new question from a student in your course, ${courseName}.</p>
-        <p>Question title: ${DM.title}</p>
-        <p>Student: ${DM.firstName} ${DM.lastName}</p>
-        <p>Question: ${DM.message}</p>
+        <p>You have received a new question from a student in your course, ${dm.title}.</p>
+        <p>Student: ${dm.firstName} ${dm.lastName}</p>
+        <p>Question: ${dm.message}</p>
         
         <p>Please login to Brainwave to see more detail.</p>
 
@@ -145,10 +144,10 @@ const newDMMsg = ({ firstName, courseName, DM }) => `
     </div>
     `;
 
-const newCourseReviewMsg = ({ firstName, courseName, review }) => `
+const newCourseReviewMsg = ({ recipient, courseName, review }) => `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">You have received a new review</h2>
-        <p>Hi ${firstName},</p>
+        <p>Hi ${recipient.firstName},</p>
 
         <p>You have received a new question from a student in your course, ${courseName}.</p>
         <p>Rating: ${review.rating}</p>
@@ -202,13 +201,14 @@ const PostRepliedMsg = ({firstName, post}) => `
     </div>
     `;
 
-const DMRepliedMsg = ({firstName, DM}) => `
+const DMRepliedMsg = ({recipient, dm}) => `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">You have received a reply on your question</h2>
-        <p>Hi ${firstName},</p>
+        <p>Hi ${recipient.firstName},</p>
 
-        <p>Your requested item has been declined by our admin. Here is the detail of approval result.</p>
-        <p>Reply: ${DM.reply}</p>
+        <p>The question you have asked for the course, ${dm.title}, has been answered by the course owner.</p>
+        <p>Your question: ${dm.message}</p>
+        <p>Reply: ${dm.reply}</p>
         
         <p>Please login to Brainwave to see more detail.</p>
 
