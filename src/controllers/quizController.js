@@ -356,6 +356,32 @@ const getMeta = (req, res) => {
     })
 }
 
+// Sync status with course status
+const syncQuizStatus = async (courseID) => {
+    try {
+        const course = await Course.findById(courseID);
+        if (!course) {
+            throw new Error('Invalid course ID. Course not found.');
+        }
+
+        const quizzes = await Quiz.findByCourseID(courseID);
+        if (quizzes.length > 0) {
+            for (quiz of quizzes) {
+                // if module status is inactive (deleted), do not change the status
+                if (quiz.status === 'inactive') {
+                    break;
+                }
+
+                // otherwise, sync the status with course
+                const updated = await Quiz.update(quiz.quizID, {
+                    status: course.status
+                })
+            }
+        }
+    } catch (error) {
+        throw new Error('Quiz status sync error: ' + error);
+    }
+}
 
 module.exports = {
   register,
@@ -366,4 +392,5 @@ module.exports = {
   getWaitForApproval,
   getDetail,
   getMeta,
+  syncQuizStatus,
 };

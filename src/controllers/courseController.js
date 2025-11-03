@@ -5,6 +5,8 @@ const User = require('../models/User');
 const Pathway = require('../models/Pathway');
 const { VALID_COURSE_STATUS, VALID_COURSE_LEVEL } = require('../config/constants');
 const { sendApprovalRequestNotification, sendApprovalNotification, sendDeclineNotification } = require('../services/emailService');
+const { syncModuleStatus } = require('../controllers/moduleController');
+const { syncQuizStatus } = require('../controllers/quizController');
 
 const register = async (req, res) => {
     try {
@@ -161,6 +163,10 @@ const update = async (req, res) => {
 
         // Create course
         const updateCourse = await Course.update(courseID, updateData)
+
+        // Sync status
+        syncModuleStatus(courseID);
+        syncQuizStatus(courseID);
 
         // Send notification in case of status change
         if (originalStatus != updateData.status && originalStatus !== 'active') {
