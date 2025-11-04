@@ -62,6 +62,17 @@ class Announcement {
     const result = await pool.query(query, [announcementID]);
     return result.rows[0];
   }
+
+  static async getNotificationRecipients(courseID) {
+    const query = `
+      SELECT u."email", u."firstName", u."notificationEnabled"
+      FROM "tblUser" u
+      JOIN "tblEnrolment" e ON u."userID" = e."userID"
+      WHERE e."courseID" = $1
+    `;
+    const result = await pool.query(query, [courseID]);
+    return result.rows;
+  }
 }
 
 module.exports = Announcement;
