@@ -47,6 +47,20 @@ class DiscussionBoard {
     await pool.query(`DELETE FROM "tblDiscussionBoard" WHERE "postID" = $1 OR "parentPostID" = $1`, [postID]);
     return true;
   }
+
+  static async getPostOwner(postID) {
+    const query = `
+      SELECT p."postID", p."title", p."postText" AS "content", p."courseID",
+             u."email", u."firstName", u."notificationEnabled",
+             c."title" AS "courseTitle"
+      FROM "tblDiscussionBoard" p
+      JOIN "tblUser" u ON p."userID" = u."userID"
+      JOIN "tblCourse" c ON p."courseID" = c."courseID"
+      WHERE p."postID" = $1
+    `;
+    const result = await pool.query(query, [postID]);
+    return result.rows[0];
+  }
 }
 
 module.exports = DiscussionBoard;

@@ -10,33 +10,17 @@ const {
 
 const register = async (req, res) => {
     try {
-        const { userID, courseID, message } = req.body;
+        const { enrolmentID, message } = req.body;
 
         // Basic validataion
-        if (!userID || !courseID || !message) {
+        if (!enrolmentID || !message) {
             return res.status(400).json({ 
-                error: 'User ID, Course ID and message are required' 
-            });
-        };
-
-        // Validate course ID
-        const course = await Course.findById(courseID);
-        if (!course) {
-            return res.status(400).json({
-                error: 'Invalid course ID. Course does not exist.'
-            });
-        };
-
-        // Validate user ID
-        const user = await User.findById(userID);
-        if (!user || user.role !== "student") {
-            return res.status(400).json({
-                error: 'Invalid user ID. Student does not exist.'
+                error: 'Enrolment ID and message are required' 
             });
         };
 
         // Validate enrolment (allow only enrolled user to give DM)
-        const enrolment = await Enrolment.findByCourseIdUserID(courseID, userID);
+        const enrolment = await Enrolment.findById(enrolmentID);
         if (!enrolment) {
             return res.status(400).json({
                 error: 'Enrolment not found. Cannot send message for non-enrolling course'
@@ -45,8 +29,7 @@ const register = async (req, res) => {
         
         // Create DM
         const newDM = await DirectMessage.create({
-            userID,
-            courseID,
+            enrolmentID,
             message
         });
 
@@ -258,7 +241,8 @@ const sendNotificaDtion = async(msgID) => {
 
         // trigger notifciation to course owner
         if (!dm.reply) {
-            const ownerID = (await Course.findById(dm.courseID)).userID;
+            const courseID = (await Enrolment.findById(dm.enrolmentID)).courseID;
+            const ownerID = (await Course.findById(courseID)).userID;
             if (!ownerID) {
                 throw new Error('Invalid userID. User not found')
             }
@@ -273,7 +257,8 @@ const sendNotificaDtion = async(msgID) => {
 
         // trigger notification to student
         if (dm.reply) {
-            const recipient = await User.findById(dm.userID);
+            const recipientID = (await Enrolment.findById(dm.enrolmentID)).userID;
+            const recipient = await User.findById(recipientID);
             if (!recipient) {
                 throw new Error('Invalid userID. User not found.')
             }
