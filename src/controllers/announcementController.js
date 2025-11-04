@@ -22,15 +22,8 @@ const createAnnouncement = async (req, res) => {
     // Send Email Notification
     if (status === 'active') { // only send when announcement is active
       try {
-        const recipients = await db.query(`
-          SELECT u."email", u."firstName", COALESCE(n."notificationEnabled", true) AS "notificationEnabled"
-          FROM "tblUser" u
-          JOIN "tblEnrollment" e ON u."userID" = e."userID"
-          LEFT JOIN "tblNotificationSetting" n ON u."userID" = n."userID"
-          WHERE e."courseID" = $1
-        `, [courseID]);
-
-        await sendNewAnnouncementNotification(recipients.rows, {
+          const recipients = await Announcement.getNotificationRecipients(courseID);
+          await sendNewAnnouncementNotification(recipients, {
           courseName: course.courseName,
           title,
           content

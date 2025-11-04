@@ -52,27 +52,14 @@ const replyPost = async (req, res) => {
 
     // Send Email Notification to Original Poster
     try {
-      const originalPost = await db.query(`
-        SELECT p."postID", p."title", p."content", p."courseID",
-               u."email", u."firstName", COALESCE(n."notificationEnabled", true) AS "notificationEnabled"
-        FROM "tblDiscussionPost" p
-        JOIN "tblUser" u ON p."userID" = u."userID"
-        LEFT JOIN "tblNotificationSetting" n ON u."userID" = n."userID"
-        WHERE p."postID" = $1
-      `, [parentPostID]);
-
-      if (originalPost.rows.length > 0) {
-        const postOwner = originalPost.rows[0];
-
-        // ✅ Only send if notifications are enabled
-        if (postOwner.notificationEnabled) {
-          await sendPostReplyNotification(postOwner, {
-            courseName: "Course Name Here", // optionally fetch real course name
-            postTitle: postOwner.title,
-            replyContent: newReply.postText
-          });
-          console.log(`✅ Reply notification sent to ${postOwner.email}`);
-        }
+      const postOwner = await DiscussionBoard.getPostOwner(parentPostID);
+      if (postOwner && postOwner.notificationEnabled) {
+        await sendPostReplyNotification(postOwner, {
+          courseName: postOwner.courseName,
+          postTitle: postOwner.title,
+          replyContent: newReply.postText
+        });
+        console.log(`✅ Reply notification sent to ${postOwner.email}`);
       }
     } catch (err) {
       console.error("❌ Failed to send reply notification:", err.message);
