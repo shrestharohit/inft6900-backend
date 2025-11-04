@@ -52,7 +52,7 @@ class QuizAttempt {
     static async findByUserModule(userID, moduleID, client = null) {
         const db = client || pool;
         const query = `
-        SELECT a.* FROM "tblQuizAttempt" a
+        SELECT a.*, m."title" as "moduleName" FROM "tblQuizAttempt" a
         LEFT JOIN "tblQuiz" q ON a."quizID" = q."quizID"
         LEFT JOIN "tblModule" m ON m."moduleID" = q."moduleID"
         LEFT JOIN "tblEnrolment" e ON m."courseID" = e."courseID"
