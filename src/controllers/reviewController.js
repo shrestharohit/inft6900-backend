@@ -320,14 +320,14 @@ const processCourseReviews = async(courseID) => {
     
     // Get reviews
     const reviews = await CourseReview.findByCourseID(courseID);
-    for (let review of reviews) {
-        let user = await User.findById(review.userID);
-        review.firstName = user.firstName;
-        review.lastName = user.lastName;
+    for (const review of reviews) {
+        const reviewerID = (await Enrolment.findById(review.enrolmentID)).userID;
+        const reviewer = await User.findById(reviewerID);
+        review.firstName = reviewer.firstName;
+        review.lastName = reviewer.lastName;
     }
 
     const avgRating = await CourseReview.getAvgRatings(courseID);
-    
     return {
         reviews: reviews,
         avgRating: avgRating? avgRating.AvgRating : 0.0,
@@ -338,7 +338,8 @@ const processCourseReviews = async(courseID) => {
 
 const sendNotification = async(review) => {
     try {
-        const course = await Course.findById(review.courseID);
+        const courseID = (await Enrolment.findById(review.enrolmentID)).courseID;
+        const course = await Course.findById(courseID);
         if (!course) {
             throw new Error('Invalid courseID. Course not found.')
         }
@@ -348,7 +349,8 @@ const sendNotification = async(review) => {
             throw new Error('Invalid userID. Course owner not found.')
         }
 
-        const reviewer = await User.findById(review.userID);
+        const reviewerID = (await Enrolment.findById(review.enrolmentID)).userID;
+        const reviewer = await User.findById(reviewerID);
         review.firstName = reviewer.firstName;
         review.lastName = reviewer.lastName;
 
