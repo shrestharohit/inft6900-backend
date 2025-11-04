@@ -407,11 +407,27 @@ const refreshStatus = async (enrolmentID) => {
         }
 
         // switch to completed if all quizzes are passed
-        const quizzes = await QuizAttempt.findByCourseIdUserID(enrolment.courseID, enrolment.userID);
-        console.log(quizzes)
-        const completed = quizzes.length > 0 && quizzes.every(q => q.passed);
+        const userCourseAttempts = await QuizAttempt.findByUserCourse(enrolment.userID, enrolment.courseID);
+        const userAttemptQuizIds = userCourseAttempts.map(a => a.quizID);
 
-        if (completed) {
+        const courseQuizzes = (await Quiz.findByCourseID(enrolment.courseID)).
+                                filter(q => q.status === 'active');
+        const quizIds = courseQuizzes.map(q => q.quizID);
+
+        let passedQuizzes = 0;
+
+        for (const quiz of courseQuizzes) {
+            // Count how many attempts that passed the quiz exist
+            passedAttempts = userCourseAttempts.
+                filter(a => a.quizID === quiz.quizID).
+                filter(a => a.passed === true).length;
+
+            if (userAttemptQuizIds.includes(quiz.quizID) && passedAttempts >= 1) {
+                passedQuizzes ++;
+            }
+        }
+
+        if (passedQuizzes === quizIds.length) {
             updatedEnrolment = await Enrolment.update(enrolmentID, {status: 'completed'});
         }
         return updatedEnrolment;
