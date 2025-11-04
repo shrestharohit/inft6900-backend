@@ -3,8 +3,8 @@ const { pool } = require('../config/database');
 class User {
   static async create({ firstName, lastName, email, passwordHash, role }) {
     const query = `
-      INSERT INTO "tblUser" ("firstName", "lastName", "email", "passwordHash", "role", "created_at")
-      VALUES ($1, $2, $3, $4, $5, NOW())
+      INSERT INTO "tblUser" ("firstName", "lastName", "email", "passwordHash", "role", "status", "created_at")
+      VALUES ($1, $2, $3, $4, $5, 'active', NOW())
       RETURNING "userID", "firstName", "lastName", "email", "passwordHash", "role", "notificationEnabled", "created_at"
     `;
     const result = await pool.query(query, [firstName, lastName, email, passwordHash, role]);
@@ -12,7 +12,7 @@ class User {
   }
 
   static async findByEmail(email) {
-    const query = 'SELECT * FROM "tblUser" WHERE "email" = $1';
+    const query = `SELECT * FROM "tblUser" WHERE "email" = $1 AND "status" = 'active'`;
     const result = await pool.query(query, [email]);
     return result.rows[0];
   }
@@ -20,7 +20,7 @@ class User {
   static async findById(id) {
     const query = `
       SELECT "userID", "firstName", "lastName", "email", "role", "notificationEnabled", "created_at"
-      FROM "tblUser" WHERE "userID" = $1
+      FROM "tblUser" WHERE "userID" = $1 AND "status" = 'active'
     `;
     const result = await pool.query(query, [id]);
     return result.rows[0];
@@ -29,7 +29,7 @@ class User {
   static async findByRole(role) {
     const query = `
       SELECT "userID", "firstName", "lastName", "email", "role","notificationEnabled", "created_at"
-      FROM "tblUser" WHERE "role" = $1
+      FROM "tblUser" WHERE "role" = $1 AND "status" = 'active'
     `;
     const result = await pool.query(query, [role]);
     return result.rows;
@@ -70,12 +70,15 @@ class User {
   static async getAll() {
     const query = `
       SELECT "userID", "firstName", "lastName", "email", "role", "isEmailVerified", "notificationEnabled", "created_at"
-      FROM "tblUser" ORDER BY "created_at" DESC
+      FROM "tblUser" 
+      WHERE "status" = 'active'
+      ORDER BY "created_at" DESC
     `;
     const result = await pool.query(query);
     return result.rows;
   }
-
+  
+  // need to be removed
   static async deleteById(id) {
     const query = `
       DELETE FROM "tblUser" 
@@ -88,7 +91,7 @@ class User {
   static async getAllNonStudents() {
     const query = `
       SELECT "userID", "firstName", "lastName", "email", "role", "isEmailVerified", "notificationEnabled", "created_at"
-      FROM "tblUser" WHERE NOT "role" = 'student'
+      FROM "tblUser" WHERE NOT "role" = 'student' AND "status" = 'active'
       ORDER BY "created_at" DESC
     `;
     const result = await pool.query(query);

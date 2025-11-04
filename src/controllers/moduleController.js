@@ -321,12 +321,39 @@ const getMeta = (req, res) => {
     })
 }
 
+// Sync status with course status
+const syncModuleStatus = async (courseID) => {
+    try {
+        const course = await Course.findById(courseID);
+        if (!course) {
+            throw new Error('Invalid course ID. Course not found.');
+        }
+
+        const modules = await Module.findByCourseId(courseID);
+        if (modules.length > 0) {
+            for (m of modules) {
+                // if module status is inactive (deleted), do not change the status
+                if (m.status === 'inactive') {
+                    break;
+                }
+
+                // otherwise, sync the status with course
+                const updated = await Module.update(m.moduleID, {
+                    status: course.status
+                })
+            }
+        }
+    } catch (error) {
+        throw new Error('Module status sync error: ' + error);
+    }
+}
 
 module.exports = {
   register,
   update,
   getModule,
   getAll,
+  syncModuleStatus,
   getAllFromCourseOwner,
   getMeta,
 };

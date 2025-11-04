@@ -97,7 +97,7 @@ class Enrolment {
         const query =`
             SELECT e."courseID", c."title", c."category", c."level", COUNT(e."userID") "count" FROM "tblEnrolment" e
             LEFT JOIN "tblCourse" c ON e."courseID" = c."courseID"
-            WHERE NOT e."status" = 'disenrolled'
+            WHERE NOT e."status" = 'disenrolled' AND c."status" = 'active'
             GROUP BY e."courseID", c."title", c."category", c."level"
             ORDER BY "count" DESC
             LIMIT 3

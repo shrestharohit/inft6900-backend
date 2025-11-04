@@ -3,7 +3,10 @@ const User = require('../models/User');
 const Enrolment = require('../models/Enrolment');
 const Course = require('../models/Course');
 const { VALID_REVIEW_STATUS } = require('../config/constants');
-const e = require('express');
+const { 
+    sendDMNotificationToOwner,
+    sendDMNotificationToStudent 
+} = require('../services/emailService')
 
 const register = async (req, res) => {
     try {
@@ -46,6 +49,9 @@ const register = async (req, res) => {
             courseID,
             message
         });
+
+        // Send notification
+        sendNotificaDtion(newDM.msgID)
 
         res.json({
             message: 'Direct message sent successfully',
@@ -95,6 +101,9 @@ const update = async (req, res) => {
 
         // Update module
         const udpatedDM = await DirectMessage.update(msgID, updateData);
+
+        // Send notification
+        sendNotificaDtion(udpatedDM.msgID)
 
         res.json({
             message: 'Direct message updated successfully',
@@ -236,6 +245,44 @@ const getMeta = (req, res) => {
     res.json({
         status: VALID_REVIEW_STATUS,
     })
+}
+
+
+const sendNotificaDtion = async(msgID) => {
+    try {
+        const dm = await DirectMessage.findById(msgID);
+        console.log(dm)
+        if (!dm) {
+            throw new Error('Invalid msgID. Direct message not found');
+        }
+
+        // trigger notifciation to course owner
+        if (!dm.reply) {
+            const ownerID = (await Course.findById(dm.courseID)).userID;
+            if (!ownerID) {
+                throw new Error('Invalid userID. User not found')
+            }
+
+            const recipient = await User.findById(ownerID);
+            if (!recipient) {
+                throw new Error('Invalid userID. Course owner not found.')
+            }
+
+            sendDMNotificationToOwner(recipient, dm)
+        }
+
+        // trigger notification to student
+        if (dm.reply) {
+            const recipient = await User.findById(dm.userID);
+            if (!recipient) {
+                throw new Error('Invalid userID. User not found.')
+            }
+
+            sendDMNotificationToStudent(recipient, dm)
+        }
+    } catch (error) {
+        throw new Error('Notification error:', error.message);
+    }
 }
 
 
