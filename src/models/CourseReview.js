@@ -1,14 +1,14 @@
 const { pool } = require('../config/database');
 
 class CourseReview {
-    static async create({ userID, courseID, comment, rating }, client = null) {
+    static async create({ enrolmentID, comment, rating }, client = null) {
         const db = client || pool;
         const query = `
-            INSERT INTO "tblCourseReview" ("userID", "courseID", "comment", "rating", "status", "created_at")
-            VALUES ($1, $2, $3, $4, 'active', NOW())
+            INSERT INTO "tblCourseReview" ("enrolmentID", "comment", "rating", "status", "created_at")
+            VALUES ($1, $2, $3, 'active', NOW())
             RETURNING *
         `;
-        const result = await db.query(query, [userID, courseID, comment, rating]);
+        const result = await db.query(query, [enrolmentID, comment, rating]);
         return result.rows[0];
     }
 
@@ -48,8 +48,10 @@ class CourseReview {
     static async findById(id, status = ["active"], client = null) {
         const db = client || pool;
         const query = `
-            SELECT r.*, u."firstName", u."lastName" FROM "tblCourseReview" r
-            LEFT JOIN "tblUser" u ON u."userID" = r."userID"
+            SELECT r.*, e."userID", u."firstName", u."lastName", e."courseID", c."title" FROM "tblCourseReview" r
+            LEFT JOIN "tblEnrolment" e ON e."enrolmentID" = r."enrolmentID"
+            LEFT JOIN "tblCourse" c ON c."courseID" = e."courseID"
+            LEFT JOIN "tblUser" u ON e."userID" = u."userID" 
             WHERE r."reviewID" = $1 AND r."status" = ANY($2)
         `;
         const result = await db.query(query, [id, status]);
@@ -60,9 +62,10 @@ class CourseReview {
         const db = client || pool;
         const query = `
             SELECT r.*, c."title", u."firstName", u."lastName" FROM "tblCourseReview" r
-            LEFT JOIN "tblCourse" c ON c."courseID" = r."courseID"
-            LEFT JOIN "tblUser" u ON r."userID" = u."userID" 
-            WHERE r."courseID" = $1 AND r."status" = ANY($2)`;
+            LEFT JOIN "tblEnrolment" e ON e."enrolmentID" = r."enrolmentID"
+            LEFT JOIN "tblCourse" c ON c."courseID" = e."courseID"
+            LEFT JOIN "tblUser" u ON e."userID" = u."userID" 
+            WHERE e."courseID" = $1 AND r."status" = ANY($2)`;
         const result = await db.query(query, [courseID, status]);
         return result.rows;
     }
@@ -71,7 +74,8 @@ class CourseReview {
         const db = client || pool;
         const query = `
             SELECT r.*, c."title" FROM "tblCourseReview" r
-            LEFT JOIN "tblCourse" c ON c."courseID" = r."courseID"
+            LEFT JOIN "tblEnrolment" e ON e."enrolmentID" = r."enrolmentID"
+            LEFT JOIN "tblCourse" c ON c."courseID" = e."courseID"
             WHERE c."pathwayID" = $1 AND r."status" = ANY($2)`;
         const result = await db.query(query, [courseID, status]);
         return result.rows;
@@ -82,7 +86,8 @@ class CourseReview {
         const query = `
             SELECT c."courseID", c."title", ROUND(AVG(r."rating"),1) as "AvgRating"
             FROM "tblCourseReview"  r
-            LEFT JOIN "tblCourse" c ON r."courseID" = c."courseID"
+            LEFT JOIN "tblEnrolment" e ON e."enrolmentID" = r."enrolmentID"
+            LEFT JOIN "tblCourse" c ON c."courseID" = e."courseID"
             WHERE c."courseID" = $1 AND r."status" = 'active'
             GROUP BY c."courseID", c."title"
         `;
@@ -95,7 +100,8 @@ class CourseReview {
         const query = `
             SELECT c."userID", ROUND(AVG(r."rating"),1) as "AvgRating"
             FROM "tblCourseReview"  r
-            LEFT JOIN "tblCourse" c ON r."courseID" = c."courseID"
+            LEFT JOIN "tblEnrolment" e ON e."enrolmentID" = r."enrolmentID"
+            LEFT JOIN "tblCourse" c ON c."courseID" = e."courseID"
             WHERE c."userID" = $1 AND r."status" = 'active'
             GROUP BY c."userID"
         `;
@@ -107,19 +113,19 @@ class CourseReview {
         const db = client || pool;
         const query = `
             SELECT r.*, u."firstName", u."lastName" FROM "tblCourseReview" r
-            LEFT JOIN "tblUser" u ON u."userID" = r."userID"
+            LEFT JOIN "tblEnrolment" e ON e."enrolmentID" = r."enrolmentID"
+            LEFT JOIN "tblUser" u ON u."userID" = e."userID"
             WHERE r."userID" = $1 AND r."status" = ANY($2)`;
         const result = await db.query(query, [userID, status]);
         return result.rows;
     }
 
-    static async findByUserIDCourseID(userID, courseID, status = ["active"], client = null) {
+    static async findByEnrolmentID(enrolmentID, status = ["active"], client = null) {
         const db = client || pool;
         const query = `
             SELECT * FROM "tblCourseReview" r
-            LEFT JOIN "tblUser" u ON u."userID" = r."userID"
-            WHERE r."userID" = $1 AND r."courseID" = $2 AND r."status" = ANY($3)`;
-        const result = await db.query(query, [userID, courseID, status]);
+            WHERE r."enrolmentID" = $1 AND r."status" = ANY($2)`;
+        const result = await db.query(query, [enrolmentID, status]);
         return result.rows;
     }
 
@@ -128,8 +134,9 @@ class CourseReview {
         const query = `
             SELECT r.*, c."courseID", c."title", u."userID", u."firstName", u."lastName"
             FROM "tblCourseReview" r
-            LEFT JOIN "tblCourse" c ON r."courseID" = c."courseID"
-            LEFT JOIN "tblUser" u ON r."userID" = u."userID"
+            LEFT JOIN "tblEnrolment" e ON e."enrolmentID" = r."enrolmentID"
+            LEFT JOIN "tblUser" u ON u."userID" = e."userID"
+            LEFT JOIN "tblCourse" c ON c."courseID" = e."courseID"
             WHERE r."rating" = 5 AND r."status" = 'active'
         `;
         const result = await db.query(query);

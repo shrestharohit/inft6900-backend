@@ -67,7 +67,7 @@ const enrolCourse = async (req, res) => {
         let newEnrolment = null;
         if (existingEnrolment && existingEnrolment.status == 'disenrolled') {
             newEnrolment = await Enrolment.update(existingEnrolment.enrolmentID, {status: 'enrolled'});
-            refreshStatus(newEnrolment.enrolmenID)
+            refreshStatus(newEnrolment.enrolmentID)
         } 
         // otherwise, create new enrolment data
         else {
