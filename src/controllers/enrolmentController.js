@@ -4,6 +4,7 @@ const Course = require('../models/Course');
 const Quiz = require('../models/Quiz');
 const Pathway = require('../models/Pathway');
 const { VALID_ENROLMENT_STATUS } = require('../config/constants');
+const QuizAttempt = require('../models/QuizAttempt');
 
 const enrolCourse = async (req, res) => {
     try {
@@ -406,7 +407,8 @@ const refreshStatus = async (enrolmentID) => {
         }
 
         // switch to completed if all quizzes are passed
-        const quizzes = await Quiz.findByCourseID(enrolment.courseID);
+        const quizzes = await QuizAttempt.findByCourseIdUserID(enrolment.courseID, enrolment.userID);
+        console.log(quizzes)
         const completed = quizzes.length > 0 && quizzes.every(q => q.passed);
 
         if (completed) {

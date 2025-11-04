@@ -306,6 +306,7 @@ const processCourseReviews = async(courseID) => {
     for (const review of reviews) {
         const reviewerID = (await Enrolment.findById(review.enrolmentID)).userID;
         const reviewer = await User.findById(reviewerID);
+        review.userID = reviewerID;
         review.firstName = reviewer.firstName;
         review.lastName = reviewer.lastName;
     }
