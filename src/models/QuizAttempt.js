@@ -55,7 +55,7 @@ class QuizAttempt {
         SELECT a.*, m."title" as "moduleName" FROM "tblQuizAttempt" a
         LEFT JOIN "tblQuiz" q ON a."quizID" = q."quizID"
         LEFT JOIN "tblModule" m ON m."moduleID" = q."moduleID"
-        LEFT JOIN "tblEnrolment" e ON m."courseID" = e."courseID"
+        LEFT JOIN "tblEnrolment" e ON e."enrolmentID" = a."enrolmentID"
         WHERE e."userID" = $1 AND m."moduleID" = $2
         `;
         const result = await db.query(query, [userID, moduleID]);
