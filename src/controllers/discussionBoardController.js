@@ -50,21 +50,26 @@ const replyPost = async (req, res) => {
       parentPostID
     });
 
-    // Send Email Notification to Original Poster
-    try {
-      const postOwner = await DiscussionBoard.getPostOwner(parentPostID);
-      if (postOwner && postOwner.notificationEnabled) {
-        await sendPostReplyNotification(postOwner, {
-          courseName: postOwner.courseName,
-          postTitle: postOwner.title,
-          replyContent: newReply.postText
-        });
-        console.log(`✅ Reply notification sent to ${postOwner.email}`);
-      }
-    } catch (err) {
-      console.error("❌ Failed to send reply notification:", err.message);
-    }
+    // Send the response 
     res.json({ message: 'Reply created', post: newReply });
+    (async () => {
+      try {
+        console.time("send-email");
+        const postOwner = await DiscussionBoard.getPostOwner(parentPostID);
+        if (postOwner && postOwner.notificationEnabled) {
+          await sendPostReplyNotification(postOwner, {
+            courseName: postOwner.courseName,
+            postTitle: postOwner.title,
+            replyContent: newReply.postText
+          });
+          console.log(`✅ Reply notification sent to ${postOwner.email}`);
+        }
+        console.timeEnd("send-email");
+      } catch (err) {
+        console.error("❌ Failed to send post reply notification:", err.message);
+      }
+    })();
+
   } catch (error) {
     console.error('Reply post error:', error);
     res.status(500).json({ error: 'Internal server error' });
