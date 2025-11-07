@@ -6,7 +6,7 @@ class DiscussionBoard {
     const result = await pool.query(
       `INSERT INTO "tblDiscussionBoard" ("courseID", "userID", "title", "postText", "parentPostID")
        VALUES ($1, $2, $3, $4, $5)
-       RETURNING *`,
+       RETURNING "postID", "created_at", "courseID", "userID", "title", "postText", "parentPostID"`,
       [courseID, userID, title, postText, parentPostID]
     );
     return result.rows[0];

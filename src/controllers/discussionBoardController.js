@@ -20,7 +20,9 @@ const createPost = async (req, res) => {
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const newPost = await DiscussionBoard.create({ courseID, userID, title, postText });
-    res.json({ message: 'Post created', post: newPost });
+    res.json({ message: 'Post created', post: newPost,
+      firstName: user.firstName,
+      lastName: user.lastName, });
   } catch (error) {
     console.error('Create post error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -47,30 +49,27 @@ const replyPost = async (req, res) => {
       userID,
       title: replyTitle,
       postText,
-      parentPostID
+      parentPostID,
     });
 
-    // Send the response 
-    res.json({ message: 'Reply created', post: newReply });
-    (async () => {
+        res.json({ message: 'Reply created', post: newReply,
+          firstName: user.firstName,
+          lastName: user.lastName, });
+      // Send Email Notification to Original Poster
       try {
-        console.time("send-email");
         const postOwner = await DiscussionBoard.getPostOwner(parentPostID);
         if (postOwner && postOwner.notificationEnabled) {
           await sendPostReplyNotification(postOwner, {
             courseName: postOwner.courseName,
             postTitle: postOwner.title,
-            replyContent: newReply.postText
+            replyContent: newReply.postText,
           });
           console.log(`✅ Reply notification sent to ${postOwner.email}`);
         }
-        console.timeEnd("send-email");
-      } catch (err) {
-        console.error("❌ Failed to send post reply notification:", err.message);
-      }
-    })();
-
-  } catch (error) {
+    } catch (err) {
+      console.error('❌ Failed to send reply notification:', err.message);
+    }
+      } catch (error) {
     console.error('Reply post error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -112,10 +111,23 @@ const updatePost = async (req, res) => {
     const postID = parseInt(req.params.postid);
     const { title, postText } = req.body;
 
+    // Fetch the post
     const post = await DiscussionBoard.findById(postID);
     if (!post) return res.status(404).json({ error: 'Post not found' });
 
-    const updated = await DiscussionBoard.update(postID, { title, postText });
+    let updatedTitle = title;
+
+    // If this is a reply and title is missing, use parent post's title
+    if (!updatedTitle && post.parentPostID) {
+      const parentPost = await DiscussionBoard.findById(post.parentPostID);
+      updatedTitle = parentPost ? parentPost.title : 'Re:';
+    }
+
+    const updated = await DiscussionBoard.update(postID, {
+      title: updatedTitle,
+      postText,
+    });
+
     res.json({ message: 'Post updated', post: updated });
   } catch (error) {
     console.error('Update post error:', error);
