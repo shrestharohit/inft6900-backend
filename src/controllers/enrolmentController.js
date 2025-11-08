@@ -624,13 +624,31 @@ const processData = async(enrolments) => {
     const processedData = [];
 
     for (const enrolment of enrolments) {
-        let processedEnrolment = enrolment;
-        let course = await Course.findById(enrolment.courseID);
+        const processedEnrolment = enrolment;
+        const course = await Course.findById(enrolment.courseID);
         
         let pathway = null;
         if (enrolment.pathwayID) {
             pathway = await Pathway.findById(enrolment.pathwayID);
         }
+
+        // get progress percentage
+        let passedQuizzes = 0;
+        let progress = 0;
+        const quizzes = await Quiz.findByCourseID(enrolment.courseID);
+        const attempts = await QuizAttempt.findByUserCourse(enrolment.userID, enrolment.courseID);
+
+        for (const quiz of quizzes) {
+            const passed = (attempts.filter(a => a.passed === true).length > 0);
+            if (passed) {
+                passedQuizzes++;
+            }
+        }
+        if (quizzes.length !== 0) {
+            progress = Math.round(passedQuizzes / quizzes.length * 100);
+        }
+
+        processedEnrolment.progress = progress;
 
         processedEnrolment.courseDetail = course;
         processedEnrolment.pathwayDetail = pathway;
