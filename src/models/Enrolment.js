@@ -71,11 +71,11 @@ class Enrolment {
             throw new Error('No valid fields to update');
         }
 
-        if(updates.status === 'disenrolled') {
+        if(updateData.status === 'disenrolled') {
             updates.push(`"disenrolledDate" = NOW()`);
         }
 
-        if(updates.status === 'completed') {
+        if(updateData.status === 'completed') {
             updates.push(`"completionDate" = NOW()`);
         }
 

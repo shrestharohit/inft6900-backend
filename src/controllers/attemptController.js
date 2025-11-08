@@ -250,7 +250,7 @@ const getQuizResult = async (req, res) => {
       if (selectedOption) {
           processedAnswer.selectedText = selectedOption.optionText;
       }
-
+      
       const question = await Question.findById(answer.questionID);
       processedAnswer.questionText = question.questionText;
       
