@@ -231,7 +231,7 @@ const getQuizResult = async (req, res) => {
     let correctOption = null;
 
     // Prepare answer data
-    for (answer of answers) {
+    for (const answer of answers) {
       processedAnswer = answer;
       correctOption = await AnswerOption.findAnswerForQuestion(
         answer.questionID
@@ -244,6 +244,12 @@ const getQuizResult = async (req, res) => {
 
       processedAnswer.correctOptionID = correctOption.optionID;
       processedAnswer.answerText = correctOption.optionText;
+
+      processedAnswer.selectedText = '';
+      selectedOption = await AnswerOption.findById(answer.optionID);
+      if (selectedOption) {
+          processedAnswer.selectedText = selectedOption.optionText;
+      }
 
       const question = await Question.findById(answer.questionID);
       processedAnswer.questionText = question.questionText;
