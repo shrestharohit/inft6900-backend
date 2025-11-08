@@ -473,7 +473,19 @@ const getPopular = async (req, res) => {
         // in case there are no 3 courses with enrolment, get random pathways
         if (popularPathways.length !== 3) {
             const popularPathIds = popularPathways.map(item => item.pathwayID);
-            const pathways = await Pathway.getAll(['active']);
+            let pathways = await Pathway.getAll(['active']);
+
+            let i = 0;
+            for (const pathway of pathways) {
+                const activeCourses = await Course.findByPathwayId(pathway.pathwayID, ['active']);
+                if (activeCourses.length === 0) {
+                    pathways = pathways.splice(i, i);
+                } else {
+                    pathway.courses = activeCourses;
+                }
+                i++;
+            }
+
             let pathIds = pathways.map(item => item.pathwayID).filter(id => !popularPathIds.includes(id));
 
             // get up to 3 pathways

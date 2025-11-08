@@ -176,7 +176,18 @@ const getCoursesInPathway = async (req, res) => {
     const pathway = await Pathway.findById(pathwayID);
     if (!pathway) return res.status(404).json({ error: 'Pathway not found' });
 
-    const courses = await Pathway.getCourses(pathwayID);
+    
+    // for student and guest users, only shows active courses
+    const user = await User.findById(req.headers['x-user-id']);
+    let courses = [];
+
+    if (req.headers['x-user-id'] == undefined || 
+        (req.headers['x-user-id'] && user.role === 'student')) {
+        courses = await Course.findByPathwayId(pathwayID, ['active']);
+    } else {
+        courses = await Pathway.getCourses(pathwayID);
+    }
+
     res.json({ pathwayID, courses });
   } catch (error) {
     console.error('Get courses in pathway error:', error);
