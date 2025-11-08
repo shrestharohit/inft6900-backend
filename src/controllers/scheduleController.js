@@ -77,8 +77,8 @@ const getSchedulesByUser = async (req, res) => {
   try {
     const userID = parseInt(req.params.userid);
     const schedules = await Schedule.findByUser(userID);
-    if (!schedules || schedules.length === 0)
-      return res.status(404).json({ error: 'No schedules found for this user.' });
+    // if (!schedules || schedules.length === 0)
+    //   return res.status(404).json({ error: 'No schedules found for this user.' });
 
     res.json({ message: 'User schedules retrieved successfully', schedules });
   } catch (error) {
