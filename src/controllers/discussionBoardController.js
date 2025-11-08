@@ -1,8 +1,7 @@
-const DiscussionBoard = require('../models/DiscussionBoard');
-const User = require('../models/User');
-const Course = require('../models/Course');
-const { sendPostReplyNotification } = require('../services/emailService');
-
+const DiscussionBoard = require("../models/DiscussionBoard");
+const User = require("../models/User");
+const Course = require("../models/Course");
+const { sendPostReplyNotification } = require("../services/emailService");
 
 // Create a top-level post
 const createPost = async (req, res) => {
@@ -11,21 +10,23 @@ const createPost = async (req, res) => {
     const { userID, title, postText } = req.body;
 
     if (!courseID || !userID || !title || !postText)
-      return res.status(400).json({ error: 'Course, user, title, and content are required' });
+      return res
+        .status(400)
+        .json({ error: "Course, user, title, and content are required" });
 
     const course = await Course.findById(courseID);
-    if (!course) return res.status(404).json({ error: 'Course not found' });
+    if (!course) return res.status(404).json({ error: "Course not found" });
 
     const user = await User.findById(userID);
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user) return res.status(404).json({ error: "User not found" });
 
     const newPost = await DiscussionBoard.create({ courseID, userID, title, postText });
     res.json({ message: 'Post created', post: newPost,
       firstName: user.firstName,
       lastName: user.lastName, });
   } catch (error) {
-    console.error('Create post error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Create post error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -36,10 +37,11 @@ const replyPost = async (req, res) => {
     const { userID, title, postText } = req.body;
 
     const parentPost = await DiscussionBoard.findById(parentPostID);
-    if (!parentPost) return res.status(404).json({ error: 'Parent post not found' });
+    if (!parentPost)
+      return res.status(404).json({ error: "Parent post not found" });
 
     const user = await User.findById(userID);
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user) return res.status(404).json({ error: "User not found" });
 
     // Auto-generate title if missing
     const replyTitle = title || `Re: ${parentPost.title}`;
@@ -80,16 +82,22 @@ const getPosts = async (req, res) => {
   try {
     const courseID = parseInt(req.params.courseid);
     const posts = await DiscussionBoard.findByCourse(courseID);
+    const postsWithUsers = await Promise.all(
+      posts.map(async (x) => {
+        const user = await User.findById(x.userID);
+        return { ...x, user };
+      })
+    );
 
-    const topLevelPosts = posts.filter(p => !p.parentPostID);
-    topLevelPosts.forEach(post => {
-      post.replies = posts.filter(p => p.parentPostID === post.postID);
+    const topLevelPosts = postsWithUsers.filter((p) => !p.parentPostID);
+    topLevelPosts.forEach((post) => {
+      post.replies = postsWithUsers.filter((p) => p.parentPostID === post.postID);
     });
 
     res.json({ posts: topLevelPosts });
   } catch (error) {
-    console.error('Get posts error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Get posts error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -100,8 +108,8 @@ const getPostsByUser = async (req, res) => {
     const posts = await DiscussionBoard.findByUser(userID);
     res.json({ posts });
   } catch (error) {
-    console.error('Get posts by user error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Get posts by user error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -113,7 +121,7 @@ const updatePost = async (req, res) => {
 
     // Fetch the post
     const post = await DiscussionBoard.findById(postID);
-    if (!post) return res.status(404).json({ error: 'Post not found' });
+    if (!post) return res.status(404).json({ error: "Post not found" });
 
     let updatedTitle = title;
 
@@ -130,8 +138,8 @@ const updatePost = async (req, res) => {
 
     res.json({ message: 'Post updated', post: updated });
   } catch (error) {
-    console.error('Update post error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Update post error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -140,14 +148,21 @@ const deletePost = async (req, res) => {
   try {
     const postID = parseInt(req.params.postid);
     const post = await DiscussionBoard.findById(postID);
-    if (!post) return res.status(404).json({ error: 'Post not found' });
+    if (!post) return res.status(404).json({ error: "Post not found" });
 
     await DiscussionBoard.delete(postID);
-    res.json({ message: 'Post deleted' });
+    res.json({ message: "Post deleted" });
   } catch (error) {
-    console.error('Delete post error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Delete post error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
-module.exports = { createPost, replyPost, getPosts, getPostsByUser, updatePost, deletePost };
+module.exports = {
+  createPost,
+  replyPost,
+  getPosts,
+  getPostsByUser,
+  updatePost,
+  deletePost,
+};

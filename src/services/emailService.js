@@ -69,7 +69,7 @@ const sendOTPEmailForpasswordReset = async (email, otp, firstName) => {
     console.log(`📩 OTP for ${email} (${firstName}): ${otp}`);
 
     const mailOptions = {
-      from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,
+      from: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER,
       to: email,
       subject: "Brainwave - Email Verification Code",
       html: OTPEmailForpasswordResetMsg({ firstName, otp }),
