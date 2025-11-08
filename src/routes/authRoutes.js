@@ -1,80 +1,44 @@
-const express = require('express');
+const express = require("express");
 const {
-    register,
-    login,
-    getCurrentUser,
-    updateCurrentUser,
-    verifyOTP,
-    resendOTP
-} = require('../controllers/authController');
+  register,
+  login,
+  verifyOTP,
+  resendOTP,
+  sendResetPasswordOTP,
+  verifyResetOTP,
+  resetPassword,
+  getCurrentUser,
+  updateCurrentUser,
+  getNonStudentUsers,
+  updateUser,
+  deleteUser
+} = require("../controllers/authController");
 
 const router = express.Router();
-console.log("✅ authRoutes loaded");
 
-// --- Registration ---
-router.post('/register', async (req, res, next) => {
-    console.log("📩 POST /api/auth/register called with body:", req.body);
-    try {
-        await register(req, res, next);
-    } catch (err) {
-        console.error("❌ Error inside /register route:", err);
-        next(err); // Pass to Express error handler
-    }
-});
+router.post("/register", register);
 
-// --- Verify OTP ---
-router.post('/verify-otp', async (req, res, next) => {
-    console.log("📩 POST /api/auth/verify-otp called with body:", req.body);
-    try {
-        await verifyOTP(req, res, next);
-    } catch (err) {
-        console.error("❌ Error inside /verify-otp route:", err);
-        next(err);
-    }
-});
+router.post("/verify-otp", verifyOTP);
 
-// --- Resend OTP ---
-router.post('/resend-otp', async (req, res, next) => {
-    console.log("📩 POST /api/auth/resend-otp called with body:", req.body);
-    try {
-        await resendOTP(req, res, next);
-    } catch (err) {
-        console.error("❌ Error inside /resend-otp route:", err);
-        next(err);
-    }
-});
+router.post("/resend-otp", resendOTP);
 
-// --- Login ---
-router.post('/login', async (req, res, next) => {
-    console.log("📩 POST /api/auth/login called with body:", req.body);
-    try {
-        await login(req, res, next);
-    } catch (err) {
-        console.error("❌ Error inside /login route:", err);
-        next(err);
-    }
-});
+router.post("/login", login);
 
-// --- Get Current User ---
-router.get('/me', async (req, res, next) => {
-    console.log("👤 GET /api/auth/me called with headers:", req.headers);
-    try {
-        await getCurrentUser(req, res, next);
-    } catch (err) {
-        console.error("❌ Error inside /me route:", err);
-        next(err);
-    }
-});
 
-// --- Update Current User ---
-router.put('/me', async (req, res, next) => {
-    console.log("✏️ PUT /api/auth/me called with body:", req.body);
-    try {
-        await updateCurrentUser(req, res, next);
-    } catch (err) {
-        console.error("❌ Error inside /me update route:", err);
-        next(err);
-    }
-});
+router.post("/send-resetotp", sendResetPasswordOTP);
+
+router.post("/verify-resetotp", verifyResetOTP);
+
+router.post("/reset-password", resetPassword);
+
+// Profile routes
+router.get("/user", getCurrentUser);   // ✅ fetch user profile
+router.put("/user", updateCurrentUser); // ✅ update user profile
+
+
+// for admin page
+router.get("/users", getNonStudentUsers);
+router.put("/update", updateUser);
+router.delete("/delete", deleteUser);
 
 module.exports = router;
