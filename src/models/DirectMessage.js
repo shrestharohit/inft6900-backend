@@ -1,14 +1,14 @@
 const { pool } = require('../config/database');
 
 class DirectMessage {
-    static async create({ userID, courseID, message }, client = null) {
+    static async create({ enrolmentID, message }, client = null) {
         const db = client || pool;
         const query = `
-            INSERT INTO "tblDirectMessage" ("userID", "courseID", "message", "status", "created_at")
-            VALUES ($1, $2, $3, 'active', NOW())
+            INSERT INTO "tblDirectMessage" ("enrolmentID", "message", "status", "created_at")
+            VALUES ($1, $2, 'active', NOW())
             RETURNING *
         `;
-        const result = await db.query(query, [userID, courseID, message]);
+        const result = await db.query(query, [enrolmentID, message]);
         return result.rows[0];
     }
 
@@ -49,8 +49,9 @@ class DirectMessage {
         const db = client || pool;
         const query = `
             SELECT d.*, c."title", u."firstName", u."lastName" FROM "tblDirectMessage"  d
-            LEFT JOIN "tblCourse" c ON d."courseID" = c."courseID"
-            LEFT JOIN "tblUser" u ON d."userID" = u."userID"
+            LEFT JOIN "tblEnrolment" e ON e."enrolmentID" = d."enrolmentID"
+            LEFT JOIN "tblCourse" c ON e."courseID" = c."courseID"
+            LEFT JOIN "tblUser" u ON e."userID" = u."userID"
             WHERE d."msgID" = $1 AND d."status" = ANY($2)
         `;
         const result = await db.query(query, [id, status]);
@@ -61,9 +62,10 @@ class DirectMessage {
         const db = client || pool;
         const query = `
             SELECT d.*, c."title", u."firstName", u."lastName" FROM "tblDirectMessage"  d
-            LEFT JOIN "tblCourse" c ON d."courseID" = c."courseID"
-            LEFT JOIN "tblUser" u ON d."userID" = u."userID"
-            WHERE d."courseID" = $1 AND d."status" = ANY($2)
+            LEFT JOIN "tblEnrolment" e ON e."enrolmentID" = d."enrolmentID"
+            LEFT JOIN "tblCourse" c ON e."courseID" = c."courseID"
+            LEFT JOIN "tblUser" u ON e."userID" = u."userID"
+            WHERE c."courseID" = $1 AND d."status" = ANY($2)
         `;
         const result = await db.query(query, [courseID, status]);
         return result.rows;
@@ -73,23 +75,25 @@ class DirectMessage {
         const db = client || pool;
         const query = `
             SELECT d.*, c."title", u."firstName", u."lastName" FROM "tblDirectMessage"  d
-            LEFT JOIN "tblCourse" c ON d."courseID" = c."courseID"
-            LEFT JOIN "tblUser" u ON d."userID" = u."userID"
-            WHERE d."userID" = $1 AND d."status" = ANY($2)
+            LEFT JOIN "tblEnrolment" e ON e."enrolmentID" = d."enrolmentID"
+            LEFT JOIN "tblCourse" c ON e."courseID" = c."courseID"
+            LEFT JOIN "tblUser" u ON e."userID" = u."userID"
+            WHERE u."userID" = $1 AND d."status" = ANY($2)
         `;
         const result = await db.query(query, [userID, status]);
         return result.rows;
     }
 
-    static async findByUserIDCourseID(userID, courseID, status = ["active"], client = null) {
+    static async findByEnrolmentID(enrolmentID, status = ["active"], client = null) {
         const db = client || pool;
         const query = `
-            SELECT d.*, c."title", u."firstName", u."lastName" FROM "tblDirectMessage"  d
-            LEFT JOIN "tblCourse" c ON d."courseID" = c."courseID"
-            LEFT JOIN "tblUser" u ON d."userID" = u."userID"
-            WHERE d."userID" = $1 AND d."courseID" = $2 d."status" = ANY($3)
+            SELECT d.*, c."title", u."firstName", u."lastName" FROM "tblDirectMessage" d
+            LEFT JOIN "tblEnrolment" e ON e."enrolmentID" = d."enrolmentID"
+            LEFT JOIN "tblCourse" c ON e."courseID" = c."courseID"
+            LEFT JOIN "tblUser" u ON e."userID" = u."userID"
+            WHERE d."enrolmentID" = $1 AND d."status" = ANY($2)
         `;
-        const result = await db.query(query, [userID, courseID, status]);
+        const result = await db.query(query, [enrolmentID, status]);
         return result.rows;
     }
     
@@ -97,8 +101,9 @@ class DirectMessage {
         const db = client || pool;
         const query = `
             SELECT d.*, c."title", u."firstName", u."lastName" FROM "tblDirectMessage"  d
-            LEFT JOIN "tblCourse" c ON d."courseID" = c."courseID"
-            LEFT JOIN "tblUser" u ON d."userID" = u."userID"
+            LEFT JOIN "tblEnrolment" e ON e."enrolmentID" = d."enrolmentID"
+            LEFT JOIN "tblCourse" c ON e."courseID" = c."courseID"
+            LEFT JOIN "tblUser" u ON e."userID" = u."userID"
             WHERE c."userID" = $1 AND d."status" = ANY($2)
         `;
         const result = await db.query(query, [userID, status]);

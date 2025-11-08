@@ -4,6 +4,7 @@ const Course = require('../models/Course');
 const Quiz = require('../models/Quiz');
 const Pathway = require('../models/Pathway');
 const { VALID_ENROLMENT_STATUS } = require('../config/constants');
+const QuizAttempt = require('../models/QuizAttempt');
 
 const enrolCourse = async (req, res) => {
     try {
@@ -67,7 +68,7 @@ const enrolCourse = async (req, res) => {
         let newEnrolment = null;
         if (existingEnrolment && existingEnrolment.status == 'disenrolled') {
             newEnrolment = await Enrolment.update(existingEnrolment.enrolmentID, {status: 'enrolled'});
-            refreshStatus(newEnrolment.enrolmenID)
+            refreshStatus(newEnrolment.enrolmentID)
         } 
         // otherwise, create new enrolment data
         else {
@@ -406,10 +407,27 @@ const refreshStatus = async (enrolmentID) => {
         }
 
         // switch to completed if all quizzes are passed
-        const quizzes = await Quiz.findByCourseID(enrolment.courseID);
-        const completed = quizzes.length > 0 && quizzes.every(q => q.passed);
+        const userCourseAttempts = await QuizAttempt.findByUserCourse(enrolment.userID, enrolment.courseID);
+        const userAttemptQuizIds = userCourseAttempts.map(a => a.quizID);
 
-        if (completed) {
+        const courseQuizzes = (await Quiz.findByCourseID(enrolment.courseID)).
+                                filter(q => q.status === 'active');
+        const quizIds = courseQuizzes.map(q => q.quizID);
+
+        let passedQuizzes = 0;
+
+        for (const quiz of courseQuizzes) {
+            // Count how many attempts that passed the quiz exist
+            passedAttempts = userCourseAttempts.
+                filter(a => a.quizID === quiz.quizID).
+                filter(a => a.passed === true).length;
+
+            if (userAttemptQuizIds.includes(quiz.quizID) && passedAttempts >= 1) {
+                passedQuizzes ++;
+            }
+        }
+
+        if (passedQuizzes === quizIds.length) {
             updatedEnrolment = await Enrolment.update(enrolmentID, {status: 'completed'});
         }
         return updatedEnrolment;

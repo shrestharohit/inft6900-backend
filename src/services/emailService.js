@@ -10,7 +10,9 @@ const {
     declineNotificationMsg,
     newDMMsg,
     DMRepliedMsg,
-    newCourseReviewMsg
+    newCourseReviewMsg,
+    PostRepliedMsg,
+    newAnnouncementMsg
 } = require('../config/emailTemplates')
 
 // Email configuration for MailerSend

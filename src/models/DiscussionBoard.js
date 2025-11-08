@@ -6,7 +6,7 @@ class DiscussionBoard {
     const result = await pool.query(
       `INSERT INTO "tblDiscussionBoard" ("courseID", "userID", "title", "postText", "parentPostID")
        VALUES ($1, $2, $3, $4, $5)
-       RETURNING *`,
+       RETURNING "postID", "created_at", "courseID", "userID", "title", "postText", "parentPostID"`,
       [courseID, userID, title, postText, parentPostID]
     );
     return result.rows[0];
@@ -46,6 +46,20 @@ class DiscussionBoard {
   static async delete(postID) {
     await pool.query(`DELETE FROM "tblDiscussionBoard" WHERE "postID" = $1 OR "parentPostID" = $1`, [postID]);
     return true;
+  }
+
+  static async getPostOwner(postID) {
+    const query = `
+      SELECT p."postID", p."title", p."postText" AS "content", p."courseID",
+             u."email", u."firstName", u."notificationEnabled",
+             c."title" AS "courseTitle"
+      FROM "tblDiscussionBoard" p
+      JOIN "tblUser" u ON p."userID" = u."userID"
+      JOIN "tblCourse" c ON p."courseID" = c."courseID"
+      WHERE p."postID" = $1
+    `;
+    const result = await pool.query(query, [postID]);
+    return result.rows[0];
   }
 }
 
