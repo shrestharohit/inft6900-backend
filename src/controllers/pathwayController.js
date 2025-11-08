@@ -1,6 +1,7 @@
 const Pathway = require('../models/Pathway');
 const User = require('../models/User');
 const { VALID_PATHWAY_STATUS } = require('../config/constants');
+const Course = require('../models/Course');
 
 // Register pathway
 const register = async (req, res) => {
@@ -186,7 +187,29 @@ const getCoursesInPathway = async (req, res) => {
 // Get all pathways
 const getAll = async (req, res) => {
     try {
-        const pathways = await Pathway.getAll();
+        let pathways = await Pathway.getAll();
+
+        // for student and guest users, only shows active pathways with active courses
+        const user = await User.findById(req.headers['x-user-id']);
+        if (req.headers['x-user-id'] == undefined || 
+            (req.headers['x-user-id'] && user.role === 'student')) {
+
+            for (const pathway of pathways) {
+                const courses = await Course.findByPathwayId(pathway.pathwayID, ['active']);
+                pathway.courses = courses;
+            }
+
+            pathways = pathways.filter(p => 
+                p.status === 'active' && 
+                p.courses.length !== 0
+            );
+        } else {
+            for (const pathway of pathways) {
+                const courses = await Course.findByPathwayId(pathway.pathwayID);
+                pathway.courses = courses;
+            }
+        }
+
         res.json({ pathways });
     } catch (error) {
         console.error('Get all pathways error:', error);
