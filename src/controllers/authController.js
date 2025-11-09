@@ -259,6 +259,7 @@ const getCurrentUser = async (req, res) => {
         email: user.email,
         role: user.role,
         created_at: user.created_at,
+        notificationEnabled: user.notificationEnabled
       },
     });
   } catch (error) {
@@ -316,8 +317,7 @@ const updateCurrentUser = async (req, res) => {
         lastName: updatedUser.lastName,
         email: updatedUser.email,
         role: updatedUser.role,
-        updated_at: updatedUser.updated_at,
-      },
+        updated_at: updatedUser.updated_at      },
     });
   } catch (error) {
     console.error("Update user error:", error);
