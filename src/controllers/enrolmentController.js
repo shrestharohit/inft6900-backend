@@ -647,10 +647,6 @@ const processData = async(enrolments) => {
         if (quizzes.length !== 0) {
             progress = Math.round(passedQuizzes / quizzes.length * 100);
         }
-        
-        console.log(course.courseID);
-        console.log("total quizzes: "+ quizzes.length);
-        console.log("total passed quizzes: "+ passedQuizzes);
 
         processedEnrolment.progress = progress;
 
