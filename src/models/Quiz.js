@@ -25,15 +25,15 @@ class Quiz {
         return result.rows[0];
     }
 
-    static async findByCourseID(courseID, client = null) {
+    static async findByCourseID(courseID, status = ['draft', 'wait_for_approval', 'active', 'inactive'], client = null) {
         const db = client || pool;
         const query = `
-        SELECT a.* FROM "tblQuiz" a
-        LEFT JOIN "tblModule" m ON a."moduleID" = m."moduleID"
-        WHERE m."courseID" = $1 
+        SELECT q.* FROM "tblQuiz" q
+        LEFT JOIN "tblModule" m ON q."moduleID" = m."moduleID"
+        WHERE m."courseID" = $1 AND q."status" = ANY($2)
         ORDER BY m."moduleNumber" DESC
         `;
-        const result = await db.query(query, [courseID]);
+        const result = await db.query(query, [courseID, status]);
         return result.rows;
     }
 
