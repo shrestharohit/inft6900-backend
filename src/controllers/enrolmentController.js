@@ -635,11 +635,11 @@ const processData = async(enrolments) => {
         // get progress percentage
         let passedQuizzes = 0;
         let progress = 0;
-        const quizzes = await Quiz.findByCourseID(enrolment.courseID);
+        const quizzes = await Quiz.findByCourseID(enrolment.courseID, ['active']);
         const attempts = await QuizAttempt.findByUserCourse(enrolment.userID, enrolment.courseID);
 
         for (const quiz of quizzes) {
-            const passed = (attempts.filter(a => a.passed === true).length > 0);
+            const passed = (attempts.filter(a => a.quizID === quiz.quizID && a.passed === true).length > 0);
             if (passed) {
                 passedQuizzes++;
             }
@@ -647,6 +647,10 @@ const processData = async(enrolments) => {
         if (quizzes.length !== 0) {
             progress = Math.round(passedQuizzes / quizzes.length * 100);
         }
+        
+        console.log(course.courseID);
+        console.log("total quizzes: "+ quizzes.length);
+        console.log("total passed quizzes: "+ passedQuizzes);
 
         processedEnrolment.progress = progress;
 
