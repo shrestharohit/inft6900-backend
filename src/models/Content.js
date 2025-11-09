@@ -16,7 +16,7 @@ class Content {
 
     static async findByModuleId(moduleID, client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "tblContent" WHERE "moduleID" = $1 ORDER BY "created_at" DESC`;
+        const query = `SELECT * FROM "tblContent" WHERE "moduleID" = $1 ORDER BY "pageNumber" ASC`;
         const result = await db.query(query, [moduleID]);
         return result.rows;
     }
@@ -63,7 +63,7 @@ class Content {
 
     static async getAll(client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "tblContent" ORDER BY "created_at" DESC`;
+        const query = `SELECT * FROM "tblContent" ORDER BY "pageNumber" ASC`;
         const result = await db.query(query);
         return result.rows;
     }

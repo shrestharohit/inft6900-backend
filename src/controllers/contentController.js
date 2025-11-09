@@ -227,7 +227,7 @@ const updateContent = async ({
             );
 
             if (duplicate) {
-                throw new Errorr('Selected page number already used in the module' );
+                throw new Error('Selected page number already used in the module' );
             }
         }
 
