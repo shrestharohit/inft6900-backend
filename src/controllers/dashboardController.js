@@ -103,14 +103,34 @@ const getAdminData = async (req, res) => {
     const pnedingCourses = await Course.findByStatus('wait_for_approval');
     const pendingQuizzes = await Quiz.getApprovalList();
 
+    // total courses
+    let allCourses = await Course.getAll();
+    allCourses = allCourses.filter(c => c.status === 'active');
+
+    // enrolment data
+    const enrolments = [];
+    for (const course of allCourses) {
+        const courseEnrolments = await Enrolment.findByCourseId(course.courseID);
+        enrolments.push({
+            courseID: course.courseID,
+            courseName: course.title,
+            enrolledCount: courseEnrolments.filter(e => e.status === 'enrolled').length,
+            inProgressCount: courseEnrolments.filter(e => e.status === 'in progress').length,
+            completedCount: courseEnrolments.filter(e => e.status === 'completed').length,
+            disenrolledCount: courseEnrolments.filter(e => e.status === 'disenrolld').length,
+        })
+    }
+
     const data = {
         totalUserCount: allUsers.length,
         newUserCount: newUsers.length,
         studentCount: students.length,
         courseOwnerCount: courseOwners.length,
         adminCount: admins.length,
+        activeCourseCount: allCourses.length,
         pendingCourseCount: pnedingCourses.length,
         pendingQuizCount: pendingQuizzes.length,
+        enrolments: enrolments,
         newUsers: newUsers
     }
 

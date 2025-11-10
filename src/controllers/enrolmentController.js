@@ -217,7 +217,9 @@ const getUserEnrolment = async (req, res) => {
         };
         
         // Get all enrolment made by users
-        const enrolments = await Enrolment.findByUserID(userID);
+        let enrolments = await Enrolment.findByUserID(userID);
+        enrolments = enrolments.filter(e => e.status !== 'disenrolled');
+
         const processedData = await processData(enrolments)
 
         res.json({
@@ -539,7 +541,8 @@ const getEnrolment = async (req, res) => {
 }
 
 const getAll = async (req, res) => {
-    const enrolments = await Enrolment.getAll();
+    let enrolments = await Enrolment.getAll();
+    console.log(enrolments)
     const processedData = await processData(enrolments);
     
     res.json({
