@@ -66,10 +66,8 @@ class QuizAttempt {
         const db = client || pool;
         const query = `
         SELECT a.* FROM "tblQuizAttempt" a
-        LEFT JOIN "tblQuiz" q ON a."quizID" = q."quizID"
-        LEFT JOIN "tblModule" m ON m."moduleID" = q."moduleID"
-        LEFT JOIN "tblEnrolment" e ON m."courseID" = e."courseID"
-        WHERE e."userID" = $1 AND m."courseID" = $2
+        LEFT JOIN "tblEnrolment" e ON e."enrolmentID" = a."enrolmentID"
+        WHERE e."userID" = $1 AND e."courseID" = $2
         `;
         const result = await db.query(query, [userID, courseID]);
         return result.rows;

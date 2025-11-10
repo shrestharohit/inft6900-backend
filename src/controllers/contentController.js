@@ -162,7 +162,7 @@ const registerContent = async ({
         }
 
         // Check if page number is already used in another content that is "active"
-        const existingContents = await Content.findByModuleId(moduleID, client);
+        const existingContents = await Content.findByModuleId(moduleID);
         const duplicate = existingContents.some(
             c => c.pageNumber === pageNumber && c.status === 'active'
         );
@@ -260,6 +260,34 @@ const updateContent = async ({
     }
 };
 
+// Sync status with course status
+const syncContentStatus = async (moduleID) => {
+    try {
+        const module = await Module.findById(moduleID);
+        if (!module) {
+            throw new Error('Invalid module ID. Module not found.');
+        }
+
+        const contents = await Content.findByModuleId(moduleID);
+        console.log(contents)
+        if (contents.length > 0) {
+            for (c of contents) {
+                // if content status is inactive (deleted), do not change the status
+                if (c.status === 'inactive') {
+                    break;
+                }
+
+                // otherwise, sync the status with module
+                const updated = await Content.update(c.contentID, {
+                    status: module.status
+                })
+                console.log(updated)
+            }
+        }
+    } catch (error) {
+        throw new Error('Content status sync error: ' + error);
+    }
+}
 
 module.exports = {
     register,
@@ -268,5 +296,6 @@ module.exports = {
     getAll,
     getMeta,
     registerContent,
-    updateContent
+    updateContent,
+    syncContentStatus
 };
