@@ -14,10 +14,10 @@ class Content {
         return result.rows[0];
     }
 
-    static async findByModuleId(moduleID, client = null) {
+    static async findByModuleId(moduleID, status = ['draft', 'wait_for_approval', 'active', 'inactive'], client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "tblContent" WHERE "moduleID" = $1 ORDER BY "pageNumber" ASC`;
-        const result = await db.query(query, [moduleID]);
+        const query = `SELECT * FROM "tblContent" WHERE "moduleID" = $1 AND "status" = ANY($2) ORDER BY "pageNumber" ASC`;
+        const result = await db.query(query, [moduleID, status]);
         return result.rows;
     }
 

@@ -252,6 +252,17 @@ const getModule = async (req, res) => {
 const getAll = async (req, res) => {
     try {
         const courseID = req.params.courseID;
+        const userId = req.headers['x-user-id'];
+        let showingStatus = ['active'];
+
+        // set showing status based on the user role
+        // for example, students should be only allowed to see acive courses
+        if (userId != undefined) {
+            const user = await User.findById(userId);
+            if (user && (user.role === 'course_owner' || user.role === 'admin')) {
+                showingStatus = VALID_MODULE_STATUS;
+            }
+        }
 
         // Validate course ID
         if (!courseID) {
@@ -261,17 +272,17 @@ const getAll = async (req, res) => {
         }
 
         // Check if course exists
-        const course = await Course.findById(courseID);
+        const course = await Course.findById(courseID, showingStatus);
         if (!course) {
             return res.status(404).json({
                 error: 'Course not found.'
             });
         }
 
-        const modules = await Module.findByCourseId(courseID);
+        const modules = await Module.findByCourseId(courseID, showingStatus);
 
         for (const module of modules) {
-            let contents = await Content.findByModuleId(module.moduleID);
+            let contents = await Content.findByModuleId(module.moduleID, showingStatus);
             module.contents = contents;
         }
 
