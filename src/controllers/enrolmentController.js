@@ -274,7 +274,7 @@ const enrolPathway = async (req, res) => {
         };
 
         // Get the first course
-        const pathwayCourses = await Course.findByPathwayId(pathwayID);
+        let pathwayCourses = await Course.findByPathwayId(pathwayID);
         if (!pathwayCourses || pathwayCourses.length === 0) {
             return res.status(400).json({
                 error: 'Invalid pathway. No courses found in this pathway.'
@@ -293,7 +293,7 @@ const enrolPathway = async (req, res) => {
         const enrolments = [];
         for (const pathwayCourse of pathwayCourses) {
             let enrolment = await Enrolment.findByCourseIdUserID(pathwayCourse.courseID, userID)
-            if (enrolment) {
+            if (enrolment && enrolment.status !== 'disenrolled') {
                 enrolments.push(enrolment);
             }
         }
@@ -301,18 +301,31 @@ const enrolPathway = async (req, res) => {
         // If user has not enrolled any course -> auto-enrol to the first course
         if (enrolments.length === 0) {
             const course = firstCourse;
+            
+            let enrolment = await Enrolment.findByCourseIdUserID(firstCourse.courseID, userID)
+
             // auto enrol and return
-            const firstEnrolment = await Enrolment.create({
-                pathwayID: pathwayID,
-                courseID: course.courseID,
-                userID: userID
-            })
+            let firstEnrolment = undefined;
+            if (enrolment && enrolment.status === 'disenrolled') {
+                firstEnrolment = await Enrolment.update(enrolment.enrolmentID, {
+                    status: 'enrolled',
+                    pathwayID: pathwayID,
+                });
+                firstEnrolment = refreshStatus(firstEnrolment.enrolmentID);
+            } else {
+                firstEnrolment = await Enrolment.create({
+                    pathwayID: pathwayID,
+                    courseID: course.courseID,
+                    userID: userID
+                })
+            }
+
 
             res.json({
                 message: 'Pathway enrolment successful. The first course enrolment is done.',
                 enrolment: firstEnrolment
             })
-        } 
+        }
         // If user has been taking a course in pathway -> no auto-enrol, update enrolment with pathway ID
         else {
             const updatedEnrolments = [];
@@ -661,6 +674,47 @@ const processData = async(enrolments) => {
     
     return processedData;
 }
+
+
+// // Check the latest enrolment status for re-enrolment
+// const getLatestEnrolmentStatus = async(enrolmentID) => {
+//     try{
+//         const enrolment = await Enrolment.findById(enrolmentID);
+//         if (!enrolment) {
+//             throw new Error('Invalid enrolment ID. Enrolment not found.')
+//         }
+
+//         const course = await Course.findById(enrolment.courseID);
+//         const quizzes = await Quiz.findByCourseID(enrolment.courseID);
+//         const attempts = await QuizAttempt.findByUserCourse(enrolment.userID, enrolment.courseID);
+
+//         let status = 'enrolled';
+//         let passedQuizzes = 0;
+//         let totalQuizzes = quizzes.length;
+//         for (const quiz of quizzes) {
+//             if (!attempts.includes(quiz)) {
+//                 break;
+//             }
+
+//             if (attempts.filter(a => a.quizID === quiz.quizID && a.passed === true)) {
+//                 passedQuizzes++;
+//             }
+//         }
+
+//         if (passedQuizzes > 0 & passedQuizzes !== totalQuizzes) {
+//             status = 'in progress';
+//         }
+//         if (passedQuizzes === totalQuizzes) {
+//             status = 'completed';
+//         }
+
+//         return status;
+
+//     } catch(err) {
+//         throw new Error('Error occured while retrieving the latest enrolment status: ' + err)
+//     }
+// }
+
 
 
 module.exports = {
