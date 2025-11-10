@@ -260,8 +260,11 @@ const getAll = async (req, res) => {
         // for example, students should be only allowed to see acive courses
         if (userId != undefined) {
             const user = await User.findById(userId);
-            if (user && (user.role === 'course_owner' || user.role === 'admin')) {
+            if (user && (user.role === 'course_owner')) {
                 showingStatus = VALID_MODULE_STATUS;
+            }
+            if (user && (user.role === 'admin')) {
+                showingStatus = ['active', 'wait_for_approval'];
             }
         }
 

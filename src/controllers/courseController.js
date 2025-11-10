@@ -379,7 +379,6 @@ const sendNotification = async (courseID) => {
     if (course.status === 'draft') {
       sendDeclineNotification(user, requestingItem)
     }
-
 }
 
 module.exports = {
