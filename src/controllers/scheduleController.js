@@ -25,6 +25,13 @@ const createSchedule = async (req, res) => {
       endTime
     });
 
+    // Overwrite totalHours with formatted string
+    const formattedSchedule = {
+      ...newSchedule,
+      totalHours: formatHours(parseFloat(newSchedule.totalHours)),
+      calculatedMins: parseFloat(newSchedule.totalHours) * 60
+    };
+
     res.json({ message: 'Schedule created successfully', schedule: newSchedule });
   } catch (error) {
     console.error('Create schedule error:', error);
@@ -42,12 +49,30 @@ const updateSchedule = async (req, res) => {
     if (!existing) return res.status(404).json({ error: 'Schedule not found' });
 
     const updated = await Schedule.update(scheduleID, { date, startTime, endTime });
+    
+    // Overwrite totalHours with formatted string
+    const formattedSchedule = {
+      ...updated,
+      totalHours: formatHours(parseFloat(updated.totalHours)),
+      calculatedMins: parseFloat(updated.totalHours) * 60
+    };
+
     res.json({ message: 'Schedule updated successfully', schedule: updated });
   } catch (error) {
     console.error('Update schedule error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+// Format totalHours into readable text
+function formatHours(hours) {
+  const totalMinutes = Math.round(hours * 60);
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  if (h > 0 && m > 0) return `${h} hr ${m} mins`;
+  if (h > 0) return `${h} hr${h > 1 ? 's' : ''}`;
+  return `${m} mins`;
+}
 
 // Get all schedules for a module (for a user)
 const getSchedulesByModule = async (req, res) => {
@@ -59,12 +84,19 @@ const getSchedulesByModule = async (req, res) => {
     if (!schedules || schedules.length === 0)
       return res.status(404).json({ error: 'No schedules found for this module.' });
 
+    // Overwrite totalHours with formatted value
+    const formattedSchedules = schedules.map(s => ({
+      ...s,
+      totalHours: formatHours(parseFloat(s.totalHours)),
+      calculatedMins: parseFloat(s.totalHours) * 60
+    }));
+
     res.json({
       message: 'Schedules retrieved successfully',
       userID,
       moduleID,
-      totalSessions: schedules.length,
-      schedules
+      totalSessions: formattedSchedules.length,
+      schedules: formattedSchedules
     });
   } catch (error) {
     console.error('Get schedules by module error:', error);
@@ -77,10 +109,19 @@ const getSchedulesByUser = async (req, res) => {
   try {
     const userID = parseInt(req.params.userid);
     const schedules = await Schedule.findByUser(userID);
-    // if (!schedules || schedules.length === 0)
-    //   return res.status(404).json({ error: 'No schedules found for this user.' });
 
-    res.json({ message: 'User schedules retrieved successfully', schedules });
+    // Overwrite totalHours with formatted value
+    const formattedSchedules = schedules.map(s => ({
+      ...s,
+      totalHours: formatHours(parseFloat(s.totalHours)),
+      calculatedMins: parseFloat(s.totalHours) * 60
+    }));
+
+    res.json({
+      message: 'User schedules retrieved successfully',
+      totalSessions: formattedSchedules.length,
+      schedules: formattedSchedules
+    });
   } catch (error) {
     console.error('Get schedules by user error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -93,6 +134,13 @@ const getSchedule = async (req, res) => {
     const scheduleID = parseInt(req.params.scheduleid);
     const schedule = await Schedule.findById(scheduleID);
     if (!schedule) return res.status(404).json({ error: 'Schedule not found' });
+
+     // Overwrite totalHours with formatted string
+    const formattedSchedule = {
+      ...schedule,
+      totalHours: formatHours(parseFloat(schedule.totalHours)),
+      calculatedMins: parseFloat(schedule.totalHours) * 60
+    };
 
     res.json({ message: 'Schedule retrieved successfully', schedule });
   } catch (error) {
