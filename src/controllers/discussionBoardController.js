@@ -62,9 +62,10 @@ const replyPost = async (req, res) => {
         const postOwner = await DiscussionBoard.getPostOwner(parentPostID);
         if (postOwner && postOwner.notificationEnabled) {
           await sendPostReplyNotification(postOwner, {
-            courseName: postOwner.courseName,
-            postTitle: postOwner.title,
-            replyContent: newReply.postText,
+            courseName: postOwner.courseTitle,  
+            firstName: user.firstName,         
+            lastName: user.lastName,            
+            postText: newReply.postText,
           });
           console.log(`✅ Reply notification sent to ${postOwner.email}`);
         }

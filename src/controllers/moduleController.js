@@ -4,7 +4,8 @@ const Course = require('../models/Course');
 const Content = require('../models/Content');
 const { VALID_MODULE_STATUS } = require('../config/constants');
 const { pool } = require('../config/database');
-const { registerContent, updateContent } = require('../controllers/contentController')
+const { registerContent, updateContent } = require('../controllers/contentController');
+const { syncContentStatus } = require('./contentController');
 
 const register = async (req, res) => {
     const client = await pool.connect();
@@ -160,7 +161,7 @@ const update = async (req, res) => {
         }
         
         // any missing content will be treated as deleted (inactive) 
-        const contentIDs = (await Content.findByModuleId(moduleID, client)).map(c => c.contentID);
+        const contentIDs = (await Content.findByModuleId(moduleID)).map(c => c.contentID);
         for (const id of contentIDs) {
             if (!contents.map(c => c.contentID).includes(id)) {
                 await updateContent({
@@ -252,6 +253,17 @@ const getModule = async (req, res) => {
 const getAll = async (req, res) => {
     try {
         const courseID = req.params.courseID;
+        const userId = req.headers['x-user-id'];
+        let showingStatus = ['active'];
+
+        // set showing status based on the user role
+        // for example, students should be only allowed to see acive courses
+        if (userId != undefined) {
+            const user = await User.findById(userId);
+            if (user && (user.role === 'course_owner' || user.role === 'admin')) {
+                showingStatus = VALID_MODULE_STATUS;
+            }
+        }
 
         // Validate course ID
         if (!courseID) {
@@ -261,17 +273,17 @@ const getAll = async (req, res) => {
         }
 
         // Check if course exists
-        const course = await Course.findById(courseID);
+        const course = await Course.findById(courseID, showingStatus);
         if (!course) {
             return res.status(404).json({
                 error: 'Course not found.'
             });
         }
 
-        const modules = await Module.findByCourseId(courseID);
+        const modules = await Module.findByCourseId(courseID, showingStatus);
 
         for (const module of modules) {
-            let contents = await Content.findByModuleId(module.moduleID);
+            let contents = await Content.findByModuleId(module.moduleID, showingStatus);
             module.contents = contents;
         }
 
@@ -341,6 +353,8 @@ const syncModuleStatus = async (courseID) => {
                 const updated = await Module.update(m.moduleID, {
                     status: course.status
                 })
+                // Also, update content status
+                syncContentStatus(m.moduleID);
             }
         }
     } catch (error) {

@@ -13,14 +13,10 @@ class Module {
         return result.rows[0];
     }
 
-    static async findByCourseId(courseID, client = null) {
+    static async findByCourseId(courseID, status = ['draft', 'wait_for_approval', 'active', 'inactive'], client = null) {
         const db = client || pool;
-        const query = `
-            SELECT * FROM "tblModule"
-            WHERE "courseID" = $1
-            ORDER BY "moduleNumber" ASC
-        `;
-        const result = await db.query(query, [courseID]);
+        const query = 'SELECT * FROM "tblModule" WHERE "courseID" = $1 AND "status" = ANY($2) ORDER BY "moduleNumber" ASC';
+        const result = await db.query(query, [courseID, status]);
         return result.rows;
     }
 

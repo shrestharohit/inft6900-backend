@@ -108,12 +108,21 @@ class Enrolment {
 
     static async getPopularPathways() {
         const query =`
-            SELECT e."pathwayID", p."name", COUNT(e."userID") "count" FROM "tblEnrolment" e
-            LEFT JOIN "tblPathway" p ON e."pathwayID" = p."pathwayID"
-            WHERE e."pathwayID" IS NOT NULL AND NOT e."status" = 'disenrolled'
-            GROUP BY e."pathwayID", p."name"
+            SELECT 
+                p."pathwayID",
+                p."name",
+                COUNT(DISTINCT e."userID") AS "count"
+            FROM "tblPathway" p
+            JOIN "tblCourse" c 
+                ON c."pathwayID" = p."pathwayID" 
+                AND c."status" = 'active'
+            LEFT JOIN "tblEnrolment" e 
+                ON e."pathwayID" = p."pathwayID" 
+                AND e."status" != 'disenrolled'
+            WHERE p."status" = 'active'
+            GROUP BY p."pathwayID", p."name"
             ORDER BY "count" DESC
-            LIMIT 3
+            LIMIT 3;
         `;
         const result = await pool.query(query);
         return result.rows;

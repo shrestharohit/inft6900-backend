@@ -227,13 +227,23 @@ const getQuiz = async (req, res) => {
 const getAllFromCourse = async(req, res) => {
     try {
         const courseID = req.params.courseID;
+        const userID = req.headers['x-user-id'];
 
-        // Validate user ID
+        // Validate course ID
         if (!courseID) {
             return res.status(400).json({
                 error: 'Course ID required.'
             });
         }
+
+        // Validate user ID
+        if (!userID) {
+            return res.status(403).json({
+                error: 'Forbidden access'
+            })
+        };
+
+        const user = await User.findById(userID);
 
         // Check if user exists
         const course = await Course.findById(courseID);
@@ -243,7 +253,10 @@ const getAllFromCourse = async(req, res) => {
             });
         }
 
-        const quizzes = await Quiz.findByCourseID(courseID);
+        let quizzes = await Quiz.findByCourseID(courseID);
+        if (user.role === 'student') {
+            quizzes = quizzes.filter(q => q.status === 'active');
+        }
         
         // Get all questions and options
         for (const quiz of quizzes) {
