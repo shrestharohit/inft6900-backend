@@ -57,7 +57,7 @@ class QuizAttempt {
         LEFT JOIN "tblModule" m ON m."moduleID" = q."moduleID"
         LEFT JOIN "tblEnrolment" e ON e."enrolmentID" = a."enrolmentID"
         WHERE e."userID" = $1 AND m."moduleID" = $2
-        ORDER BY c."count" ASC
+        ORDER BY a."count" ASC
         `;
         const result = await db.query(query, [userID, moduleID]);
         return result.rows;
