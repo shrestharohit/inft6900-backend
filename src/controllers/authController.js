@@ -209,6 +209,7 @@ const login = async (req, res) => {
           email: user.email,
           role: user.role,
           isEmailVerified: false,
+          notificationEnabled: user.notificationEnabled
         },
       });
     }
@@ -223,6 +224,7 @@ const login = async (req, res) => {
         email: user.email,
         role: user.role,
         isEmailVerified: user.isEmailVerified,
+        notificationEnabled: user.notificationEnabled
       },
     });
   } catch (error) {
