@@ -15,7 +15,7 @@ class Module {
 
     static async findByCourseId(courseID, client = null) {
         const db = client || pool;
-        const query = 'SELECT * FROM "tblModule" WHERE "courseID" = $1';
+        const query = 'SELECT * FROM "tblModule" WHERE "courseID" = $1 ORDER BY "moduleNumber" ASC';
         const result = await db.query(query, [courseID]);
         return result.rows;
     }
