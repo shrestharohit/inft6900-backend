@@ -14,7 +14,7 @@ class Content {
         return result.rows[0];
     }
 
-    static async findByModuleId(moduleID, status = ['draft', 'wait_for_approval', 'active', 'inactive'], client = null) {
+    static async findByModuleId(moduleID, status = ['draft', 'wait_for_approval', 'active'], client = null) {
         const db = client || pool;
         const query = `SELECT * FROM "tblContent" WHERE "moduleID" = $1 AND "status" = ANY($2) ORDER BY "pageNumber" ASC`;
         const result = await db.query(query, [moduleID, status]);
@@ -61,10 +61,10 @@ class Content {
         return result.rows[0];
     }
 
-    static async getAll(client = null) {
+    static async getAll(status = ['draft', 'wait_for_approval', 'active'], client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "tblContent" ORDER BY "pageNumber" ASC`;
-        const result = await db.query(query);
+        const query = `SELECT * FROM "tblContent" WHERE "status" = ANY($1) ORDER BY "pageNumber" ASC`;
+        const result = await db.query(query, [status]);
         return result.rows;
     }
 }

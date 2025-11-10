@@ -226,6 +226,7 @@ const getAll = async (req, res) => {
       const processedModules = [];
       for (const module of modules) {
         let contents = await Content.findByModuleId(module.moduleID, showingStatus);
+        contents = contents.filter(c => c.status !== 'inactive')
         let processedModule = module;
         processedModule.contents = contents;
         processedModules.push(processedModule)

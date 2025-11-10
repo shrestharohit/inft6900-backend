@@ -4,7 +4,8 @@ const Course = require('../models/Course');
 const Content = require('../models/Content');
 const { VALID_MODULE_STATUS } = require('../config/constants');
 const { pool } = require('../config/database');
-const { registerContent, updateContent } = require('../controllers/contentController')
+const { registerContent, updateContent } = require('../controllers/contentController');
+const { syncContentStatus } = require('./contentController');
 
 const register = async (req, res) => {
     const client = await pool.connect();
@@ -160,7 +161,7 @@ const update = async (req, res) => {
         }
         
         // any missing content will be treated as deleted (inactive) 
-        const contentIDs = (await Content.findByModuleId(moduleID, client)).map(c => c.contentID);
+        const contentIDs = (await Content.findByModuleId(moduleID)).map(c => c.contentID);
         for (const id of contentIDs) {
             if (!contents.map(c => c.contentID).includes(id)) {
                 await updateContent({
@@ -352,6 +353,8 @@ const syncModuleStatus = async (courseID) => {
                 const updated = await Module.update(m.moduleID, {
                     status: course.status
                 })
+                // Also, update content status
+                syncContentStatus(m.moduleID);
             }
         }
     } catch (error) {
