@@ -262,8 +262,16 @@ const getAllFromCourse = async(req, res) => {
         for (const quiz of quizzes) {
             const questions = await Question.findByQuizId(quiz.quizID);
             for (const question of questions) {
-                const options = await AnswerOption.findByQuestionID(question.questionID);
+                let options = await AnswerOption.findByQuestionID(question.questionID);
                 question.options = options;
+
+                // do not include answers and feedback if the user is student
+                if (user.role === 'student') {
+                    options = options.forEach(o => {
+                        delete o.isCorrect,
+                        delete o.feedbackText
+                    })
+                }
             }
             quiz.questions = questions;
         }

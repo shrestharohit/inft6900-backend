@@ -212,7 +212,7 @@ CREATE TABLE "tblDirectMessage" (
     "msgID" SERIAL PRIMARY KEY,
     "enrolmentID" INT NOT NULL,
     "message" VARCHAR(200) NOT NULL,
-    "reply" VARCHAR(50),
+    "reply" VARCHAR(200),
     "status" VARCHAR(50),
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
