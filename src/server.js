@@ -27,7 +27,6 @@ const directMessageRoutes = require('./routes/course/directMessageRoutes');
 
 const enrolmentRoutes = require('./routes/enrolmentRoutes');
 
-const notificationSettingRoutes = require('./routes/notificationSettingRoutes');
 const pomodoroSettingRoutes = require('./routes/pomodoroSettingRoutes');
 
 const dashboardRoutes = require('./routes/dashboardRoutes');
@@ -102,7 +101,6 @@ app.use('/api/dm', directMessageRoutes);
 
 app.use('/api/enrolment', enrolmentRoutes);
 
-app.use('/api/notification', notificationSettingRoutes);
 app.use('/api/pomodoro', pomodoroSettingRoutes);
 
 app.use('/api/dashboard', dashboardRoutes);
@@ -136,7 +134,6 @@ app.use('*', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/health`);
-  console.log(`Auth API: http://localhost:${PORT}/api/auth`);
 });
 
 module.exports = app;

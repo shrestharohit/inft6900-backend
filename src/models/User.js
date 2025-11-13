@@ -17,6 +17,12 @@ class User {
     return result.rows[0];
   }
 
+  static async findInactiveUserByEmail(email) {
+    const query = `SELECT * FROM "tblUser" WHERE "email" = $1 AND "status" = 'inactive'`;
+    const result = await pool.query(query, [email]);
+    return result.rows[0];
+  }
+
   static async findById(id) {
     const query = `
       SELECT "userID", "firstName", "lastName", "email", "role", "notificationEnabled", "created_at"
@@ -45,7 +51,7 @@ class User {
   }
 
   static async update(id, updateData) {
-    const allowedFields = ['firstName', 'lastName', 'email', 'role', 'passwordHash', 'notificationEnabled'];
+    const allowedFields = ['firstName', 'lastName', 'email', 'role', 'passwordHash', 'notificationEnabled', 'status'];
     const updates = [];
     const values = [];
     let paramCount = 1;
@@ -86,17 +92,7 @@ class User {
     const result = await pool.query(query);
     return result.rows;
   }
-  
-  // need to be removed
-  static async deleteById(id) {
-    const query = `
-      DELETE FROM "tblUser" 
-      WHERE "userID" = $1
-    `;
-    const result = await pool.query(query, [id]);
-    return result.rows[0];
-  }
-  
+    
   static async getAllNonStudents() {
     const query = `
       SELECT "userID", "firstName", "lastName", "email", "role", "isEmailVerified", "notificationEnabled", "created_at"
@@ -148,7 +144,6 @@ class User {
     return result.rows[0];
   }
 
-  // Reset Password
   static async updatePassword(email, newHashedPassword) {
     const query = `
       UPDATE "tblUser"

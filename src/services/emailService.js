@@ -1,6 +1,5 @@
 const nodemailer = require("nodemailer");
 const User = require('../models/User');
-const { getNotificationReceivers } = require('../controllers/notificationSettingController');
 const {
     OTPMsg,
     OTPEmailForpasswordResetMsg,

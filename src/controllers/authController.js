@@ -2,7 +2,6 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const { VALID_USER_ROLES } = require('../config/constants');
 const { generateOTP, sendOTPEmail, sendOTPEmailForpasswordReset, sendInitialPassword } = require('../services/emailService');
-const { setInitialSettings } = require('./notificationSettingController');
 const { initialisePomodoro } = require('./pomodoroSettingController');
 
 const register = async (req, res) => {
@@ -12,6 +11,11 @@ const register = async (req, res) => {
     // Validate role
     const userRole = role || 'student';
     let userPassword = ""
+
+    const [existingUser, deletedUser] = await Promise.all([
+      User.findByEmail(email),
+      User.findInactiveUserByEmail(email)
+    ]);
     
     if (!VALID_USER_ROLES.includes(userRole)) {
       return res.status(400).json({ 
@@ -57,7 +61,6 @@ const register = async (req, res) => {
     }
 
     // Check if user already exists
-    const existingUser = await User.findByEmail(email);
     if (existingUser) {
       return res.status(400).json({
         error: "User with this email already exists",
@@ -67,14 +70,28 @@ const register = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(userPassword, 10);
 
-    // Create user
-    const newUser = await User.create({
-      firstName,
-      lastName,
-      email,
-      passwordHash: hashedPassword,
-      role: userRole,
-    });
+    // If the user is inactive (deleted), bring it back to active with new data
+    let newUser = null;
+    if (deletedUser) {
+      newUser = await User.update(deletedUser.userID, {
+        firstName,
+        lastName,
+        email,
+        passwordHash: hashedPassword,
+        role: userRole,
+        status: 'active'
+      })
+    } 
+    // Otherwise create a new account
+    else {
+      newUser = await User.create({
+        firstName,
+        lastName,
+        email,
+        passwordHash: hashedPassword,
+        role: userRole,
+      });
+    }
 
     // Initialise pomodoro setting & check if user needs email verification (only students need verification)
     if (userRole === "student") {
@@ -347,7 +364,7 @@ const deleteUser = async (req, res) => {
     }
 
     // Update user
-    const deletedUser = await User.deleteById(userID);
+    const deletedUser = await User.update(userID, {status: 'inactive'});
 
     res.json({
       message: 'User deleted successfully',
@@ -664,7 +681,7 @@ const resetPassword = async (req, res) => {
     // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // ✅ Use model method instead of raw query
+    // Use model method instead of raw query
     const updatedUser = await User.updatePassword(email, hashedPassword);
 
     if (!updatedUser) {
@@ -679,7 +696,7 @@ const resetPassword = async (req, res) => {
     });
     
   } catch (error) {
-    console.error("❌ Reset password error:", error);
+    console.error("Reset password error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
