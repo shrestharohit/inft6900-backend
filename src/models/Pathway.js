@@ -38,6 +38,18 @@ class Pathway {
     return result.rows;
   }
 
+  // Find pathway by User ID
+  static async findByEnrolments(enrolmentIds) {
+    const query = `
+            SELECT p.*
+            FROM "tblPathway" p
+            LEFT JOIN "tblEnrolment" e ON e."pathwayID" = p."pathwayID"
+            WHERE e."enrolmentID" = ANY($1)
+        `;
+    const result = await pool.query(query, [enrolmentIds]);
+    return result.rows;
+  }
+
   // Get detailed pathway
   static async getDetail(pathwayID) {
     const query = `SELECT * FROM "tblPathway" WHERE "pathwayID" = $1`;

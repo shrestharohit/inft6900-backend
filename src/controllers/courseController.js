@@ -215,17 +215,22 @@ const getAll = async (req, res) => {
       }
     }
 
-    const courses = await Course.getAll(showingStatus);
+    let [courses, modules, contents] = await Promise.all([
+      Course.getAll(showingStatus),
+      Module.getAll(),
+      Content.getAll()
+    ])
+
     const processedData = [];
 
     // get modules and contents nested
     for (const course of courses) {
-      let modules = await Module.findByCourseId(course.courseID, showingStatus);
+      modules = modules.filter(m => m.courseID === course.courseID && m.status === showingStatus);
       let processedCourse = course;
 
       const processedModules = [];
       for (const module of modules) {
-        let contents = await Content.findByModuleId(module.moduleID, showingStatus);
+        contents = contents.filter(c => c.moduleID === module.moduleID && c.status === showingStatus);
         contents = contents.filter(c => c.status !== 'inactive')
         let processedModule = module;
         processedModule.contents = contents;
@@ -321,19 +326,17 @@ const getDetail = async (req, res) => {
       });
     }
 
-    // Find course by ID
     const course = await Course.findById(courseID);
-    
-    // find modules in the quiz
-    const modules = await Module.findByCourseId(course.courseID);
-
-    // get course owner data
-    const user = await User.findById(course.userID);
+    const [modules, user, pathways] = await Promise.all([
+      Module.findByCourseId(course.courseID),
+      User.findById(course.userID),
+      Pathway.getAll()
+    ])
 
     // get pathway data
     let pathway = null;
     if (course.pathway !== null) {
-        pathway = await Pathway.findById(course.pathwayID);
+        pathway = pathways.find(p => p.pathwayID === course.pathwayID);
     }
 
     const result = {

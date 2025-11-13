@@ -18,6 +18,30 @@ class AnswerOption {
         return result.rows[0];
     }
 
+    static async findByQuizId(quizID, client = null) {
+        const db = client || pool;
+        const query = `
+            SELECT o.*, q."quizID" FROM "tblAnswerOption" o
+            LEFT JOIN "tblQuestion" q ON o."questionID" = q."questionID"
+            WHERE q."quizID" = $1 AND o."status" = 'active' 
+            ORDER BY "optionOrder" DESC
+        `;
+        const result = await db.query(query, [quizID]);
+        return result.rows;
+    }
+
+    static async findByQuizzes(quizIDs, client = null) {
+        const db = client || pool;
+        const query = `
+            SELECT o.*, q."quizID" FROM "tblAnswerOption" o
+            LEFT JOIN "tblQuestion" q ON o."questionID" = q."questionID"
+            WHERE q."quizID" = ANY($1) AND o."status" = 'active' 
+            ORDER BY "optionOrder" DESC
+        `;
+        const result = await db.query(query, [quizIDs]);
+        return result.rows;
+    }
+
     static async findByQuestionID(questionID, client = null) {
         const db = client || pool;
         const query = `SELECT * FROM "tblAnswerOption" WHERE "questionID" = $1 AND "status" = 'active' ORDER BY "optionOrder" DESC`;

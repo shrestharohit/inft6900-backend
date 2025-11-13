@@ -243,10 +243,12 @@ const getAllFromCourse = async(req, res) => {
             })
         };
 
-        const user = await User.findById(userID);
+        const [user, course] = await Promise.all([
+            User.findById(userID),
+            Course.findById(courseID)
+        ]);
 
         // Check if user exists
-        const course = await Course.findById(courseID);
         if (!course) {
             return res.status(404).json({
                 error: 'Course not found.'
@@ -257,12 +259,17 @@ const getAllFromCourse = async(req, res) => {
         if (user.role === 'student') {
             quizzes = quizzes.filter(q => q.status === 'active');
         }
+
+        let [questions, options] = await Promise.all([
+            Question.findByQuizzes(quizzes.map(q => q.quizID)),
+            AnswerOption.findByQuizzes(quizzes.map(q => q.quizID)),
+        ])
         
         // Get all questions and options
         for (const quiz of quizzes) {
-            const questions = await Question.findByQuizId(quiz.quizID);
+            questions = questions.filter(q => q.quizID = quiz.quizID);
             for (const question of questions) {
-                let options = await AnswerOption.findByQuestionID(question.questionID);
+                options = options.filter(o => o.questionID = question.questionID);
                 question.options = options;
 
                 // do not include answers and feedback if the user is student
@@ -345,8 +352,13 @@ const getDetail = async (req, res) => {
     try {
         const quizID = req.params.quizID;
 
+        const [quiz, questions, options] = await Promise.all([
+            Quiz.findById(quizID),
+            Question.findByQuizId(quizID),
+            AnswerOption.findByQuizId(quizID)
+        ])
+
         // Check if quiz is already created for the module
-        const quiz = await Quiz.findById(quizID);
         if (!quiz) {
             return res.status(404).json({
                 error: 'Quiz not found.'
@@ -354,10 +366,9 @@ const getDetail = async (req, res) => {
         }
 
         // Get all questions and options
-        const questions = await Question.findByQuizId(quizID);
         const questionList = []
         for (const question of questions) {
-            const options = await AnswerOption.findByQuestionID(question.questionID);
+            const questionOptions = options.filter(o => o.questionID = question.questionID);
             question['options'] = options;
             questionList.push(question);
         }

@@ -120,7 +120,6 @@ const update = async (req, res) => {
 const getCourseReviews = async (req, res) => {
     try {
         const courseID = req.params.courseID;
-
         // Basic validataion
         if (!courseID) {
             return res.status(400).json({ 
@@ -128,16 +127,18 @@ const getCourseReviews = async (req, res) => {
             });
         };
 
+        const [course, review] = await Promise.all([
+            Course.findById(courseID),
+            processCourseReviews(courseID)
+        ]);
+
         // Check Course ID
-        const exists = !!(await Course.findById(courseID));
-        if (!exists) {
+        if (!course) {
             return res.status(400).json({ 
                 error: 'Course not found' 
             });
         };
         
-        const review = await processCourseReviews(courseID);
-
         res.json({
             reviews: review.reviews,
             avgRating: review.avgRating,
@@ -295,23 +296,28 @@ const getMeta = (req, res) => {
 
 
 const processCourseReviews = async(courseID) => {
+    // Get data
+    const [course, reviews, enrolments, students, avgRating] = await Promise.all([
+        Course.findById(courseID),
+        CourseReview.findByCourseID(courseID),
+        Enrolment.findByCourseId(courseID),
+        User.findByRole('student'),
+        CourseReview.getAvgRatings(courseID)
+    ])
+
     // Validate course ID
-    const course = await Course.findById(courseID);
     if (!course) {
         throw new Error('Invalid course ID. Course does not exist.');
     };
     
-    // Get reviews
-    const reviews = await CourseReview.findByCourseID(courseID);
     for (const review of reviews) {
-        const reviewerID = (await Enrolment.findById(review.enrolmentID)).userID;
-        const reviewer = await User.findById(reviewerID);
+        const reviewerID = enrolments.find(e => e.enrolmentID === review.enrolmentID).userID;
+        const reviewer = students.find(s => s.userID === reviewerID);
         review.userID = reviewerID;
         review.firstName = reviewer.firstName;
         review.lastName = reviewer.lastName;
     }
 
-    const avgRating = await CourseReview.getAvgRatings(courseID);
     return {
         reviews: reviews,
         avgRating: avgRating? avgRating.AvgRating : 0.0,
