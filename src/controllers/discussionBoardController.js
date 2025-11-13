@@ -83,9 +83,11 @@ const getPosts = async (req, res) => {
   try {
     const courseID = parseInt(req.params.courseid);
     const posts = await DiscussionBoard.findByCourse(courseID);
+    const users = await User.findByIds(posts.map(p => p.userID));
+
     const postsWithUsers = await Promise.all(
-      posts.map(async (x) => {
-        const user = await User.findById(x.userID);
+      posts.map((x) => {
+        const user = users.find(u => u.userID === x.userID)
         return { ...x, user };
       })
     );
