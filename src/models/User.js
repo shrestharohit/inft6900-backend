@@ -26,6 +26,15 @@ class User {
     return result.rows[0];
   }
 
+  static async findByIds(ids) {
+    const query = `
+      SELECT "userID", "firstName", "lastName", "email", "role", "notificationEnabled", "created_at"
+      FROM "tblUser" WHERE "userID" = ANY($1) AND "status" = 'active'
+    `;
+    const result = await pool.query(query, [ids]);
+    return result.rows;
+  }
+
   static async findByRole(role) {
     const query = `
       SELECT "userID", "firstName", "lastName", "email", "role","notificationEnabled", "created_at"
