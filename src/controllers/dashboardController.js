@@ -28,28 +28,47 @@ const getCourseOwnerData = async (req, res) => {
 
         // Get individual course data
         const courses = await Course.findByOwner(userID);
-        const [enrolments, reviews] = await Promise.all([
+
+        // return empty data if no course
+        if (!courses || courses.length === 0) {
+            return res.json({
+                overallData: {
+                coursesOwned: 0,
+                enrolments: 0,
+                totalPublishedAnnouncement: 0,
+                avgRating: 0.0,
+                },
+                individualCourseData: [],
+            });
+        }
+
+        const [enrolments, reviews, announcements, courseOwnerRating] = await Promise.all([
             Enrolment.findByCourses(courses.map(c => c.courseID)),
-            CourseReview.findByCourses(courses.map(c => c.courseID))
+            CourseReview.findByCourses(courses.map(c => c.courseID)),
+            Announcement.findByCourseOwner(userID, ['active']),
+            CourseReview.getAvgCourseOwnerRatings(userID)
         ])
+
 
         for (const course of courses) {
             // push course id & title
-            let courseData = {};
+            const courseData = {};
             courseData.courseID = course.courseID;
             courseData.title = course.title;
 
             // push total enrolment
-            const courseEnrolments = enrolments.filter(e => e.courseID === course.courseID)
-            courseData.enrolments = enrolments.length;
+            const courseEnrolments = enrolments.filter(e => e.courseID === course.courseID);
+            courseData.enrolments = courseEnrolments.length;
             totalEnrolments += courseData.enrolments;
 
             // push avg ratings
             courseData.avgRating = 0.0;
-            let avgRating = await CourseReview.getAvgRatings(course.courseID);
-            if (avgRating) {
-                courseData.avgRating = parseFloat(avgRating.AvgRating);
+            const courseReviews = reviews.filter(r => r.courseID === course.courseID);
+            let avgRating = 0.0;
+            if (courseReviews.length !== 0) {
+                avgRating = courseReviews.reduce((total, next) => total + next.rating, 0) / courseReviews.length
             }
+            courseData.avgRating = avgRating;
 
             // push released date (created_at is fine...?)
             courseData.releasedDate = course.created_at;
@@ -65,15 +84,10 @@ const getCourseOwnerData = async (req, res) => {
 
         overallData.enrolments = totalEnrolments;
 
-        const announcements = await Announcement.findByCourseOwner(userID, ['active']);
         overallData.totalPublishedAnnouncement = announcements.length;
 
-        overallData.avgRating = 0.0;
-        const courseOwnerRating = await CourseReview.getAvgCourseOwnerRatings(userID);
-        if (courseOwnerRating) {
-            overallData.avgRating = parseFloat(courseOwnerRating.AvgRating);
-        }
-
+        overallData.avgRating = parseFloat(courseOwnerRating?.AvgRating || 0.0);
+        
         res.json({
             overallData: overallData,
             individualCourseData: allCourseData

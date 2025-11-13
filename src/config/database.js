@@ -22,15 +22,15 @@ const initializeSchema = async () => {
     
     // Execute the schema
     await client.query(schemaSQL);
-    console.log('✅ Database schema initialized successfully');
+    console.log('Database schema initialized successfully');
     
     client.release();
   } catch (error) {
     // If tables already exist, that's okay - just log it
     if (error.message.includes('already exists')) {
-      console.log('ℹ️  Database tables already exist');
+      console.log('Database tables already exist');
     } else {
-      console.error('❌ Schema initialization failed:', error.message);
+      console.error('Schema initialization failed:', error.message);
       throw error;
     }
   }
@@ -39,13 +39,13 @@ const initializeSchema = async () => {
 const connectDB = async () => {
   try {
     const client = await pool.connect();
-    console.log('✅ Connected to PostgreSQL database');
+    console.log('Connected to PostgreSQL database');
     client.release();
     
     // Initialize schema after successful connection
     await initializeSchema();
   } catch (error) {
-    console.error('❌ Database connection failed:', error.message);
+    console.error('Database connection failed:', error.message);
     process.exit(1);
   }
 };
