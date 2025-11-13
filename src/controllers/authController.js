@@ -117,7 +117,7 @@ const register = async (req, res) => {
 
       if (!emailResult.success) {
         console.warn(
-          "⚠️ Failed to send OTP email, falling back to console only:",
+          "Failed to send OTP email, falling back to console only:",
           emailResult.error
         );
 
@@ -126,7 +126,7 @@ const register = async (req, res) => {
           message:
             "Registration successful! Please check your OTP in terminal (email not sent).",
           email: email,
-          otpCode, // ⚠️ include only for dev testing, remove in prod
+          otpCode, // include only for dev testing, remove in prod
           expiresIn: "10 minutes",
           requiresVerification: true,
         });
@@ -147,7 +147,7 @@ const register = async (req, res) => {
       const emailResult = await sendInitialPassword(email, userPassword, firstName);
       
       if (!emailResult.success) {
-        console.warn("⚠️ Failed to send initial password, falling back to console only:", emailResult.error);
+        console.warn("Failed to send initial password, falling back to console only:", emailResult.error);
 
         // Still return success so frontend can go to /login2fa
         return res.status(201).json({

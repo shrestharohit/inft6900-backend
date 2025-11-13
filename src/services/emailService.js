@@ -39,8 +39,8 @@ const sendOTPEmail = async (email, otp, firstName) => {
   try {
     const transporter = createTransporter();
 
-    // ✅ Always log OTP to backend terminal for now
-    console.log(`📩 OTP for ${email} (${firstName}): ${otp}`);
+    // Always log OTP to backend terminal for now
+    console.log(`OTP for ${email} (${firstName}): ${otp}`);
 
     const mailOptions = {
       from: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER,
@@ -50,10 +50,10 @@ const sendOTPEmail = async (email, otp, firstName) => {
     };
 
     const result = await transporter.sendMail(mailOptions);
-    console.log("✅ OTP email sent successfully:", result.messageId);
+    console.log("OTP email sent successfully:", result.messageId);
     return { success: true, messageId: result.messageId };
   } catch (error) {
-    console.error("❌ Failed to send OTP email:", error);
+    console.error("Failed to send OTP email:", error);
     return { success: false, error: error.message };
   }
 };
@@ -64,8 +64,8 @@ const sendOTPEmailForpasswordReset = async (email, otp, firstName) => {
   try {
     const transporter = createTransporter();
 
-    // ✅ Always log OTP to backend terminal for now
-    console.log(`📩 OTP for ${email} (${firstName}): ${otp}`);
+    // Always log OTP to backend terminal for now
+    console.log(`OTP for ${email} (${firstName}): ${otp}`);
 
     const mailOptions = {
       from: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER,
@@ -75,10 +75,10 @@ const sendOTPEmailForpasswordReset = async (email, otp, firstName) => {
     };
 
     const result = await transporter.sendMail(mailOptions);
-    console.log("✅ OTP email sent successfully:", result.messageId);
+    console.log("OTP email sent successfully:", result.messageId);
     return { success: true, messageId: result.messageId };
   } catch (error) {
-    console.error("❌ Failed to send OTP email:", error);
+    console.error("Failed to send OTP email:", error);
     return { success: false, error: error.message };
   }
 };
@@ -89,8 +89,8 @@ const sendInitialPassword = async (email, password, firstName) => {
   try {
     const transporter = createTransporter();
 
-    // ✅ Always log OTP to backend terminal for now
-    console.log(`📩 Initial password for ${email} (${firstName}): ${password}`);
+    // Always log OTP to backend terminal for now
+    console.log(`Initial password for ${email} (${firstName}): ${password}`);
 
     const mailOptions = {
       from: process.env.SMPT_FROM_EMAIL || process.env.SMTP_USER,
@@ -100,10 +100,10 @@ const sendInitialPassword = async (email, password, firstName) => {
     };
 
     const result = await transporter.sendMail(mailOptions);
-    console.log("✅ Initial password email sent successfully:", result.messageId);
+    console.log("Initial password email sent successfully:", result.messageId);
     return { success: true, messageId: result.messageId };
   } catch (error) {
-    console.error("❌ Failed to send iInitial password email:", error);
+    console.error("Failed to send iInitial password email:", error);
     return { success: false, error: error.message };
   }
 };
@@ -119,7 +119,7 @@ const sendApprovalRequestNotification = async (requestor, requestingItem) => {
     const receivers = admins.filter(admin => admin.notificationEnabled === true)
     
     if (receivers.length === 0) {
-      console.log("✅ No error occured, but notification setting turned off for user");
+      console.log("No error occured, but notification setting turned off for user");
       return { success: true };
     }
 
@@ -134,10 +134,10 @@ const sendApprovalRequestNotification = async (requestor, requestingItem) => {
     };
 
     const result = await transporter.sendMail(mailOptions);
-    console.log("✅ Request notification sent successfully:", result.messageId);
+    console.log("Request notification sent successfully:", result.messageId);
     return { success: true, messageId: result.messageId };
   } catch (error) {
-    console.error("❌ Failed to send request notification:", error);
+    console.error("Failed to send request notification:", error);
     return { success: false, error: error.message };
   }
 };
@@ -149,7 +149,7 @@ const sendApprovalNotification = async (requestor, requestingItem) => {
     const transporter = createTransporter();
 
     if (!requestor.notificationEnabled) {
-      console.log("✅ No error occured, but notification setting turned off for user");
+      console.log("No error occured, but notification setting turned off for user");
       return { success: true };
     }
 
@@ -161,10 +161,10 @@ const sendApprovalNotification = async (requestor, requestingItem) => {
     };
 
     const result = await transporter.sendMail(mailOptions);
-    console.log("✅ Approval notification sent successfully:", result.messageId);
+    console.log("Approval notification sent successfully:", result.messageId);
     return { success: true, messageId: result.messageId };
   } catch (error) {
-    console.error("❌ Failed to send approval notification:", error);
+    console.error("Failed to send approval notification:", error);
     return { success: false, error: error.message };
   }
 };
@@ -175,7 +175,7 @@ const sendDeclineNotification = async (requestor, requestingItem) => {
     const transporter = createTransporter();
 
     if (!requestor.notificationEnabled) {
-      console.log("✅ No error occured, but notification setting turned off for user");
+      console.log("No error occured, but notification setting turned off for user");
       return { success: true };
     }
 
@@ -187,10 +187,10 @@ const sendDeclineNotification = async (requestor, requestingItem) => {
     };
 
     const result = await transporter.sendMail(mailOptions);
-    console.log("✅ Decline notification sent successfully:", result.messageId);
+    console.log("Decline notification sent successfully:", result.messageId);
     return { success: true, messageId: result.messageId };
   } catch (error) {
-    console.error("❌ Failed to send decline notification:", error);
+    console.error("Failed to send decline notification:", error);
     return { success: false, error: error.message };
   }
 };
@@ -202,7 +202,7 @@ const sendDMNotificationToOwner = async (recipient, dm) => {
     const transporter = createTransporter();
 
     if (!recipient.notificationEnabled) {
-      console.log("✅ No error occured, but notification setting turned off for user");
+      console.log("No error occured, but notification setting turned off for user");
       return { success: true };
     }
 
@@ -214,10 +214,10 @@ const sendDMNotificationToOwner = async (recipient, dm) => {
     };
 
     const result = await transporter.sendMail(mailOptions);
-    console.log("✅ New DM notification sent successfully:", result.messageId);
+    console.log("New DM notification sent successfully:", result.messageId);
     return { success: true, messageId: result.messageId };
   } catch (error) {
-    console.error("❌ Failed to send new DM notification:", error);
+    console.error("Failed to send new DM notification:", error);
     return { success: false, error: error.message };
   }
 };
@@ -228,7 +228,7 @@ const sendDMNotificationToStudent = async (recipient, dm) => {
     const transporter = createTransporter();
 
     if (!recipient.notificationEnabled) {
-      console.log("✅ No error occured, but notification setting turned off for user");
+      console.log("No error occured, but notification setting turned off for user");
       return { success: true };
     }
 
@@ -240,10 +240,10 @@ const sendDMNotificationToStudent = async (recipient, dm) => {
     };
 
     const result = await transporter.sendMail(mailOptions);
-    console.log("✅ DM reply notification sent successfully:", result.messageId);
+    console.log("DM reply notification sent successfully:", result.messageId);
     return { success: true, messageId: result.messageId };
   } catch (error) {
-    console.error("❌ Failed to send DM reply notification:", error);
+    console.error("Failed to send DM reply notification:", error);
     return { success: false, error: error.message };
   }
 };
@@ -255,7 +255,7 @@ const sendNewReviewNotification = async (recipient, courseName, review) => {
     const transporter = createTransporter();
 
     if (!recipient.notificationEnabled) {
-      console.log("✅ No error occured, but notification setting turned off for user");
+      console.log("No error occured, but notification setting turned off for user");
       return { success: true };
     }
     
@@ -269,10 +269,10 @@ const sendNewReviewNotification = async (recipient, courseName, review) => {
     };
 
     const result = await transporter.sendMail(mailOptions);
-    console.log("✅ New review notification sent successfully:", result.messageId);
+    console.log("New review notification sent successfully:", result.messageId);
     return { success: true, messageId: result.messageId };
   } catch (error) {
-    console.error("❌ Failed to send new review notification:", error);
+    console.error("Failed to send new review notification:", error);
     return { success: false, error: error.message };
   }
 };
@@ -284,7 +284,7 @@ const sendNewAnnouncementNotification = async (recipients, announcement) => {
 
     const activeRecipients = recipients.filter(r => r.notificationEnabled);
     if (activeRecipients.length === 0) {
-      console.log("✅ No users have email notifications enabled for announcements");
+      console.log("No users have email notifications enabled for announcements");
       return { success: true };
     }
 
@@ -296,12 +296,12 @@ const sendNewAnnouncementNotification = async (recipients, announcement) => {
         html: newAnnouncementMsg({ firstName: user.firstName, announcement }),
       };
       await transporter.sendMail(mailOptions);
-      console.log(`📩 Announcement email sent to ${user.email}`);
+      console.log(`Announcement email sent to ${user.email}`);
     }
 
     return { success: true };
   } catch (error) {
-    console.error("❌ Failed to send announcement notification:", error);
+    console.error("Failed to send announcement notification:", error);
     return { success: false, error: error.message };
   }
 };
@@ -313,7 +313,7 @@ const sendPostReplyNotification = async (recipient, post) => {
     const transporter = createTransporter();
 
     if (!recipient.notificationEnabled) {
-      console.log("✅ No error occurred, but notification setting turned off for user");
+      console.log("No error occurred, but notification setting turned off for user");
       return { success: true };
     }
 
@@ -325,10 +325,10 @@ const sendPostReplyNotification = async (recipient, post) => {
     };
 
     const result = await transporter.sendMail(mailOptions);
-    console.log("✅ Post reply notification sent successfully:", result.messageId);
+    console.log("Post reply notification sent successfully:", result.messageId);
     return { success: true, messageId: result.messageId };
   } catch (error) {
-    console.error("❌ Failed to send post reply notification:", error);
+    console.error("Failed to send post reply notification:", error);
     return { success: false, error: error.message };
   }
 };

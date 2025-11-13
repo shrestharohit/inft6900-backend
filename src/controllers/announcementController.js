@@ -29,7 +29,7 @@ const createAnnouncement = async (req, res) => {
           content
         });
 
-        console.log("✅ Announcement notifications sent successfully.");
+        console.log("Announcement notifications sent successfully.");
       } catch (notifyError) {
         console.error('Error sending notifications:', notifyError);
       }

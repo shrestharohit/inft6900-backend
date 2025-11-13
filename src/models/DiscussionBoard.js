@@ -20,13 +20,13 @@ class DiscussionBoard {
 
   // Get all posts for a course
   static async findByCourse(courseID) {
-    const result = await pool.query(`SELECT * FROM "tblDiscussionBoard" WHERE "courseID" = $1`, [courseID]);
+    const result = await pool.query(`SELECT * FROM "tblDiscussionBoard" WHERE "courseID" = $1 ORDER BY "created_at" ASC`, [courseID]);
     return result.rows;
   }
 
   // Get all posts by a user
   static async findByUser(userID) {
-    const result = await pool.query(`SELECT * FROM "tblDiscussionBoard" WHERE "userID" = $1`, [userID]);
+    const result = await pool.query(`SELECT * FROM "tblDiscussionBoard" WHERE "userID" = $1 ORDER BY "created_at" ASC`, [userID]);
     return result.rows;
   }
 

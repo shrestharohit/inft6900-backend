@@ -52,7 +52,7 @@ CREATE TABLE "tblCourse" (
     "courseID" SERIAL PRIMARY KEY,
     "userID" INT NOT NULL,
     "title" VARCHAR(150) NOT NULL,
-    "category" VARCHAR(150) NOT NULL, -- added by Hide
+    "category" VARCHAR(150) NOT NULL, 
     "level" VARCHAR(50),
     "outline" TEXT,
     "status" VARCHAR(20),
@@ -127,8 +127,7 @@ CREATE TABLE "tblQuestion" (
     "quizID" INT NOT NULL,
     "questionNumber" INT NOT NULL,
     "questionText" TEXT NOT NULL,
-    -- "questionType" VARCHAR(50), -- what is this for???
-    "status" VARCHAR(50), -- to define if it's deleted or active
+    "status" VARCHAR(50), 
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("quizID") REFERENCES "tblQuiz"("quizID") ON DELETE CASCADE

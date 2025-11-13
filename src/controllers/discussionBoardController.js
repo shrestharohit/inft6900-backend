@@ -67,10 +67,10 @@ const replyPost = async (req, res) => {
             lastName: user.lastName,            
             postText: newReply.postText,
           });
-          console.log(`✅ Reply notification sent to ${postOwner.email}`);
+          console.log(`Reply notification sent to ${postOwner.email}`);
         }
     } catch (err) {
-      console.error('❌ Failed to send reply notification:', err.message);
+      console.error('Failed to send reply notification:', err.message);
     }
       } catch (error) {
     console.error('Reply post error:', error);
