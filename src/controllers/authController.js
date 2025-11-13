@@ -132,7 +132,7 @@ const register = async (req, res) => {
       if (!emailResult.success) {
         console.warn("Failed to send initial password, falling back to console only:", emailResult.error);
 
-        // ✅ Still return success so frontend can go to /login2fa
+        // Still return success so frontend can go to /login2fa
         return res.status(201).json({
           message: 'Registration successful! Please check initial password in terminal (email not sent).',
           email: email,
