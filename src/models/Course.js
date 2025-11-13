@@ -20,6 +20,15 @@ class Course {
         return result.rows[0];
     }
 
+    static async findByIds(ids, status = ['draft', 'wait_for_approval', 'active', 'inactive']) {
+        const query = `
+            SELECT * FROM "tblCourse" 
+            WHERE "courseID" = ANY($1) AND "status" = ANY($2)
+        `;
+        const result = await pool.query(query, [ids, status]);
+        return result.rows;
+    }
+
     static async findByCategory(category, status = ['draft', 'wait_for_approval', 'active', 'inactive']) {
         const query = `
             SELECT * FROM "tblCourse" 

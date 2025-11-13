@@ -29,6 +29,17 @@ class Question {
         return result.rows;
     }
 
+    static async findByQuizzes(quizIDs, client = null) {
+        const db = client || pool;
+        const query = `
+            SELECT * FROM "tblQuestion" 
+            WHERE "quizID" = ANY($1) AND "status" = 'active'
+            ORDER BY "questionNumber"
+        `;
+        const result = await db.query(query, [quizIDs]);
+        return result.rows;
+    }
+    
     static async findByQuizIdQuestionNumber(quizId, questionNumber, client = null) {
         const db = client || pool;
         const query = `

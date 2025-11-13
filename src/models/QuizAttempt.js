@@ -74,6 +74,25 @@ class QuizAttempt {
         return result.rows;
     }
 
+    static async findByEnrolments(enrolmentIDs, client = null) {
+        const db = client || pool;
+        const query = `
+        SELECT a.* FROM "tblQuizAttempt" a
+        WHERE a."enrolmentID" = ANY($1)
+        `;
+        const result = await db.query(query, [enrolmentIDs]);
+        return result.rows;
+    }
+
+    static async getAll(client = null) {
+        const db = client || pool;
+        const query = `
+        SELECT a.* FROM "tblQuizAttempt" a
+        `;
+        const result = await db.query(query);
+        return result.rows;
+    }
+
 }
 
 module.exports = QuizAttempt;

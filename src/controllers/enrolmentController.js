@@ -202,7 +202,7 @@ const getUserEnrolment = async (req, res) => {
         const userID = req.params.userID;
 
         // Validate course id is provided
-        if (!userID) {
+        if (!userID || userID === 'undefined' || userID === 'null') {
             return res.status(400).json({ 
                 error: 'User ID is required in header (userID)' 
             });
@@ -454,18 +454,22 @@ const refreshStatus = async (enrolmentID) => {
 
 const getPopular = async (req, res) => {
     try {
-        const popularCourses = await Enrolment.getPopularCourses();
+        const [popularCourses, courses, popularPathways] = await Promise.all([
+            Enrolment.getPopularCourses(),
+            Course.getAll(['active']),
+            Enrolment.getPopularPathways()
+        ])
+
         // in case there are no 3 courses with enrolment, get random courses
         if (popularCourses.length !== 3) {
             const popularIds = popularCourses.map(item => item.courseID);
-            const courses = await Course.getAll(['active']);
             let courseIds = courses.map(item => item.courseID).filter(id => !popularIds.includes(id));
 
             // get up to 3 courses
             const len = courses.length < 3 ? courses.length : 3;
             for (let i = len - popularCourses.length; popularCourses.length < len ; i++) {
                 let randId = courseIds[Math.floor(Math.random() * courseIds.length)];
-                let randCourse = await Course.findById(randId);
+                let randCourse = courses.find(c => c.courseID === randId)
                 courseIds = courseIds.filter(id => id !== randId);
                 if (randCourse) {
                     let data = {
@@ -484,7 +488,6 @@ const getPopular = async (req, res) => {
             }
         }
 
-        const popularPathways = await Enrolment.getPopularPathways();
         // in case there are no 3 courses with enrolment, get random pathways
         if (popularPathways.length !== 3) {
             const popularPathIds = popularPathways.map(item => item.pathwayID);
@@ -492,7 +495,7 @@ const getPopular = async (req, res) => {
 
             let i = 0;
             for (const pathway of pathways) {
-                const activeCourses = await Course.findByPathwayId(pathway.pathwayID, ['active']);
+                const activeCourses = courses.filter(c => c.pathwayID === pathway.pathwayID && c.status === 'active');
                 if (activeCourses.length === 0) {
                     pathways = pathways.splice(i, i);
                 } else {
@@ -507,7 +510,7 @@ const getPopular = async (req, res) => {
             const len = pathways.length < 3 ? pathways.length : 3;
             for (let i = len - popularPathways.length; popularPathways.length < len; i++) {
                 let randId = pathIds[Math.floor(Math.random() * pathIds.length)];
-                let randPath = await Pathway.findById(randId);
+                let randPath = pathways.find(p => p.pathwayID === randId)
                 pathIds = pathIds.filter(id => id !== randId);
                 if (randPath) {
                     let data = {
@@ -638,21 +641,32 @@ const valdiatePrerequisite = async (userID, pathwayID, courseID) => {
 // process enrolment data to include nested pathway and course details
 const processData = async(enrolments) => {
     const processedData = [];
+    const [enrolmentIds, courseIds] = [
+        enrolments.map(e => e.enrolmentID),
+        enrolments.map(e => e.courseID),
+    ]
+
+    const [allCourses, allPathways, allQuizzes, allAttempts] = await Promise.all([
+        Course.findByIds(courseIds),
+        Pathway.findByEnrolments(enrolmentIds),
+        Quiz.findByCourses(courseIds),
+        QuizAttempt.findByEnrolments(enrolmentIds)
+    ])
 
     for (const enrolment of enrolments) {
         const processedEnrolment = enrolment;
-        const course = await Course.findById(enrolment.courseID);
+        const course = allCourses.find(c => c.courseID === enrolment.courseID);
         
         let pathway = null;
         if (enrolment.pathwayID) {
-            pathway = await Pathway.findById(enrolment.pathwayID);
+            pathway = allPathways.find(p => p.pathwayID === enrolment.pathwayID);
         }
 
         // get progress percentage
         let passedQuizzes = 0;
         let progress = 0;
-        const quizzes = await Quiz.findByCourseID(enrolment.courseID, ['active']);
-        const attempts = await QuizAttempt.findByUserCourse(enrolment.userID, enrolment.courseID);
+        const quizzes = allQuizzes.filter(q => q.courseID === enrolment.courseID && q.status === 'active');
+        const attempts = allAttempts.filter(a => a.enrolmentID === enrolment.enrolmentID);
 
         for (const quiz of quizzes) {
             const passed = (attempts.filter(a => a.quizID === quiz.quizID && a.passed === true).length > 0);

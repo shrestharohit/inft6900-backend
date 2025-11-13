@@ -199,15 +199,18 @@ const getCoursesInPathway = async (req, res) => {
 const getAll = async (req, res) => {
     try {
         let pathways = await Pathway.getAll();
+        const [user, courses] = await Promise.all([
+            User.findById(req.headers['x-user-id']),
+            Course.getAll()
+        ])
 
         // for student and guest users, only shows active pathways with active courses
-        const user = await User.findById(req.headers['x-user-id']);
         if (req.headers['x-user-id'] == undefined || 
             (req.headers['x-user-id'] && user.role === 'student')) {
 
             for (const pathway of pathways) {
-                const courses = await Course.findByPathwayId(pathway.pathwayID, ['active']);
-                pathway.courses = courses;
+                const pathwayCourses = courses.filter(c => c.pathwayID === pathway.pathwayID && c.status === 'active');
+                pathway.courses = pathwayCourses;
             }
 
             pathways = pathways.filter(p => 
@@ -216,8 +219,8 @@ const getAll = async (req, res) => {
             );
         } else {
             for (const pathway of pathways) {
-                const courses = await Course.findByPathwayId(pathway.pathwayID);
-                pathway.courses = courses;
+                const pathwayCourses = courses.filter(c => c.pathwayID === pathway.pathwayID);
+                pathway.courses = pathwayCourses;
             }
         }
 

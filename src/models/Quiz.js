@@ -37,6 +37,18 @@ class Quiz {
         return result.rows;
     }
 
+    static async findByCourses(courseIDs, status = ['draft', 'wait_for_approval', 'active', 'inactive'], client = null) {
+        const db = client || pool;
+        const query = `
+        SELECT q.*, m."courseID" FROM "tblQuiz" q
+        LEFT JOIN "tblModule" m ON q."moduleID" = m."moduleID"
+        WHERE m."courseID" = ANY($1) AND q."status" = ANY($2)
+        ORDER BY m."moduleNumber" DESC
+        `;
+        const result = await db.query(query, [courseIDs, status]);
+        return result.rows;
+    }
+    
     static async findByCourseOwner(userID, client = null) {
         const db = client || pool;
         const query = `
@@ -54,6 +66,15 @@ class Quiz {
         const query = `
         SELECT * FROM "tblQuiz"
         WHERE "status" = 'wait_for_approval'
+        `;
+        const result = await db.query(query);
+        return result.rows;
+    }
+
+    static async getAll(client = null) {
+        const db = client || pool;
+        const query = `
+        SELECT * FROM "tblQuiz"
         `;
         const result = await db.query(query);
         return result.rows;
