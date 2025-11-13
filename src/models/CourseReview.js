@@ -70,6 +70,18 @@ class CourseReview {
         return result.rows;
     }
 
+    static async findByCourses(courseIDs, status = ["active"], client = null) {
+        const db = client || pool;
+        const query = `
+            SELECT r.*, c."title", u."firstName", u."lastName" FROM "tblCourseReview" r
+            LEFT JOIN "tblEnrolment" e ON e."enrolmentID" = r."enrolmentID"
+            LEFT JOIN "tblCourse" c ON c."courseID" = e."courseID"
+            LEFT JOIN "tblUser" u ON e."userID" = u."userID" 
+            WHERE e."courseID" = ANY($1) AND r."status" = ANY($2)`;
+        const result = await db.query(query, [courseIDs, status]);
+        return result.rows;
+    }
+
     static async findByPathwayID(courseID, status = ["active"], client = null) {
         const db = client || pool;
         const query = `

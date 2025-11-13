@@ -260,27 +260,31 @@ const getAllFromCourse = async(req, res) => {
             quizzes = quizzes.filter(q => q.status === 'active');
         }
 
-        let [questions, options] = await Promise.all([
+        const [questions, options] = await Promise.all([
             Question.findByQuizzes(quizzes.map(q => q.quizID)),
             AnswerOption.findByQuizzes(quizzes.map(q => q.quizID)),
         ])
-        
         // Get all questions and options
-        for (const quiz of quizzes) {
-            questions = questions.filter(q => q.quizID = quiz.quizID);
-            for (const question of questions) {
-                options = options.filter(o => o.questionID = question.questionID);
-                question.options = options;
+        if (quizzes.length !== 0) {
+            for (const quiz of quizzes) {
+                const targetQuestions = questions.filter(q => q.quizID === quiz.quizID);
+                if (questions.length !== 0) {
+                    for (const question of targetQuestions) {
+                        let targetOptions = options.filter(o => o.questionID === question.questionID);
 
-                // do not include answers and feedback if the user is student
-                if (user.role === 'student') {
-                    options = options.forEach(o => {
-                        delete o.isCorrect,
-                        delete o.feedbackText
-                    })
+                        // do not include answers and feedback if the user is student
+                        if (user.role === 'student') {
+                            targetOptions = options.forEach(o => {
+                                delete o.isCorrect,
+                                delete o.feedbackText
+                            })
+                        }
+                        question.options = targetOptions;
+
+                    }
+                    quiz.questions = questions;
                 }
             }
-            quiz.questions = questions;
         }
 
         res.json(quizzes);
