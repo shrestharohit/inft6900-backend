@@ -3,9 +3,7 @@ const User = require('../models/User');
 const Course = require('../models/Course');
 const Quiz = require('../models/Quiz');
 const CourseReview = require('../models/CourseReview');
-const { VALID_MODULE_STATUS } = require('../config/constants');
 const { pool } = require('../config/database');
-const { registerContent, updateContent } = require('../controllers/contentController');
 const Announcement = require('../models/Announcement');
 
 const getCourseOwnerData = async (req, res) => {
@@ -30,6 +28,11 @@ const getCourseOwnerData = async (req, res) => {
 
         // Get individual course data
         const courses = await Course.findByOwner(userID);
+        const [enrolments, reviews] = await Promise.all([
+            Enrolment.findByCourses(courses.map(c => c.courseID)),
+            CourseReview.findByCourses(courses.map(c => c.courseID))
+        ])
+
         for (const course of courses) {
             // push course id & title
             let courseData = {};
@@ -37,7 +40,7 @@ const getCourseOwnerData = async (req, res) => {
             courseData.title = course.title;
 
             // push total enrolment
-            let enrolments = await Enrolment.findByCourseId(course.courseID);
+            const courseEnrolments = enrolments.filter(e => e.courseID === course.courseID)
             courseData.enrolments = enrolments.length;
             totalEnrolments += courseData.enrolments;
 

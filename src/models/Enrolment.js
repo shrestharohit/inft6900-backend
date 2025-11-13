@@ -17,6 +17,12 @@ class Enrolment {
         return result.rows;
     }
 
+    static async findByCourses(courseIDs) {
+        const query = 'SELECT * FROM "tblEnrolment" WHERE "courseID" = ANY($1)';
+        const result = await pool.query(query, [courseIDs]);
+        return result.rows;
+    }
+
     static async findByPathwayId(pathwayID) {
         const query = 'SELECT * FROM "tblEnrolment" WHERE "pathwayID" = $1';
         const result = await pool.query(query, [pathwayID]);
