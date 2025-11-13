@@ -107,7 +107,7 @@ class User {
     return result.rows;
   }
 
-  // 🔹 OTP Methods
+  // OTP Methods
   static async setOTP(email, otpCode, expiresAt) {
     const query = `
       UPDATE "tblUser"
@@ -148,7 +148,7 @@ class User {
     return result.rows[0];
   }
 
-  // 🔹 Reset Password
+  // Reset Password
   static async updatePassword(email, newHashedPassword) {
     const query = `
       UPDATE "tblUser"

@@ -44,7 +44,7 @@ const PORT = process.env.PORT || 3001;
 // Test database connection
 connectDB();
 
-// ✅ Enable CORS (allow frontend origin)
+// Enable CORS (allow frontend origin)
 app.use(
   cors({
     origin: [
@@ -57,7 +57,7 @@ app.use(
   })
 );
 
-// ✅ Middleware
+// Middleware
 app.use(express.json());
 
 // Session Middleware
@@ -73,13 +73,13 @@ app.use(session({
   }
 }));
 
-// ✅ Simple request logger
+// Simple request logger
 app.use((req, res, next) => {
-  console.log(`➡️  ${req.method} ${req.originalUrl}`);
+  console.log(`${req.method} ${req.originalUrl}`);
   next();
 });
 
-// ✅ Routes
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 
@@ -112,7 +112,7 @@ app.use('/api/upload', uploadRoutes);
 // Static folder
 app.use('/uploads/', express.static(path.join(__dirname, '../uploads')));
 
-// ✅ Health check
+// Health check
 app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
@@ -121,22 +121,22 @@ app.get('/health', (req, res) => {
   });
 });
 
-// ✅ Error handling
+// Error handling
 app.use((error, req, res, next) => {
-  console.error('❌ Error:', error.stack || error.message);
+  console.error('Error:', error.stack || error.message);
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// ✅ 404 handler
+// 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-// ✅ Start server
+// Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`🔐 Auth API: http://localhost:${PORT}/api/auth`);
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Health check: http://localhost:${PORT}/health`);
+  console.log(`Auth API: http://localhost:${PORT}/api/auth`);
 });
 
 module.exports = app;
