@@ -32,8 +32,8 @@ router.post("/verify-resetotp", verifyResetOTP);
 router.post("/reset-password", resetPassword);
 
 // Profile routes
-router.get("/user", getCurrentUser);   // ✅ fetch user profile
-router.put("/user", updateCurrentUser); // ✅ update user profile
+router.get("/user", getCurrentUser);
+router.put("/user", updateCurrentUser);
 
 
 // for admin page
