@@ -24,7 +24,7 @@ class AnswerOption {
             SELECT o.*, q."quizID" FROM "tblAnswerOption" o
             LEFT JOIN "tblQuestion" q ON o."questionID" = q."questionID"
             WHERE q."quizID" = $1 AND o."status" = 'active' 
-            ORDER BY "optionOrder" DESC
+            ORDER BY "optionOrder" ASC
         `;
         const result = await db.query(query, [quizID]);
         return result.rows;
@@ -36,7 +36,7 @@ class AnswerOption {
             SELECT o.*, q."quizID" FROM "tblAnswerOption" o
             LEFT JOIN "tblQuestion" q ON o."questionID" = q."questionID"
             WHERE q."quizID" = ANY($1) AND o."status" = 'active' 
-            ORDER BY "optionOrder" DESC
+            ORDER BY "optionOrder" ASC
         `;
         const result = await db.query(query, [quizIDs]);
         return result.rows;
@@ -44,7 +44,7 @@ class AnswerOption {
 
     static async findByQuestionID(questionID, client = null) {
         const db = client || pool;
-        const query = `SELECT * FROM "tblAnswerOption" WHERE "questionID" = $1 AND "status" = 'active' ORDER BY "optionOrder" DESC`;
+        const query = `SELECT * FROM "tblAnswerOption" WHERE "questionID" = $1 AND "status" = 'active' ORDER BY "optionOrder" ASC`;
         const result = await db.query(query, [questionID]);
         return result.rows;
     }

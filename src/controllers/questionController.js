@@ -42,7 +42,11 @@ const registerQuestion = async (quiz, question) => {
 
     // Call option registration
     const newOptions = []
-    for (const option of options) {
+    const processedOptions = options.map((opt, i) => ({
+        ...opt,
+        optionOrder: i+1
+    }))
+    for (const option of processedOptions) {
         const newOption = await registerOption(newQuestion, option);
         newOptions.push(newOption);
     };
@@ -73,7 +77,7 @@ const updateQuestion = async (quiz, question, client) => {
         };
 
         // Validate if there will be any multiple correct answers
-        const currentAnswer = await AnswerOption.findAnswerForQuestion(existingQuestion.questionID);
+        const currentAnswer = await AnswerOption.findAnswerForQuestion(existingQuestion.questionID, client);
         let answerCounter = 0;
         for (const option of options) {
             if (option.isCorrect && option.optionOrder !== currentAnswer?.optionOrder) {
@@ -87,9 +91,8 @@ const updateQuestion = async (quiz, question, client) => {
 
         // Validate if the question number is already takne
         if (questionNumber !== undefined && questionNumber !== existingQuestion.questionNumber) {
-            const existingQuestionNumber = await Question.findByQuizIdQuestionNumber(quiz.quizID, questionNumber);
-            console.log(questionNumber)
-            console.log(existingQuestion.questionNumber)
+            const existingQuestionNumber = await Question.findByQuizIdQuestionNumber(quiz.quizID, questionNumber, client);
+            console.log(existingQuestionNumber)
             if (existingQuestionNumber !== undefined) {
                 throw new Error('Question update error: Selected question number already used');
             }
