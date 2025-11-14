@@ -45,8 +45,8 @@ const register = async (req, res) => {
         };
 
         // Check if there is already a quiz created for the module
-        const exists = !!(await Quiz.findByModuleID(quizModule.moduleID));
-        if (exists) {
+        const existingQuiz = await Quiz.findByModuleID(quizModule.moduleID);
+        if (existingQuiz && existingQuiz.status !== 'inactive') {
             return res.status(400).json({
                 error: 'Quiz already exists. Each module can only have 1 quiz.'
             });
@@ -117,7 +117,7 @@ const update = async (req, res) => {
         // Check if quiz under the selected module exists
         if (moduleID !== quiz.moduleID) {
             const existingQuiz = await Quiz.findByModuleID(moduleID, client);
-            if (existingQuiz) {
+            if (existingQuiz && existingQuiz.status !== 'inactive') {
                 return res.status(400).json({
                     error: 'Quiz already exists. Each module can only have 1 quiz.'
                 });
@@ -138,11 +138,12 @@ const update = async (req, res) => {
         };
 
         // any missing question will be treated as deleted (inactive)
-        const questionNumbers = (await Question.findByQuizId(quiz.quizID, client)).map(q => q.questionNumber);
-        for (const number of questionNumbers) {
-            if (!questions.map(q => q.questionNumber).includes(number)) {
-                const deletedQuestion = await Question.findByQuizIdQuestionNumber(quiz.quizID, number, client);
+        const questionIds = (await Question.findByQuizId(quiz.quizID, client)).map(q => q.questionID);
+        for (const id of questionIds) {
+            if (!questions.map(q => q.questionID).includes(id)) {
+                const deletedQuestion = await Question.findById(id, client);
                 await inactivateQuestion(deletedQuestion, client);
+                console.log(deletedQuestion)
             };
         };
 
